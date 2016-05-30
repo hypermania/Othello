@@ -19,8 +19,8 @@ int main(int argc, char **argv){
   init_game(game);
 
   while(is_end_of_game(game) == 0){
-    //printf("Turn %d\n", game->turns);
-    //print_state(game->current);
+    printf("Turn %d\n", game->turns);
+    print_state(game->current);
     
     //printf("%d pieces on board\n", count_pieces(game->current, W) + count_pieces(game->current, B));
     if(require_input(game) == 1){
@@ -28,14 +28,32 @@ int main(int argc, char **argv){
       if(game->status == W)
 	//r = rand() % game->allowed_movec;
 	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec);
-      if(game->status == B)
-	r = rand() % game->allowed_movec;
-      //printf("make move at (%d,%d)\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
+      if(game->status == B){
+	printf("This is your turn. Enter number to place your piece.\n");
+	int i;
+	for(i=0;i<game->allowed_movec;i++){
+	  printf("%d:(%d,%d)\n", i, game->allowed_moves[i].r, game->allowed_moves[i].c);
+	}
+	while(1){
+	  int ret = scanf("%d", &r);
+	  if(ret < 1){
+	    printf("Invalid input. Try again.\n");
+	    continue;
+	  }
+	  if(r>=game->allowed_movec){
+	    printf("Invalid choice. Try again.\n");
+	    continue;
+	  }
+	  break;
+	}
+      }
+      printf("(makes move at (%d,%d))\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
       make_move(game, r);
     } else {
       make_skip(game);
+      printf("Turn skipped.\n");
     }
-    //write(1, "\n", 1);
+    write(1, "\n", 1);
   }
   end_game(game);
 
@@ -60,16 +78,6 @@ int main(int argc, char **argv){
   /*      
       // my turn!
 
-      if(state->turn == B){
-	int i;
-	for(i=0;i<movec;i++){
-	  printf("%d:(%d,%d)\n", i, moves[i].r, moves[i].c);
-	}
-	scanf("%d", &i);
-	place_piece(state, moves[i], state->turn);
-	state_switch_turn(state);
-	continue;
-      }
 */
 
 }
