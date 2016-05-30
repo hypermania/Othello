@@ -75,9 +75,6 @@ int main(int argc, char **argv){
   free_game(game);
 
   exit(0);  
-  /*      
-      // my turn!
 
-*/
 
 }
