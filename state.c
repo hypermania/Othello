@@ -219,3 +219,11 @@ int count_pieces(State state, int side){
   }
   return count;
 }
+
+int state_final(State state){
+  if(state == NULL)
+    return -1;
+  if((allowed_moves(state, NULL, W) == 0) && (allowed_moves(state, NULL, B) == 0))
+    return 1;
+  return 0;
+}

@@ -48,6 +48,10 @@ int state_switch_turn(State state);
 // return -2 also if side is neither black or white
 int count_pieces(State state, int side);
 
+// return 1 if this is a final state (neither player can move)
+// 0 if not
+int state_final(State state);
+
 
 #endif
 

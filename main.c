@@ -21,14 +21,14 @@ int main(int argc, char **argv){
   while(is_end_of_game(game) == 0){
     printf("Turn %d\n", game->turns);
     print_state(game->current);
-    
-    //printf("%d pieces on board\n", count_pieces(game->current, W) + count_pieces(game->current, B));
+
     if(require_input(game) == 1){
       int r;
       if(game->status == W)
-	//r = rand() % game->allowed_movec;
 	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec);
       if(game->status == B){
+	//r = rand() % game->allowed_movec;
+
 	printf("This is your turn. Enter number to place your piece.\n");
 	int i;
 	for(i=0;i<game->allowed_movec;i++){
@@ -46,6 +46,7 @@ int main(int argc, char **argv){
 	  }
 	  break;
 	}
+
       }
       printf("(makes move at (%d,%d))\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
       make_move(game, r);
@@ -56,6 +57,7 @@ int main(int argc, char **argv){
     write(1, "\n", 1);
   }
   end_game(game);
+  print_state(game->current);
 
   int wp = count_pieces(game->current, W);
   int bp = count_pieces(game->current, B);
