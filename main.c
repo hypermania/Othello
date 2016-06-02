@@ -25,8 +25,9 @@ int main(int argc, char **argv){
     if(require_input(game) == 1){
       int r;
       if(game->status == W)
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec);
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 5);
       if(game->status == B){
+	//r = best_next_state(game->current, game->allowed_moves, game->allowed_movec,3);
 	//r = rand() % game->allowed_movec;
 
 	printf("This is your turn. Enter number to place your piece.\n");
@@ -48,6 +49,7 @@ int main(int argc, char **argv){
 	}
 
       }
+
       printf("(makes move at (%d,%d))\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
       make_move(game, r);
     } else {

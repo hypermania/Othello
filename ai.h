@@ -18,7 +18,7 @@ int total_pieces(State state, int side);
 int consider_corner(State state, int side);
 
 // state searching algorithms
-int best_next_state(State state, Pos *moves, int movec);
+int best_next_state(State state, Pos *moves, int movec, int param);
 int abpruning(State state, int depth, int a, int b, int side);
 
 
