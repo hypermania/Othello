@@ -13,7 +13,11 @@ typedef struct {
 } *State, State_store;
 
 clock_t start, end;
-static double cpu_time_used;
+clock_t start_1, end_1;
+static double cpu_am = 0;
+static double cpu_pp = 0;
+static double cpu_cp = 0;
+static double cpu_cpa = 0;
 
 
 // return 0 at success, unless otherwise specified

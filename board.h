@@ -1,5 +1,7 @@
 // implements board interface
 #include <stdlib.h>
+#include <time.h>
+//#include <stdio.h>
 
 // BOARD_SIZE >= 4 and is even
 
@@ -12,9 +14,11 @@
 #define W 1
 #define B 2
 
+//clock_t start_2, end_2;
+//clock_t start_1, end_1;
+//static double cpu_adjpos = 0;
 
 typedef int** Board;
-
 
 typedef struct {
   int r;

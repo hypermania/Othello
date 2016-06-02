@@ -10,7 +10,10 @@ State create_state(void){
 int free_state(State state){
   if(state == NULL)
     return -1;
-
+  //printf("cpu_am = %lf\n", cpu_am);
+  //printf("cpu_pp = %lf\n", cpu_pp);
+  //printf("cpu_cp = %lf\n", cpu_cp);
+  //printf("cpu_cpa = %lf\n", cpu_cpa);
   free_board(state->board);
   free(state);
   return 0;
@@ -74,7 +77,7 @@ int opposite_side(int side){
 }
 
 int can_place_at(State state, Pos pos, int side){
-
+  //start = clock();
   if(state == NULL)
     return -1;
   if(check_pos(pos) < 0)
@@ -109,13 +112,14 @@ int can_place_at(State state, Pos pos, int side){
     if(board_get_pos(board, head) == side)
       return 1;
   }
-  
+  //end = clock();
+  //cpu_cpa += ((double) (end - start));  
   return 0;
 }
 
 
 int allowed_moves(State state, Pos *store, int side){
-  //start = clock();  
+  //start_1 = clock();  
   int need_to_store = 0;
   if(state == NULL)
     return -1;
@@ -138,16 +142,16 @@ int allowed_moves(State state, Pos *store, int side){
       }
     }
   }
-  //end = clock();
-  //cpu_time_used += ((double) (end - start));
-  //printf("%lf\n", cpu_time_used);
-  
+  //end_1 = clock();
+  //cpu_am += ((double) (end_1 - start_1));
   return count;
 }
 
 
 
 int place_piece(State state, Pos pos, int side){
+  //start = clock();
+  
   if(state == NULL)
     return -1;
   if(check_pos(pos) < 0)
@@ -189,6 +193,9 @@ int place_piece(State state, Pos pos, int side){
       }
     }
   }
+  //end = clock();
+  //cpu_pp += ((double) (end - start));
+
   return count;
 }
 
@@ -201,6 +208,7 @@ int state_switch_turn(State state){
 
 
 int count_pieces(State state, int side){
+  //start = clock();  
   if(state == NULL)
     return -1;
   if(check_val(side) < 0)
@@ -217,6 +225,9 @@ int count_pieces(State state, int side){
 	count++;
     }
   }
+  //end = clock();
+  //cpu_cp += ((double) (end - start));
+  
   return count;
 }
 

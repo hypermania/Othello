@@ -7,10 +7,13 @@
 #include "game.h"
 #include "ai.h"
 
+clock_t start, end;
+static double cpu_all = 0;
+
 
 
 int main(int argc, char **argv){
-
+  start = clock();
   struct timeval t;
   gettimeofday(&t, NULL);
   srand((long int) t.tv_usec);
@@ -18,19 +21,24 @@ int main(int argc, char **argv){
   Game game = create_game();
   init_game(game);
 
+  int print_midgame_flag = 1;
+  
   while(is_end_of_game(game) == 0){
-    printf("Turn %d\n", game->turns);
-    print_state(game->current);
+    if(print_midgame_flag){
+      printf("Turn %d\n", game->turns);
+      print_state(game->current);
+    }
 
     if(require_input(game) == 1){
       int r;
       if(game->status == W)
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 5);
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 8);
       if(game->status == B){
-	//r = best_next_state(game->current, game->allowed_moves, game->allowed_movec,3);
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 0);
 	//r = rand() % game->allowed_movec;
-
+	/*
 	printf("This is your turn. Enter number to place your piece.\n");
+
 	int i;
 	for(i=0;i<game->allowed_movec;i++){
 	  printf("%d:(%d,%d)\n", i, game->allowed_moves[i].r, game->allowed_moves[i].c);
@@ -47,19 +55,23 @@ int main(int argc, char **argv){
 	  }
 	  break;
 	}
-
+	*/
       }
-
-      printf("(makes move at (%d,%d))\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
+      if(print_midgame_flag)
+	printf("(makes move at (%d,%d))\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
       make_move(game, r);
     } else {
+      if(print_midgame_flag)
+	printf("Turn skipped.\n");
       make_skip(game);
-      printf("Turn skipped.\n");
     }
-    write(1, "\n", 1);
+    if(print_midgame_flag)
+      write(1, "\n", 1);
   }
   end_game(game);
-  print_state(game->current);
+  
+  if(print_midgame_flag)
+    print_state(game->current);
 
   int wp = count_pieces(game->current, W);
   int bp = count_pieces(game->current, B);
@@ -77,7 +89,11 @@ int main(int argc, char **argv){
 
 
   free_game(game);
-
+  
+  end = clock();
+  cpu_all = (double) (end - start);
+  //printf("cpu_all = %lf\n", cpu_all);
+  
   exit(0);  
 
 

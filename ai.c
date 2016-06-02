@@ -6,12 +6,20 @@ int total_pieces(State state, int side){
 
 int consider_corner(State state, int side){
   int result;
-  
   int mypieces = count_pieces(state, side);
-  result = mypieces;
-
   int opp_side = opposite_side(side);
+  result = mypieces;
+  int opppieces = count_pieces(state, opp_side);
   
+  if(state_final(state) == 1){
+    if(mypieces < opppieces){
+      return INT_MIN + 10000 + (mypieces - opppieces);
+    }
+    if(mypieces > opppieces){
+      return INT_MAX - 10000 + (mypieces - opppieces);
+    }
+  }
+
   Pos corners[4] = {(Pos) {0,0}, (Pos) {0,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-1,0}, (Pos) {BOARD_SIZE-1,BOARD_SIZE-1}};
   Pos neighbours[3];
   int i;
@@ -24,21 +32,20 @@ int consider_corner(State state, int side){
     adj_pos(corners[i], neighbours);
     int j;
     for(j=0;j<3;j++){
-      if(state_get_pos(state, neighbours[j]) == side)
-	result -= 8;
+      if(state_get_pos(state, neighbours[j]) == side){
+	if(corner_val == side)
+	  result += 8;
+	if(corner_val == opp_side)
+	  result -= 16;
+	if(corner_val == X)
+	  result -= 8;
+      }
     }
   }
   
   //Pos store[TEMP_STORE];
   result += allowed_moves(state, NULL, side) * 4;
   
-  if(state_final(state) == 1){
-    int opppieces = count_pieces(state, opp_side);
-    if(mypieces < opppieces)
-      return INT_MIN;      
-    if(mypieces > opppieces)
-      return INT_MAX;
-  }
     
   return result;
 }

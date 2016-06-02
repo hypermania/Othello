@@ -14,6 +14,7 @@ Board create_board(void){
 }
 
 int free_board(Board board){
+  //printf("cpu_adjpos = %lf\n", cpu_adjpos);
   if(board == NULL)
     return -1;
   int r;
@@ -75,6 +76,7 @@ int board_set_pos(Board board, Pos pos, int val){
 }
 
 int adj_pos(Pos pos, Pos *store){
+  //start_2 = clock();
   if(check_pos(pos)<0)
     return -1;
   if(store == NULL)
@@ -93,10 +95,14 @@ int adj_pos(Pos pos, Pos *store){
       }
     }
   }
+  //end_2 = clock();
+  //cpu_adjpos += (double) (end_2 - start_2);
+
   return count;
 }
 
 int adj_empty_pos(Board board, Pos pos, Pos *store){
+
   if(board == NULL)
     return -1;
   if(check_pos(pos) < 0)
