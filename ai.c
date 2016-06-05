@@ -30,9 +30,9 @@ int consider_corner(State state, int side){
     if(corner_val == opp_side)
       result -= 10;
     //dangerous optimization using board interface
-    //Pos neighbours[3];
-    int mycount = adj_sided_pos(state->board, corners[i], NULL, side);
+
     //int oppcount = adj_sided_pos(state->board, corners[i], neighbours, opp_side);
+    int mycount = adj_sided_pos(state->board, corners[i], NULL, side);
     if(corner_val == side) {
       result += 8*mycount;
     } else if(corner_val == opp_side){
@@ -40,9 +40,9 @@ int consider_corner(State state, int side){
     } else {
       result -= 8*mycount;
     }
-    
-    /*
 
+    /* //(start) original implementation
+    Pos neighbours[3];
     adj_pos(corners[i], neighbours);
     int j;
     for(j=0;j<3;j++){
@@ -55,12 +55,12 @@ int consider_corner(State state, int side){
 	  result -= 8;
       }
     }
-    */
+    */ //(end) orignal implementation
   }
   
   //Pos store[TEMP_STORE];
   result += allowed_moves(state, NULL, side) * 4;
-  result -= allowed_moves(state, NULL, opp_side) * 1;
+  //result -= allowed_moves(state, NULL, opp_side) * 1;
   
     
   return result;
@@ -102,50 +102,55 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   if(moves == NULL)
     return -2;
   // should try to eliminate error conditions
-  int scores[TEMP_STORE];
-  global_state = state; global_moves = moves; global_param = param;
-  global_scores = scores;
-  pthread_t tids[TEMP_STORE];
   /*
-int i; int j;
-  for(j=0;j<(movec+3)/4;j++){
-    for(i=0;i<4;i++){
-      //scores[i] = get_score_for_move(state, moves[i], param);
-      if(4*j+i < movec)
-	pthread_create(&(tids[i]), NULL, store_score, (void *)(4*j+i));
-    }
-    for(i=0;i<4;i++){
-      if(4*j+i < movec)
-	pthread_join(tids[4*j+i], NULL);
-    }
-  }
-  */
   int i;
   for(i=0;i<movec;i++){
-    pthread_create(&(tids[i]), NULL, store_score, (void *)(i));
+    printf("moves:%d:(%d,%d)\n",i, moves[i].r, moves[i].c);
+  }
+  */
+  int scores[TEMP_STORE];
+  global_state = state;
+  global_moves = moves;
+  global_scores = scores;
+  global_param = param;
+
+  pthread_t tids[TEMP_STORE];
+  int i;
+  for(i=0;i<movec;i++){
+    pthread_create(&(tids[i]), NULL, store_score, (void *)i);
   }
   for(i=0;i<movec;i++){
       pthread_join(tids[i], NULL);
   }
-
+  
   int max_moves[TEMP_STORE];
   int num_max_moves = 0;
   int max_score = INT_MIN;
   for(i=0;i<movec;i++){
+    //printf("thread:i=%d, scores[i]=%d, max_score=%d, num_max_moves=%d\n", i, scores[i], max_score, num_max_moves);
     if(scores[i] > max_score){
+      num_max_moves = 0;
+      max_moves[num_max_moves] = i;
+      num_max_moves++;
       max_score = scores[i];
-      max_moves[num_max_moves++] = i;
     } else if(scores[i] == max_score){
-      max_moves[num_max_moves++] = i;
+      max_moves[num_max_moves] = i;
+      num_max_moves++;
     }
   }
-  if(num_max_moves == 0)
-    return 0;
+  /*
+  for(i=0;i<num_max_moves;i++){
+    printf("thread:max_moves[] = %d, moves[max_moves[%d]] = (%d,%d)\n", max_moves[i], i, moves[max_moves[i]].r, moves[max_moves[i]].c);
+  }
+  */
   int r = rand() % num_max_moves;
   return max_moves[r];
-  //memset(maxmoves, 0, TEMP_STORE * sizeof(Pos));
+  
+  /* (start) original implementation */
   /*
-  int i,j = 0; Pos maxmoves[TEMP_STORE];
+  int j = 0;
+  //int i;
+  Pos maxmoves[TEMP_STORE];
   State hold = create_state();  
   int maxscore = INT_MIN;
   int score;
@@ -155,24 +160,36 @@ int i; int j;
     place_piece(hold, moves[i], hold->turn);
     state_switch_turn(hold);
     score = state_score(hold, my_side, param);
+
     if(score > maxscore){
       j = 0;
-      maxmoves[j++] = moves[i];
+      maxmoves[j] = moves[i];
+      j++;
       maxscore = score;
-    } 
-    if(score == maxscore)
-      maxmoves[j++] = moves[i];
+    } else if(score == maxscore){
+      maxmoves[j] = moves[i];
+      j++;
+    }
+
   }
   free_state(hold);
-
   
+  for(i=0;i<j;i++){
+    printf("original:maxmoves:(%d,%d)\n", maxmoves[i].r, maxmoves[i].c);
+  }
+  */
+  /*
+
   int r = rand() % j;
 
   for(i=0;i<movec;i++){
-    if((maxmoves[r].r == moves[i].r) && (maxmoves[r].c == moves[i].c))
+    if((maxmoves[r].r == moves[i].r) && (maxmoves[r].c == moves[i].c)){
       return i;
+    }
   }
-  */  
+  */
+  /* (end) original implementation */
+
   return 0;
 }
 

@@ -7,28 +7,17 @@
 #include "game.h"
 #include "ai.h"
 
-static clock_t start, end;
-
-double cpu_am = 0;
-double cpu_pp = 0;
-double cpu_cp = 0;
-double cpu_cpa = 0;
-
-
-
 int main(int argc, char **argv){
 
-  start = clock();
-  
   struct timeval t;
   gettimeofday(&t, NULL);
   srand((long int) t.tv_usec);
-  //srand((long int) 100);
+  //srand((long int) 102);
 
   Game game = create_game();
   init_game(game);
 
-  int print_midgame_flag = 1;
+  int print_midgame_flag = 0;
   int human_player_flag = 0;
   
   while(is_end_of_game(game) == 0){
@@ -40,7 +29,7 @@ int main(int argc, char **argv){
     if(require_input(game) == 1){
       int r;
       if(game->status == B)
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 4);
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 2);
       if(game->status == W){
 
 	if(human_player_flag){
@@ -101,12 +90,6 @@ int main(int argc, char **argv){
 
   free_game(game);
   
-  end = clock();
-  printf("cpu_all = %lf\n", (double) (end - start));
-
-  printf("cpu_cpa = %lf\n", cpu_cpa);
-
-
   /*
   State state = create_state();
   init_state(state);
