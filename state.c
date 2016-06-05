@@ -20,7 +20,7 @@ int cpy_state(State dest, State src){
     return -1;
   if(src == NULL)
     return -2;
-  
+
   int r,c;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
@@ -29,6 +29,11 @@ int cpy_state(State dest, State src){
     }
   }
   dest->turn = src->turn;
+
+
+  //memcpy((void *)dest->board, (void *)src->board, BOARD_SIZE * BOARD_SIZE * sizeof(int));
+  //dest->turn = src->turn;
+  //printf("point0\n");
   
   return 0;
 }
@@ -192,9 +197,6 @@ int place_piece(State state, Pos pos, int side){
       }
     }
   }
-
-
-
   return count;
 }
 

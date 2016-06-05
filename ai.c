@@ -59,15 +59,16 @@ int consider_corner(State state, int side){
   }
   
   //Pos store[TEMP_STORE];
-  result += allowed_moves(state, NULL, side) * 4;
-  //result -= allowed_moves(state, NULL, opp_side) * 1;
+  //result += allowed_moves(state, NULL, side) * 4;
+  //result -= allowed_moves(state, NULL, opp_side) * 20;
   
     
   return result;
 }
 
-int state_score(State state, int side, int depth){
-  int result = abpruning(state, depth, INT_MIN, INT_MAX, side);
+int state_score(State state, int my_side, int param){
+  //int result = abpruning(state, param, INT_MIN, INT_MAX, my_side);
+  int result = mcts(state, param, my_side);
   return result;
 }
 
@@ -77,7 +78,7 @@ static int get_score_for_move(State state, Pos move,  int param){
   State hold = create_state();
   cpy_state(hold, state);
   int my_side = hold->turn;
-  
+  //printf("gsfm:my_side = %d\n", my_side);
   place_piece(hold, move, my_side);
   state_switch_turn(hold);
   int score = state_score(hold, my_side, param);
@@ -125,7 +126,7 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   
   int max_moves[TEMP_STORE];
   int num_max_moves = 0;
-  int max_score = INT_MIN;
+  int max_score = INT_MIN;   int sum_scores = 0;
   for(i=0;i<movec;i++){
     //printf("thread:i=%d, scores[i]=%d, max_score=%d, num_max_moves=%d\n", i, scores[i], max_score, num_max_moves);
     if(scores[i] > max_score){
@@ -137,7 +138,9 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       max_moves[num_max_moves] = i;
       num_max_moves++;
     }
+    sum_scores += scores[i];
   }
+  printf("est = %lf\n", sum_scores/movec/((double)param));
   /*
   for(i=0;i<num_max_moves;i++){
     printf("thread:max_moves[] = %d, moves[max_moves[%d]] = (%d,%d)\n", max_moves[i], i, moves[max_moves[i]].r, moves[max_moves[i]].c);
@@ -193,6 +196,17 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   return 0;
 }
 
+/*
+int strategy_control(State state, Pos *moves, int movec, int param, int side){
+  if(side == B){
+    return best_next_state(State state, Pos *moves, int movec, int param);
+  } else {
+    return best_next_state(State state, Pos *moves, int movec, int param);
+  }
+  return 0;
+}
+*/
+
 int abpruning(State state, int depth, int a, int b, int side){
   if(state == NULL)
     return -1;
@@ -238,4 +252,42 @@ int abpruning(State state, int depth, int a, int b, int side){
   free_state(next);
   return v;
 }
+
+int mcts(State state, int width, int my_side){
+  State hold = create_state();
+
+  //int my_side = opposite_side(hold->turn);
+  int opp_side = opposite_side(my_side);
+  
+  int final_score = 0;
+  Pos moves[TEMP_STORE];
+  int movec;
+  int i;
+  for(i=0;i<width;i++){
+    cpy_state(hold, state);
+    while(!state_final(hold)){
+      movec = allowed_moves(hold, moves, hold->turn);
+      if(movec>0){
+	place_piece(hold, moves[rand() % movec], hold->turn);
+      }
+      state_switch_turn(hold);
+    }
+    
+    int my_pieces = count_pieces(hold, my_side);
+    int opp_pieces = count_pieces(hold, opp_side);
+    /*
+    if(my_pieces > opp_pieces){
+      final_score++;
+    } else if(my_pieces < opp_pieces){
+      final_score--;
+    }
+    */
+    final_score += (my_pieces - opp_pieces);
+  }
+
+  //printf("final_score = %d\n", final_score);
+  free_state(hold);
+  return final_score;
+}
+
 

@@ -27,7 +27,7 @@ int print_board(Board board){
   //write(1, "\e[1m", 4);
   writecolor("  0 1 2 3 4 5 6 7 ", "52", "46");
   write(1, "\n", 1);
-  int r,c;
+  int r,c = 0;
   for(r=0;r<BOARD_SIZE;r++){
     char rownum[3] = {'0'+r, ' '};
     writecolor(rownum, "52", "46");
@@ -52,12 +52,13 @@ int print_board(Board board){
 int print_state(State state){
   if(state == NULL)
     return -1;
-
-  if(state->turn == 1){
+  
+  //printf("state->turn = %d\n", state->turn);
+  if(state->turn == W){
     write(1, "(white's turn)\n", 15);
   } else {
     write(1, "(black's turn)\n", 15);
-  }
+  } 
   print_board(state->board);
 
   return 0;

@@ -14,14 +14,18 @@
 
 // does not provide error handling
 
-// scoring functions (given state)
+// heuristic scoring functions
 int total_pieces(State state, int side);
 int consider_corner(State state, int side);
 
+int strategy_control(State state, Pos *moves, int movec, int param);
+
 // state searching algorithms
 int best_next_state(State state, Pos *moves, int movec, int param);
-int abpruning(State state, int depth, int a, int b, int side);
 
+// scoring functions
+int abpruning(State state, int depth, int a, int b, int side);
+int mcts(State state, int width, int my_side);
 
 
 #endif

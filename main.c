@@ -12,7 +12,7 @@ int main(int argc, char **argv){
   struct timeval t;
   gettimeofday(&t, NULL);
   srand((long int) t.tv_usec);
-  //srand((long int) 102);
+  //srand((long int) 111);
 
   Game game = create_game();
   init_game(game);
@@ -29,7 +29,7 @@ int main(int argc, char **argv){
     if(require_input(game) == 1){
       int r;
       if(game->status == B)
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 2);
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 1000);
       if(game->status == W){
 
 	if(human_player_flag){
@@ -52,7 +52,7 @@ int main(int argc, char **argv){
 	    break;
 	  }
 	} else {
-	  //r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 0);
+	  //r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 50);
 	  r = rand() % game->allowed_movec;
 	}
 
