@@ -7,21 +7,29 @@
 #include "game.h"
 #include "ai.h"
 
-clock_t start, end;
-static double cpu_all = 0;
+static clock_t start, end;
+
+double cpu_am = 0;
+double cpu_pp = 0;
+double cpu_cp = 0;
+double cpu_cpa = 0;
 
 
 
 int main(int argc, char **argv){
+
   start = clock();
+  
   struct timeval t;
   gettimeofday(&t, NULL);
   srand((long int) t.tv_usec);
+  //srand((long int) 100);
 
   Game game = create_game();
   init_game(game);
 
   int print_midgame_flag = 1;
+  int human_player_flag = 0;
   
   while(is_end_of_game(game) == 0){
     if(print_midgame_flag){
@@ -31,31 +39,34 @@ int main(int argc, char **argv){
 
     if(require_input(game) == 1){
       int r;
-      if(game->status == W)
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 8);
-      if(game->status == B){
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 0);
-	//r = rand() % game->allowed_movec;
-	/*
-	printf("This is your turn. Enter number to place your piece.\n");
+      if(game->status == B)
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 4);
+      if(game->status == W){
 
-	int i;
-	for(i=0;i<game->allowed_movec;i++){
-	  printf("%d:(%d,%d)\n", i, game->allowed_moves[i].r, game->allowed_moves[i].c);
-	}
-	while(1){
-	  int ret = scanf("%d", &r);
-	  if(ret < 1){
-	    printf("Invalid input. Try again.\n");
-	    continue;
+	if(human_player_flag){
+	  printf("This is your turn. Enter number to place your piece.\n");
+	  
+	  int i;
+	  for(i=0;i<game->allowed_movec;i++){
+	    printf("%d:(%d,%d)\n", i, game->allowed_moves[i].r, game->allowed_moves[i].c);
 	  }
-	  if(r>=game->allowed_movec){
-	    printf("Invalid choice. Try again.\n");
-	    continue;
+	  while(1){
+	    int ret = scanf("%d", &r);
+	    if(ret < 1){
+	      printf("Invalid input. Try again.\n");
+	      continue;
+	    }
+	    if(r>=game->allowed_movec){
+	      printf("Invalid choice. Try again.\n");
+	      continue;
+	    }
+	    break;
 	  }
-	  break;
+	} else {
+	  //r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 0);
+	  r = rand() % game->allowed_movec;
 	}
-	*/
+
       }
       if(print_midgame_flag)
 	printf("(makes move at (%d,%d))\n", game->allowed_moves[r].r, game->allowed_moves[r].c);
@@ -91,10 +102,21 @@ int main(int argc, char **argv){
   free_game(game);
   
   end = clock();
-  cpu_all = (double) (end - start);
-  //printf("cpu_all = %lf\n", cpu_all);
+  printf("cpu_all = %lf\n", (double) (end - start));
+
+  printf("cpu_cpa = %lf\n", cpu_cpa);
+
+
+  /*
+  State state = create_state();
+  init_state(state);
+  Pos store[10];
+  int x = adj_sided_pos(state->board, (Pos) {2,4}, store, B);
+  printf("x = %d\n",x);
+  free_state(state);
+  */
   
   exit(0);  
-
+  
 
 }

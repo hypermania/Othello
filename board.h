@@ -14,10 +14,6 @@
 #define W 1
 #define B 2
 
-//clock_t start_2, end_2;
-//clock_t start_1, end_1;
-//static double cpu_adjpos = 0;
-
 typedef int** Board;
 
 typedef struct {
@@ -50,10 +46,15 @@ int board_get_pos(Board board, Pos pos);
 int board_set_pos(Board board, Pos pos, int val);
 
 // return number of elems in store at success
-// does not malloc new space for store
 // return -1, -2 for pos, store error, respectively
 int adj_pos(Pos pos, Pos *store);
 // return -1, -2, -3 for board, pos, store error, respectively
 int adj_empty_pos(Board board, Pos pos, Pos *store);
+// return number of elems of side and store them in "store"
+// return -1, -2,  -4 for board, pos, side error, respectively
+// store == NULL is NOT an error
+int adj_sided_pos(Board board, Pos pos, Pos *store, int side);
+
+
 
 #endif

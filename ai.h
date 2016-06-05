@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <limits.h>
+#include <pthread.h>
 
 #include "state.h"
 #include "game.h"

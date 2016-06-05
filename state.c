@@ -10,10 +10,6 @@ State create_state(void){
 int free_state(State state){
   if(state == NULL)
     return -1;
-  //printf("cpu_am = %lf\n", cpu_am);
-  //printf("cpu_pp = %lf\n", cpu_pp);
-  //printf("cpu_cp = %lf\n", cpu_cp);
-  //printf("cpu_cpa = %lf\n", cpu_cpa);
   free_board(state->board);
   free(state);
   return 0;
@@ -77,7 +73,7 @@ int opposite_side(int side){
 }
 
 int can_place_at(State state, Pos pos, int side){
-  //start = clock();
+ 
   if(state == NULL)
     return -1;
   if(check_pos(pos) < 0)
@@ -92,34 +88,37 @@ int can_place_at(State state, Pos pos, int side){
   Board board = state->board;
   int opp_side = opposite_side(side);
   Pos adjs[ADJ_SIZE];
-  int adjc = adj_pos(pos, adjs);
+  int adjc = adj_sided_pos(board, pos, adjs, opp_side);
   int i;
   for(i=0;i<adjc;i++){
-
+    /*
     if(board_get_pos(board, adjs[i]) != opp_side)
       continue;
-
+    */
     Pos head = adjs[i];
     int direc_h = adjs[i].r - pos.r;
     int direc_v = adjs[i].c - pos.c;
-    while((check_pos(head) == 0) && (board_get_pos(board, head) == opp_side)){
+    head.r += direc_h;
+    head.c += direc_v;
+    while(board_get_pos(board, head) == opp_side){
       head.r += direc_h;
       head.c += direc_v;
     }
-
+    /*
     if(check_pos(head) < 0)
       continue;
+    */
     if(board_get_pos(board, head) == side)
       return 1;
   }
-  //end = clock();
-  //cpu_cpa += ((double) (end - start));  
+
+
   return 0;
 }
 
 
 int allowed_moves(State state, Pos *store, int side){
-  //start_1 = clock();  
+
   int need_to_store = 0;
   if(state == NULL)
     return -1;
@@ -142,15 +141,15 @@ int allowed_moves(State state, Pos *store, int side){
       }
     }
   }
-  //end_1 = clock();
-  //cpu_am += ((double) (end_1 - start_1));
+
+
   return count;
 }
 
 
 
 int place_piece(State state, Pos pos, int side){
-  //start = clock();
+
   
   if(state == NULL)
     return -1;
@@ -193,8 +192,8 @@ int place_piece(State state, Pos pos, int side){
       }
     }
   }
-  //end = clock();
-  //cpu_pp += ((double) (end - start));
+
+
 
   return count;
 }
@@ -208,7 +207,7 @@ int state_switch_turn(State state){
 
 
 int count_pieces(State state, int side){
-  //start = clock();  
+
   if(state == NULL)
     return -1;
   if(check_val(side) < 0)
@@ -225,8 +224,7 @@ int count_pieces(State state, int side){
 	count++;
     }
   }
-  //end = clock();
-  //cpu_cp += ((double) (end - start));
+
   
   return count;
 }

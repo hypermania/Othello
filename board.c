@@ -76,7 +76,6 @@ int board_set_pos(Board board, Pos pos, int val){
 }
 
 int adj_pos(Pos pos, Pos *store){
-  //start_2 = clock();
   if(check_pos(pos)<0)
     return -1;
   if(store == NULL)
@@ -95,14 +94,10 @@ int adj_pos(Pos pos, Pos *store){
       }
     }
   }
-  //end_2 = clock();
-  //cpu_adjpos += (double) (end_2 - start_2);
-
   return count;
 }
 
 int adj_empty_pos(Board board, Pos pos, Pos *store){
-
   if(board == NULL)
     return -1;
   if(check_pos(pos) < 0)
@@ -110,12 +105,295 @@ int adj_empty_pos(Board board, Pos pos, Pos *store){
   if(store == NULL)
     return -3;
 
-  Pos adjs[ADJ_SIZE];
-  int num = adj_pos(pos, adjs);
-  int i, count = 0;
-  for(i=0;i<num;i++){
-    if(board_get_pos(board, adjs[i]) == X)
-      store[count++] = adjs[i];
+  int count = 0;
+  int direc_h, direc_v;
+  for(direc_h=-1; direc_h<=1; direc_h++){
+    for(direc_v=-1; direc_v<=1; direc_v++){
+      if(direc_h != 0 || direc_v != 0){
+	Pos temp = pos;
+	temp.r += direc_h;
+	temp.c += direc_v;
+	if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == X))
+	  store[count++] = temp;
+      }
+    }
   }
+  return count;
+}
+
+int adj_sided_pos(Board board, Pos pos, Pos *store, int side){
+  if(board == NULL)
+    return -1;
+  if(check_pos(pos)<0)
+    return -2;
+  /*
+  if(store == NULL)
+    return -3;
+  */
+  if(check_side(side) < 0)
+    return -4;
+  
+  int count = 0;
+  /*
+  int direc_h, direc_v;
+  for(direc_h=-1; direc_h<=1; direc_h++){
+    for(direc_v=-1; direc_v<=1; direc_v++){
+      if(direc_h != 0 || direc_v != 0){
+	Pos temp = pos;
+	temp.r += direc_h;
+	temp.c += direc_v;
+	if((check_pos(temp) >= 0) && (board[temp.r][temp.c] == side))//&& (board_get_pos(board, temp) == side))
+	  store[count++] = temp;
+      }
+    }
+  }
+  */
+  int r = pos.r; int c = pos.c;
+  int condrlow = r==0; int condclow = c==0; int condrhi = r==BOARD_SIZE-1; int condchi = c==BOARD_SIZE-1;
+
+  if(store != NULL){
+    if(condrlow){
+      if(condclow){
+	if(board[r-0][c+1] == side)
+	  store[count++] = (Pos) {r-0, c+1};
+	if(board[r+1][c-0] == side)
+	  store[count++] = (Pos) {r+1, c-0};
+	if(board[r+1][c+1] == side)
+	  store[count++] = (Pos) {r+1, c+1};
+	
+      } else if(condchi){
+	if(board[r-0][c-1] == side)
+	  store[count++] = (Pos) {r-0, c-1};
+	if(board[r+1][c-1] == side)
+	  store[count++] = (Pos) {r+1, c-1};
+	if(board[r+1][c-0] == side)
+	  store[count++] = (Pos) {r+1, c-0};
+	
+      } else {
+	if(board[r-0][c-1] == side)
+	  store[count++] = (Pos) {r-0, c-1};
+	if(board[r-0][c+1] == side)
+	  store[count++] = (Pos) {r-0, c+1};
+	if(board[r+1][c-1] == side)
+	  store[count++] = (Pos) {r+1, c-1};
+	if(board[r+1][c-0] == side)
+	  store[count++] = (Pos) {r+1, c-0};
+	if(board[r+1][c+1] == side)
+	  store[count++] = (Pos) {r+1, c+1};
+	
+      }
+    } else if(condrhi){
+      if(condclow){
+	if(board[r-1][c-0] == side)
+	  store[count++] = (Pos) {r-1, c-0};
+	if(board[r-1][c+1] == side)
+	  store[count++] = (Pos) {r-1, c+1};
+	if(board[r-0][c+1] == side)
+	  store[count++] = (Pos) {r-0, c+1};
+	
+      } else if(condchi){
+	if(board[r-1][c-1] == side)
+	  store[count++] = (Pos) {r-1, c-1};
+	if(board[r-1][c-0] == side)
+	  store[count++] = (Pos) {r-1, c-0};
+	if(board[r-0][c-1] == side)
+	  store[count++] = (Pos) {r-0, c-1};
+	
+      } else {
+	if(board[r-1][c-1] == side)
+	  store[count++] = (Pos) {r-1, c-1};
+	if(board[r-1][c-0] == side)
+	  store[count++] = (Pos) {r-1, c-0};
+	if(board[r-1][c+1] == side)
+	  store[count++] = (Pos) {r-1, c+1};
+	if(board[r-0][c-1] == side)
+	  store[count++] = (Pos) {r-0, c-1};
+	if(board[r-0][c+1] == side)
+	  store[count++] = (Pos) {r-0, c+1};
+      }
+    } else {
+      if(condclow){
+	if(board[r-1][c-0] == side)
+	  store[count++] = (Pos) {r-1, c-0};
+	if(board[r-1][c+1] == side)
+	  store[count++] = (Pos) {r-1, c+1};
+	if(board[r-0][c+1] == side)
+	  store[count++] = (Pos) {r-0, c+1};
+	if(board[r+1][c-0] == side)
+	  store[count++] = (Pos) {r+1, c-0};
+	if(board[r+1][c+1] == side)
+	  store[count++] = (Pos) {r+1, c+1};
+	
+      } else if(condchi){
+	if(board[r-1][c-1] == side)
+	  store[count++] = (Pos) {r-1, c-1};
+	if(board[r-1][c-0] == side)
+	  store[count++] = (Pos) {r-1, c-0};
+	if(board[r-0][c-1] == side)
+	  store[count++] = (Pos) {r-0, c-1};
+	if(board[r+1][c-1] == side)
+	  store[count++] = (Pos) {r+1, c-1};
+	if(board[r+1][c-0] == side)
+	  store[count++] = (Pos) {r+1, c-0};
+      } else {
+	if(board[r-1][c-1] == side)
+	  store[count++] = (Pos) {r-1, c-1};
+	if(board[r-1][c-0] == side)
+	  store[count++] = (Pos) {r-1, c-0};
+	if(board[r-1][c+1] == side)
+	  store[count++] = (Pos) {r-1, c+1};
+	if(board[r-0][c-1] == side)
+	  store[count++] = (Pos) {r-0, c-1};
+	if(board[r-0][c+1] == side)
+	  store[count++] = (Pos) {r-0, c+1};
+	if(board[r+1][c-1] == side)
+	  store[count++] = (Pos) {r+1, c-1};
+	if(board[r+1][c-0] == side)
+	  store[count++] = (Pos) {r+1, c-0};
+	if(board[r+1][c+1] == side)
+	  store[count++] = (Pos) {r+1, c+1};
+      }
+    }
+  } else {
+
+    if(condrlow){
+      if(condclow){
+	if(board[r-0][c+1] == side)
+	  count++;
+	if(board[r+1][c-0] == side)
+	  count++;
+	if(board[r+1][c+1] == side)
+	  count++;
+	
+      } else if(condchi){
+	if(board[r-0][c-1] == side)
+	  count++;
+	if(board[r+1][c-1] == side)
+	  count++;
+	if(board[r+1][c-0] == side)
+	  count++;
+	
+      } else {
+	if(board[r-0][c-1] == side)
+	  count++;
+	if(board[r-0][c+1] == side)
+	  count++;
+	if(board[r+1][c-1] == side)
+	  count++;
+	if(board[r+1][c-0] == side)
+	  count++;
+	if(board[r+1][c+1] == side)
+	  count++;
+	
+      }
+    } else if(condrhi){
+      if(condclow){
+	if(board[r-1][c-0] == side)
+	  count++;
+	if(board[r-1][c+1] == side)
+	  count++;
+	if(board[r-0][c+1] == side)
+	  count++;
+	
+      } else if(condchi){
+	if(board[r-1][c-1] == side)
+	  count++;
+	if(board[r-1][c-0] == side)
+	  count++;
+	if(board[r-0][c-1] == side)
+	  count++;
+	
+      } else {
+	if(board[r-1][c-1] == side)
+	  count++;
+	if(board[r-1][c-0] == side)
+	  count++;
+	if(board[r-1][c+1] == side)
+	  count++;
+	if(board[r-0][c-1] == side)
+	  count++;
+	if(board[r-0][c+1] == side)
+	  count++;
+      }
+    } else {
+      if(condclow){
+	if(board[r-1][c-0] == side)
+	  count++;
+	if(board[r-1][c+1] == side)
+	  count++;
+	if(board[r-0][c+1] == side)
+	  count++;
+	if(board[r+1][c-0] == side)
+	  count++;
+	if(board[r+1][c+1] == side)
+	  count++;
+	
+      } else if(condchi){
+	if(board[r-1][c-1] == side)
+	  count++;
+	if(board[r-1][c-0] == side)
+	  count++;
+	if(board[r-0][c-1] == side)
+	  count++;
+	if(board[r+1][c-1] == side)
+	  count++;
+	if(board[r+1][c-0] == side)
+	  count++;
+      } else {
+	if(board[r-1][c-1] == side)
+	  count++;
+	if(board[r-1][c-0] == side)
+	  count++;
+	if(board[r-1][c+1] == side)
+	  count++;
+	if(board[r-0][c-1] == side)
+	  count++;
+	if(board[r-0][c+1] == side)
+	  count++;
+	if(board[r+1][c-1] == side)
+	  count++;
+	if(board[r+1][c-0] == side)
+	  count++;
+	if(board[r+1][c+1] == side)
+	  count++;
+      }
+    }
+
+  }
+  /*					
+  if(r>=1){
+    if(c>=1){
+      if(r<BOARD_SIZE-1){
+	if(c<BOARD_SIZE-1){
+	  if(board[r-1][c-1] == side)
+	    store[count++] = (Pos) {r-1, c-1};
+	  if(board[r-1][c-0] == side)
+	    store[count++] = (Pos) {r-1, c-0};
+	  if(board[r-1][c+1] == side)
+	    store[count++] = (Pos) {r-1, c+1};
+	  if(board[r-0][c-1] == side)
+	    store[count++] = (Pos) {r-0, c-1};
+	  if(board[r-0][c+1] == side)
+	    store[count++] = (Pos) {r-0, c+1};
+	  if(board[r+1][c-1] == side)
+	    store[count++] = (Pos) {r+1, c-1};
+	  if(board[r+1][c-0] == side)
+	    store[count++] = (Pos) {r+1, c-0};
+	  if(board[r+1][c+1] == side)
+	    store[count++] = (Pos) {r+1, c+1};
+	} else {
+	}
+      } else {
+
+      }
+    } else {
+      
+    }
+  } else {
+
+  }
+  */
+
+  
   return count;
 }
