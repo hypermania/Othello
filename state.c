@@ -20,7 +20,7 @@ int cpy_state(State dest, State src){
     return -1;
   if(src == NULL)
     return -2;
-
+  /*
   int r,c;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
@@ -28,12 +28,9 @@ int cpy_state(State dest, State src){
       board_set_pos(dest->board, pos, board_get_pos(src->board, pos));
     }
   }
+  */
+  memcpy((void *)dest->board, (void *)src->board, BOARD_SIZE * BOARD_SIZE * sizeof(char));
   dest->turn = src->turn;
-
-
-  //memcpy((void *)dest->board, (void *)src->board, BOARD_SIZE * BOARD_SIZE * sizeof(int));
-  //dest->turn = src->turn;
-  //printf("point0\n");
   
   return 0;
 }
@@ -78,7 +75,7 @@ int opposite_side(int side){
 }
 
 int can_place_at(State state, Pos pos, int side){
- 
+  /*
   if(state == NULL)
     return -1;
   if(check_pos(pos) < 0)
@@ -89,7 +86,8 @@ int can_place_at(State state, Pos pos, int side){
   if(board_get_pos(state->board, pos) != X){
     return 0;
   }
-
+  */
+  
   Board board = state->board;
   int opp_side = opposite_side(side);
   Pos adjs[ADJ_SIZE];
@@ -116,8 +114,6 @@ int can_place_at(State state, Pos pos, int side){
     if(board_get_pos(board, head) == side)
       return 1;
   }
-
-
   return 0;
 }
 
@@ -222,7 +218,7 @@ int count_pieces(State state, int side){
   int count = 0;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
-      if(board[r][c] == side)
+      if(board_get_pos(board, (Pos) {r,c}) == side)
 	count++;
     }
   }

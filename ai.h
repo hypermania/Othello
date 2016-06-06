@@ -16,7 +16,7 @@
 
 // heuristic scoring functions
 int total_pieces(State state, int side);
-int consider_corner(State state, int side);
+//int consider_corner(State state, int side, int is_at_final);
 
 int strategy_control(State state, Pos *moves, int movec, int param);
 

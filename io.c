@@ -32,7 +32,7 @@ int print_board(Board board){
     char rownum[3] = {'0'+r, ' '};
     writecolor(rownum, "52", "46");
     for(c=0;c<BOARD_SIZE;c++){
-      switch(board[r][c]){
+      switch(board_get_pos(board, (Pos) {r,c})){
       case 0:
 	writecolor("* ", "94", "08");
 	break;

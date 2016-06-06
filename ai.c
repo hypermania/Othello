@@ -1,17 +1,33 @@
 #include "ai.h"
 
+#define ROUNDS 100
+
 int total_pieces(State state, int side){
   return count_pieces(state, side);
 }
 
-int consider_corner(State state, int side){
+int consider_corner(State state, int side, int is_at_final){
+  //printf("consider_corner\n");
   int result;
   int mypieces = count_pieces(state, side);
   int opp_side = opposite_side(side);
   result = mypieces;
   int opppieces = count_pieces(state, opp_side);
-  
-  if(state_final(state) == 1){
+
+  /*
+  if(mypieces + opppieces == BOARD_SIZE * BOARD_SIZE){
+    if(mypieces <= opppieces){
+      return INT_MIN + 16384 + (mypieces - opppieces);
+    }
+    if(mypieces > opppieces){
+      return INT_MAX - 16384 + (mypieces - opppieces);
+    }
+  }
+  */
+
+  //Pos neighbours[4][3] = {{(Pos) {0,1}, (Pos) {1,0}, (Pos) {1,1}}, {(Pos) {0,BOARD_SIZE-2}, (Pos) {1,BOARD_SIZE-1}, (Pos) {1,BOARD_SIZE-2}}, {(Pos) {BOARD_SIZE-2,0}, (Pos) {BOARD_SIZE-1,1}, (Pos) {BOARD_SIZE-2,1}}, {(Pos) {BOARD_SIZE-1,BOARD_SIZE-2}, (Pos) {BOARD_SIZE-2,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-2,BOARD_SIZE-2}}};
+
+  if(is_at_final){//state_final(state) == 1){
     if(mypieces <= opppieces){
       return INT_MIN + 16384 + (mypieces - opppieces);
     }
@@ -20,8 +36,7 @@ int consider_corner(State state, int side){
     }
   }
 
-  Pos corners[4] = {(Pos) {0,0}, (Pos) {0,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-1,0}, (Pos) {BOARD_SIZE-1,BOARD_SIZE-1}};
-
+  Pos corners[4] = {(Pos) {0,0}, (Pos) {0,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-1,0}, (Pos) {BOARD_SIZE-1,BOARD_SIZE-1}};  
   int i;
   for(i=0;i<4;i++){
     int corner_val = state_get_pos(state, corners[i]);
@@ -40,35 +55,15 @@ int consider_corner(State state, int side){
     } else {
       result -= 8*mycount;
     }
-
-    /* //(start) original implementation
-    Pos neighbours[3];
-    adj_pos(corners[i], neighbours);
-    int j;
-    for(j=0;j<3;j++){
-      if(state_get_pos(state, neighbours[j]) == side){
-	if(corner_val == side)
-	  result += 8;
-	if(corner_val == opp_side)
-	  result -= 16;
-	if(corner_val == X)
-	  result -= 8;
-      }
-    }
-    */ //(end) orignal implementation
-  }
-  
-  //Pos store[TEMP_STORE];
-  //result += allowed_moves(state, NULL, side) * 4;
-  //result -= allowed_moves(state, NULL, opp_side) * 20;
-  
+  }  
     
   return result;
 }
 
 int state_score(State state, int my_side, int param){
-  //int result = abpruning(state, param, INT_MIN, INT_MAX, my_side);
-  int result = mcts(state, param, my_side);
+  //int result = abpruning(state, param, -ROUNDS, ROUNDS, my_side);
+  int result = abpruning(state, param, INT_MIN, INT_MAX, my_side);
+  //int result = mcts(state, param, my_side);
   return result;
 }
 
@@ -109,6 +104,9 @@ int best_next_state(State state, Pos *moves, int movec, int param){
     printf("moves:%d:(%d,%d)\n",i, moves[i].r, moves[i].c);
   }
   */
+  if(movec == 1)
+    return 0;
+  
   int scores[TEMP_STORE];
   global_state = state;
   global_moves = moves;
@@ -138,64 +136,22 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       max_moves[num_max_moves] = i;
       num_max_moves++;
     }
-    sum_scores += scores[i];
+    //sum_scores += scores[i];
+    //printf("move (%d,%d): %lf\n", moves[i].r, moves[i].c, scores[i]/((double)ROUNDS));
   }
-  printf("est = %lf\n", sum_scores/movec/((double)param));
+  //printf("avg = %lf\n", sum_scores/movec/((double)ROUNDS));
   /*
-  for(i=0;i<num_max_moves;i++){
-    printf("thread:max_moves[] = %d, moves[max_moves[%d]] = (%d,%d)\n", max_moves[i], i, moves[max_moves[i]].r, moves[max_moves[i]].c);
+  for(i=0;i<movec;i++){
+    printf("thread:moves[%d] (%d,%d), score = %d\n", i,  moves[i].r, moves[i].c, scores[i]);
   }
   */
   int r = rand() % num_max_moves;
   return max_moves[r];
   
-  /* (start) original implementation */
-  /*
-  int j = 0;
-  //int i;
-  Pos maxmoves[TEMP_STORE];
-  State hold = create_state();  
-  int maxscore = INT_MIN;
-  int score;
-  for(i=0;i<movec;i++){
-    cpy_state(hold, state);
-    int my_side = hold->turn;
-    place_piece(hold, moves[i], hold->turn);
-    state_switch_turn(hold);
-    score = state_score(hold, my_side, param);
-
-    if(score > maxscore){
-      j = 0;
-      maxmoves[j] = moves[i];
-      j++;
-      maxscore = score;
-    } else if(score == maxscore){
-      maxmoves[j] = moves[i];
-      j++;
-    }
-
-  }
-  free_state(hold);
-  
-  for(i=0;i<j;i++){
-    printf("original:maxmoves:(%d,%d)\n", maxmoves[i].r, maxmoves[i].c);
-  }
-  */
-  /*
-
-  int r = rand() % j;
-
-  for(i=0;i<movec;i++){
-    if((maxmoves[r].r == moves[i].r) && (maxmoves[r].c == moves[i].c)){
-      return i;
-    }
-  }
-  */
-  /* (end) original implementation */
-
   return 0;
 }
 
+//TODO
 /*
 int strategy_control(State state, Pos *moves, int movec, int param, int side){
   if(side == B){
@@ -210,11 +166,9 @@ int strategy_control(State state, Pos *moves, int movec, int param, int side){
 int abpruning(State state, int depth, int a, int b, int side){
   if(state == NULL)
     return -1;
-
-  int (*scorer_ptr)(State, int) = consider_corner;
-  
-  if((depth == 0) || (state_final(state) == 1))
-    return (*scorer_ptr)(state, side);
+  int is_at_final = 0;
+  if((depth == 0) || (is_at_final = (state_final(state) == 1)))
+    return consider_corner(state, side, is_at_final);
   
   Pos moves[TEMP_STORE];
   int movec = allowed_moves(state, moves, state->turn);

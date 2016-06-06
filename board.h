@@ -1,5 +1,6 @@
 // implements board interface
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 //#include <stdio.h>
 
@@ -14,7 +15,7 @@
 #define W 1
 #define B 2
 
-typedef int** Board;
+typedef char* Board;//typedef int** Board;
 
 typedef struct {
   int r;

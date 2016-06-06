@@ -8,17 +8,41 @@
 #include "ai.h"
 
 int main(int argc, char **argv){
+  /*
+  Board board = create_board();
+
+  board_set_pos(board, (Pos) {0,0}, X);
+  int i, j;
+  for(i=0;i<8;i++){
+    for(j=0;j<8;j++){
+      printf("%d ", board_get_pos(board, (Pos) {i,j}));
+    }
+    printf("\n");
+  }
+  
+  print_board(board);
+  
+  free_board(board);
+  */
+  
+  int depth;
+  if(argc > 1)
+    depth = atoi(argv[1]);
+  else
+    depth = 5;
 
   struct timeval t;
   gettimeofday(&t, NULL);
-  srand((long int) t.tv_usec);
-  //srand((long int) 111);
-
+  //srand((long int) t.tv_usec);
+  srand((long int) 100);
   Game game = create_game();
   init_game(game);
-
+  
+  int print_endgame_flag = 1;
   int print_midgame_flag = 0;
+
   int human_player_flag = 0;
+
   
   while(is_end_of_game(game) == 0){
     if(print_midgame_flag){
@@ -28,8 +52,10 @@ int main(int argc, char **argv){
 
     if(require_input(game) == 1){
       int r;
-      if(game->status == B)
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 1000);
+      if(game->status == B){
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, depth);
+	//r = rand() % game->allowed_movec;
+      }
       if(game->status == W){
 
 	if(human_player_flag){
@@ -52,7 +78,7 @@ int main(int argc, char **argv){
 	    break;
 	  }
 	} else {
-	  //r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 50);
+	  //r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 0);
 	  r = rand() % game->allowed_movec;
 	}
 
@@ -69,27 +95,29 @@ int main(int argc, char **argv){
       write(1, "\n", 1);
   }
   end_game(game);
+
   
   if(print_midgame_flag)
     print_state(game->current);
 
-  int wp = count_pieces(game->current, W);
-  int bp = count_pieces(game->current, B);
-  switch(game_result(game)){
-  case W:
-    printf("White wins: %d - %d\n", wp, bp);
-    break;
-  case B:
-    printf("Black wins: %d - %d\n", wp, bp);
-    break;
-  case X:
-    printf("Draw: %d - %d\n", wp, bp);
-    break;
+  if(print_endgame_flag){
+    
+    int wp = count_pieces(game->current, W);
+    int bp = count_pieces(game->current, B);
+    switch(game_result(game)){
+    case W:
+      printf("White wins: %d - %d\n", wp, bp);
+      break;
+    case B:
+      printf("Black wins: %d - %d\n", wp, bp);
+      break;
+    case X:
+      printf("Draw: %d - %d\n", wp, bp);
+      break;
+    }
   }
-
-
   free_game(game);
-  
+
   /*
   State state = create_state();
   init_state(state);
