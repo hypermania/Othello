@@ -8,11 +8,11 @@ program_INCLUDE_DIRS :=
 program_LIBRARY_DIRS :=
 program_LIBRARIES :=
 
-CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir)) -Ofast  -pthread -pg
+CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir)) -Ofast  -pthread -Wall #-pg
 LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir))
 LDFLAGS += $(foreach library,$(program_LIBRARIES),-l$(library))
 
-CFLAGS += -Ofast -pthread -pg
+CFLAGS += -Ofast -pthread -Wall #-pg
 
 .PHONY: all clean distclean
 

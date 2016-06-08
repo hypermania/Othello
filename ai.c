@@ -1,13 +1,14 @@
 #include "ai.h"
 
-#define ROUNDS 100
+#define ROUNDS 50
 
+// heuristic scoring functions
 int total_pieces(State state, int side){
-  return count_pieces(state, side);
+  return count_pieces(state, side) - count_pieces(state, opposite_side(side));
 }
 
-int consider_corner(State state, int side, int is_at_final){
-  //printf("consider_corner\n");
+int heuristic_score_1(State state, int side, int is_at_final){
+  //printf("heuristic_score_1\n");
   int result;
   int mypieces = count_pieces(state, side);
   int opp_side = opposite_side(side);
@@ -124,7 +125,7 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   
   int max_moves[TEMP_STORE];
   int num_max_moves = 0;
-  int max_score = INT_MIN;   int sum_scores = 0;
+  int max_score = INT_MIN; // int sum_scores = 0;
   for(i=0;i<movec;i++){
     //printf("thread:i=%d, scores[i]=%d, max_score=%d, num_max_moves=%d\n", i, scores[i], max_score, num_max_moves);
     if(scores[i] > max_score){
@@ -168,7 +169,8 @@ int abpruning(State state, int depth, int a, int b, int side){
     return -1;
   int is_at_final = 0;
   if((depth == 0) || (is_at_final = (state_final(state) == 1)))
-    return consider_corner(state, side, is_at_final);
+    //return mcts(state, ROUNDS ,side);
+    return heuristic_score_1(state, side, is_at_final);
   
   Pos moves[TEMP_STORE];
   int movec = allowed_moves(state, moves, state->turn);

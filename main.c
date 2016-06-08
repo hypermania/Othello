@@ -1,49 +1,43 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "board.h"
 #include "io.h"
 #include "game.h"
 #include "ai.h"
 
+int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_flag, int depthw, int depthb);
+int test_board(void);
+int test_state(void);
+
 int main(int argc, char **argv){
-  /*
-  Board board = create_board();
-
-  board_set_pos(board, (Pos) {0,0}, X);
-  int i, j;
-  for(i=0;i<8;i++){
-    for(j=0;j<8;j++){
-      printf("%d ", board_get_pos(board, (Pos) {i,j}));
-    }
-    printf("\n");
-  }
-  
-  print_board(board);
-  
-  free_board(board);
-  */
-  
-  int depth;
-  if(argc > 1)
-    depth = atoi(argv[1]);
-  else
-    depth = 5;
-
+  // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  //srand((long int) t.tv_usec);
-  srand((long int) 100);
+  srand((long int) t.tv_usec);
+  //srand((long int) 100);
+
+  // run the game
+  //run_game(1,1,0,0,5);
+
+  // run tests
+  printf("test_board = %d\n", test_board());
+  printf("test_state = %d\n", test_state());
+  
+  exit(0);  
+}
+int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_flag, int depthw, int depthb){
+  
   Game game = create_game();
   init_game(game);
-  
+  /*
   int print_endgame_flag = 1;
-  int print_midgame_flag = 0;
-
+  int print_midgame_flag = 1;
   int human_player_flag = 0;
-
+  */
   
+  int r = 0;
   while(is_end_of_game(game) == 0){
     if(print_midgame_flag){
       printf("Turn %d\n", game->turns);
@@ -51,12 +45,12 @@ int main(int argc, char **argv){
     }
 
     if(require_input(game) == 1){
-      int r;
-      if(game->status == B){
-	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, depth);
+
+      if(game->status == W){
+	r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, depthw);
 	//r = rand() % game->allowed_movec;
       }
-      if(game->status == W){
+      if(game->status == B){
 
 	if(human_player_flag){
 	  printf("This is your turn. Enter number to place your piece.\n");
@@ -78,8 +72,8 @@ int main(int argc, char **argv){
 	    break;
 	  }
 	} else {
-	  //r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, 0);
-	  r = rand() % game->allowed_movec;
+	  r = best_next_state(game->current, game->allowed_moves, game->allowed_movec, depthb);
+	  //r = rand() % game->allowed_movec;
 	}
 
       }
@@ -118,16 +112,59 @@ int main(int argc, char **argv){
   }
   free_game(game);
 
-  /*
+  return 0;
+}
+
+int test_board(void){
+  Board board = create_board();
+
+  int naive_board[BOARD_SIZE][BOARD_SIZE];
+  int i, j;
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      naive_board[i][j] = rand() % 3;
+    }
+  }
+  
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      if(board_get_pos(board, (Pos) {i,j}) != X)
+	return -1;
+      if(board_set_pos(board, (Pos) {i,j}, naive_board[i][j]))
+	return -1;
+    }
+  }
+
+  int ret1;
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      if((ret1 = board_get_pos(board, (Pos) {i,j})) < 0)
+	 return -1;
+      if(ret1 != naive_board[i][j])
+	return -1;
+    }
+  }
+
+
+
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      if(adj_sided_pos(board, (Pos) {i,j}, NULL, B) == -1)
+	return -1;
+    }
+  }
+  
+  //print_board(board);
+  free_board(board);
+  return 0;
+}
+
+int test_state(void){
+
   State state = create_state();
   init_state(state);
-  Pos store[10];
-  int x = adj_sided_pos(state->board, (Pos) {2,4}, store, B);
-  printf("x = %d\n",x);
-  free_state(state);
-  */
-  
-  exit(0);  
-  
 
+  free_state(state);
+
+  return 0;
 }

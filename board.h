@@ -10,12 +10,13 @@
 #define BOARD_H
 
 #define BOARD_SIZE 8
+#define BOARD_SIZE_SQR (BOARD_SIZE * BOARD_SIZE)
 #define ADJ_SIZE 8
 #define X 0
 #define W 1
 #define B 2
 
-typedef char* Board;//typedef int** Board;
+typedef char *Board;//typedef int** Board;
 
 typedef struct {
   int r;

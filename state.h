@@ -13,14 +13,6 @@ typedef struct {
   int turn; 
 } *State, State_store;
 
-static clock_t start, end;
-clock_t start_1, end_1;
-double cpu_am;
-double cpu_pp;
-double cpu_cp;
-double cpu_cpa;
-
-
 // return 0 at success, unless otherwise specified
 // return -k for error at k-th argument
 

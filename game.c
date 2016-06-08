@@ -1,8 +1,5 @@
 #include "game.h"
 
-void gameError(const char *msg){
-  write(1, msg, strlen(msg));
-}
 
 Game create_game(void){
   Game game = malloc(sizeof(Game_store));

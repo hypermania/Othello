@@ -201,6 +201,7 @@ int state_switch_turn(State state){
   if(state == NULL)
     return -1;
   state->turn = opposite_side(state->turn);
+  return 0;
 }
 
 
