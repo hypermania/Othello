@@ -5,7 +5,7 @@
 #include "state.h"
 #include "game.h"
 
-#define TEMP_STORE (BOARD_SIZE*BOARD_SIZE/2)
+
 #define MAXIMIZE 1
 #define MINIMIZE 0 
 

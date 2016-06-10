@@ -47,8 +47,8 @@ int heuristic_score_1(State state, int side, int is_at_final){
       result -= 10;
     //dangerous optimization using board interface
 
-    //int oppcount = adj_sided_pos(state->board, corners[i], neighbours, opp_side);
-    int mycount = adj_sided_pos(state->board, corners[i], NULL, side);
+    //int oppcount = adj_given_pos(state->board, corners[i], neighbours, opp_side);
+    int mycount = adj_given_pos(state->board, corners[i], NULL, side);
     if(corner_val == side) {
       result += 8*mycount;
     } else if(corner_val == opp_side){
@@ -108,13 +108,13 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   if(movec == 1)
     return 0;
   
-  int scores[TEMP_STORE];
+  int scores[POS_STORE_SIZE];
   global_state = state;
   global_moves = moves;
   global_scores = scores;
   global_param = param;
 
-  pthread_t tids[TEMP_STORE];
+  pthread_t tids[POS_STORE_SIZE];
   int i;
   for(i=0;i<movec;i++){
     pthread_create(&(tids[i]), NULL, store_score, (void *)i);
@@ -123,7 +123,7 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       pthread_join(tids[i], NULL);
   }
   
-  int max_moves[TEMP_STORE];
+  int max_moves[POS_STORE_SIZE];
   int num_max_moves = 0;
   int max_score = INT_MIN; // int sum_scores = 0;
   for(i=0;i<movec;i++){
@@ -172,7 +172,7 @@ int abpruning(State state, int depth, int a, int b, int side){
     //return mcts(state, ROUNDS ,side);
     return heuristic_score_1(state, side, is_at_final);
   
-  Pos moves[TEMP_STORE];
+  Pos moves[POS_STORE_SIZE];
   int movec = allowed_moves(state, moves, state->turn);
   State next = create_state();
   int v;
@@ -216,7 +216,7 @@ int mcts(State state, int width, int my_side){
   int opp_side = opposite_side(my_side);
   
   int final_score = 0;
-  Pos moves[TEMP_STORE];
+  Pos moves[POS_STORE_SIZE];
   int movec;
   int i;
   for(i=0;i<width;i++){

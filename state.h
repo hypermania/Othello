@@ -2,15 +2,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+//#include <time.h>
+#include <stdbool.h>
 #include "board.h"
 
 #ifndef STATE_H
 #define STATE_H
 
 typedef struct {
-  Board board;
-  int turn; 
+  // info that determines the state
+  char board[BOARD_SIZE_SQR];
+  short turn;
+
+  struct {
+    // true when transposition info are filled accordingly
+    bool trans_filled;
+    // true when previous move data exists (dependent on external info)
+    bool seq_valid;
+  } control;
+  
+  // transposition info (dependent only on board and turn)
+  int movec;
+  Pos moves[POS_STORE_SIZE];
+  //double scores[POS_STORE_SIZE]; 
+  char positions[POS_STORE_SIZE][BOARD_SIZE_SQR];
+
+  // previous move data (dependent on external info)
+  Pos seq[BOARD_SIZE_SQR];
+  int seq_num;
 } *State, State_store;
 
 // return 0 at success, unless otherwise specified
@@ -28,8 +47,6 @@ int state_get_turn(State state);
 // get opposite side; return -1 if side is not a side
 int opposite_side(int side);
 
-// success: return 0 for no and 1 for yes
-int can_place_at(State state, Pos pos, int side);
 // return number of allowed moves at success
 // is not considered an error if store == NULL
 int allowed_moves(State state, Pos *store, int side);
@@ -48,6 +65,28 @@ int count_pieces(State state, int side);
 // return 1 if this is a final state (neither player can move)
 // 0 if not
 int state_final(State state);
+
+/* functions below have no error checking */
+
+/* private functions for managing transposition data */
+// fill all transposition data
+void fill_trans(State state);
+// copies board to dest and attempts to place for side at pos
+// returns 1 when that positions is placeable
+// returns 0 otherwise
+// if 0 is returned, there is no guranteed behavior on dest
+int try_to_place(Board board, Board dest, Pos pos, int side); 
+
+
+
+/* private functions for managing past move data */
+void record_seq(State state, Pos pos);
+
+
+/* old private functions */
+
+// success: return 0 for no and 1 for yes
+int can_place_at(State state, Pos pos, int side);
 
 
 #endif
