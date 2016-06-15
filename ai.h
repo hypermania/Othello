@@ -3,14 +3,17 @@
 #include <pthread.h>
 
 #include "state.h"
-#include "game.h"
+#include "board.h"
+#include "table.h"
+
+
+#ifndef AI_H
+#define AI_H
 
 
 #define MAXIMIZE 1
 #define MINIMIZE 0 
 
-#ifndef AI_H
-#define AI_H
 
 // does not provide error handling
 

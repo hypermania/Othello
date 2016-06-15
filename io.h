@@ -5,6 +5,7 @@
 
 #include "board.h"
 #include "state.h"
+#include "genconf.h"
 
 #ifndef IO_H
 #define IO_H
@@ -16,5 +17,11 @@ static const char black_str[] = "black";
 // return -1 if ptr == NULL
 int print_board(Board board);
 int print_state(State state);
+int print_config(Config config);
+void print_options(Pos *moves, int movec);
+int get_human_response(int movec);
+// change (in place) a string (of max size n) read from a file to a Pos sequence
+Pos *file_to_seq(char *buff, int n);
+
 
 #endif

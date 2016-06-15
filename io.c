@@ -64,3 +64,70 @@ int print_state(State state){
   return 0;
 }
 
+
+void print_options(Pos *moves, int movec){
+  int i;
+  for(i=0;i<(movec+7-1)/7;i++){
+    int j = 7*i;
+    while(j<movec && j<7*(i+1)){
+      printf("%2d:(%d,%d)  ", j, moves[j].r, moves[j].c);
+      j++;
+    }
+    printf("\n");
+  }
+}
+
+
+int get_human_response(int movec){
+  int response;
+  printf("This is your turn. Enter number to place your piece.\n");
+  while(1){
+    int ret = scanf("%d", &response);
+    if(ret < 1){
+      printf("Invalid input. Try again.\n");
+      continue;
+    }
+    if(response >= movec){
+      printf("Invalid choice. Try again.\n");
+      continue;
+    }
+    break;
+  }
+  return response;
+}
+
+Pos *file_to_seq(char *buff, int n){
+  assert(buff != NULL);
+  int i;
+  for(i=0;i<n/2;i++){
+    buff[2*i+0] -= 'A';
+    buff[2*i+1] -= '1';
+    /* swapping adjacent char
+    char c;
+    c = buff[2*i+1];
+    buff[2*i+1] = buff[2*i+0];
+    buff[2*i+0] = c;
+    */
+    buff[2*i+1] ^= buff[2*i+0];
+    buff[2*i+0] ^= buff[2*i+1];
+    buff[2*i+1] ^= buff[2*i+0];
+  }
+  return (Pos *)buff;
+}
+
+int print_config(Config config){
+  assert(config != NULL);
+  
+  printf("config->x = %016lx\n", config->x);
+  printf("config->w = %016lx\n", config->w);
+  printf("config->b = %016lx\n", config->b);
+  printf("degree = %d\n",
+	 __builtin_popcountl(config->x) +
+	 __builtin_popcountl(config->w) +
+	 __builtin_popcountl(config->b)
+	 );
+  printf("is_board = %d\n", check_board_as_config(*config));
+  printf("\n");
+  
+  return 0;
+}

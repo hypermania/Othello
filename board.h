@@ -1,12 +1,12 @@
 // implements board interface
+
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-
-// BOARD_SIZE >= 4 and is even
+#include <assert.h>
 
 #ifndef BOARD_H
 #define BOARD_H
+
 
 #define BOARD_SIZE 8
 #define BOARD_SIZE_SQR (BOARD_SIZE * BOARD_SIZE)
@@ -26,7 +26,7 @@ typedef struct {
 // return a new empty board, filled with X
 Board create_board(void);
 
-// return 0 at success, -1 if board == NULL
+// return 0 at success
 int free_board(Board board);
 int init_board(Board board);
 
@@ -43,17 +43,16 @@ int check_val(char val);
 int check_side(char side);
 
 
-// return -1, -2, -3 for board, pos, val error, respectively
+/* return negative values below changed to assertions */
+
 char board_get_pos(Board board, Pos pos);
 int board_set_pos(Board board, Pos pos, char val);
 
 // return number of elems in store at success
-// return -1, -2 for pos, store error, respectively
 int adj_pos(Pos pos, Pos *store);
-// return -1, -2, -3 for board, pos, store error, respectively
+
 int adj_empty_pos(Board board, Pos pos, Pos *store);
 // return number of elems of side (can be 0) and store them in "store"
-// return -1, -2, -4 for board, pos, side error, respectively
 // store == NULL is NOT an error
 int adj_given_pos(Board board, Pos pos, Pos *store, char side);
 

@@ -17,8 +17,7 @@ Board create_board(void){
 }
 
 int free_board(Board board){
-  if(board == NULL)
-    return -1;
+  assert(board != NULL);
   /*
   int r;
   for(r=0;r<BOARD_SIZE;r++){
@@ -30,14 +29,7 @@ int free_board(Board board){
 }
 
 int init_board(Board board){
-  if(board == NULL)
-    return -1;
-  /*
-  int i;
-  for(i=0;i<BOARD_SIZE_SQR;i++){
-    board[i] = X;
-  }
-  */
+  assert(board != NULL);
   memset(board, 0, BOARD_SIZE_SQR * sizeof(char));
   return 0;
 }
@@ -64,37 +56,24 @@ int check_side(char side){
 
 
 char board_get_pos(Board board, Pos pos){
-
-  if(board == NULL){
-    //printf("board == NULL\n");
-    return -1;
-  }
-
-  if(check_pos(pos)<0){
-    //printf("check_pos(pos) < 0, pos = (%d,%d)\n", pos.r, pos.c);
-    return -2;
-  }
+  assert(board != NULL);
+  assert(check_pos(pos) == 0);
 
   return board[BOARD_SIZE * pos.r + pos.c];
 }
 
 int board_set_pos(Board board, Pos pos, char val){
-  if(board == NULL)
-    return -1;
-  if(check_pos(pos)<0)
-    return -2;
-  if(check_val(val)<0)
-    return -3;
-  //if(val == W)
+  assert(board != NULL);
+  assert(check_pos(pos) == 0);
+  assert(check_val(val) == 0);
+
   board[BOARD_SIZE * pos.r + pos.c] =  (char) val;
   return 0;
 }
 
 int adj_pos(Pos pos, Pos *store){
-  if(check_pos(pos)<0)
-    return -1;
-  if(store == NULL)
-    return -2;
+  assert(check_pos(pos) == 0);  
+  assert(store != NULL);
   
   int count = 0;
   int direc_h, direc_v;
@@ -113,12 +92,9 @@ int adj_pos(Pos pos, Pos *store){
 }
 
 int adj_empty_pos(Board board, Pos pos, Pos *store){
-  if(board == NULL)
-    return -1;
-  if(check_pos(pos) < 0)
-    return -2;
-  if(store == NULL)
-    return -3;
+  assert(board != NULL);
+  assert(check_pos(pos) == 0);
+  assert(store != NULL);
 
   int count = 0;
   int direc_h, direc_v;
@@ -136,19 +112,10 @@ int adj_empty_pos(Board board, Pos pos, Pos *store){
   return count;
 }
 
-int adj_given_pos(Board board, Pos pos, Pos *store, char side){
-  if(board == NULL)
-    return -1;
-  if(check_pos(pos)<0)
-    return -2;
-  /*
-  if(store == NULL)
-    return -3;
-  */
-  /*
-  if(check_side(side) < 0)
-    return -4;
-  */
+int adj_given_pos(Board board, Pos pos, Pos *store, char val){
+  assert(board != NULL);
+  assert(check_pos(pos) == 0);
+  assert(check_val(val) == 0);
 
   int count = 0;
   /*
@@ -161,7 +128,7 @@ int adj_given_pos(Board board, Pos pos, Pos *store, char side){
 	  temp = pos;
 	  temp.r += direc_h;
 	  temp.c += direc_v;
-	  if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == side))
+	  if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == val))
 	    count++;
 	}
       }
@@ -173,7 +140,7 @@ int adj_given_pos(Board board, Pos pos, Pos *store, char side){
 	  temp = pos;
 	  temp.r += direc_h;
 	  temp.c += direc_v;
-	  if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == side))
+	  if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == val))
 	    store[count++] = temp;
 	}
       }
@@ -188,103 +155,103 @@ int adj_given_pos(Board board, Pos pos, Pos *store, char side){
   if(store != NULL){
     if(condrlow){
       if(condclow){
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  store[count++] = (Pos) {r-0, c+1};
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  store[count++] = (Pos) {r+1, c-0};
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  store[count++] = (Pos) {r+1, c+1};
 	
       } else if(condchi){
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  store[count++] = (Pos) {r-0, c-1};
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  store[count++] = (Pos) {r+1, c-1};
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  store[count++] = (Pos) {r+1, c-0};
 	
       } else {
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  store[count++] = (Pos) {r-0, c-1};
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  store[count++] = (Pos) {r-0, c+1};
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  store[count++] = (Pos) {r+1, c-1};
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  store[count++] = (Pos) {r+1, c-0};
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  store[count++] = (Pos) {r+1, c+1};
 	
       }
     } else if(condrhi){
       if(condclow){
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  store[count++] = (Pos) {r-1, c-0};
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  store[count++] = (Pos) {r-1, c+1};
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  store[count++] = (Pos) {r-0, c+1};
 	
       } else if(condchi){
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  store[count++] = (Pos) {r-1, c-1};
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  store[count++] = (Pos) {r-1, c-0};
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  store[count++] = (Pos) {r-0, c-1};
 	
       } else {
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  store[count++] = (Pos) {r-1, c-1};
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  store[count++] = (Pos) {r-1, c-0};
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  store[count++] = (Pos) {r-1, c+1};
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  store[count++] = (Pos) {r-0, c-1};
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  store[count++] = (Pos) {r-0, c+1};
       }
     } else {
       if(condclow){
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  store[count++] = (Pos) {r-1, c-0};
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  store[count++] = (Pos) {r-1, c+1};
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  store[count++] = (Pos) {r-0, c+1};
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  store[count++] = (Pos) {r+1, c-0};
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  store[count++] = (Pos) {r+1, c+1};
 	
       } else if(condchi){
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  store[count++] = (Pos) {r-1, c-1};
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  store[count++] = (Pos) {r-1, c-0};
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  store[count++] = (Pos) {r-0, c-1};
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  store[count++] = (Pos) {r+1, c-1};
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  store[count++] = (Pos) {r+1, c-0};
       } else {
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  store[count++] = (Pos) {r-1, c-1};
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  store[count++] = (Pos) {r-1, c-0};
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  store[count++] = (Pos) {r-1, c+1};
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  store[count++] = (Pos) {r-0, c-1};
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  store[count++] = (Pos) {r-0, c+1};
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  store[count++] = (Pos) {r+1, c-1};
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  store[count++] = (Pos) {r+1, c-0};
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  store[count++] = (Pos) {r+1, c+1};
       }
     }
@@ -292,103 +259,103 @@ int adj_given_pos(Board board, Pos pos, Pos *store, char side){
 
     if(condrlow){
       if(condclow){
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  count++;
 	
       } else if(condchi){
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  count++;
 	
       } else {
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  count++;
 	
       }
     } else if(condrhi){
       if(condclow){
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  count++;
 	
       } else if(condchi){
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  count++;
 	
       } else {
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  count++;
       }
     } else {
       if(condclow){
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  count++;
 	
       } else if(condchi){
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  count++;
       } else {
-	if(board[BOARD_SIZE * (r-1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-1) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r-0) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r-0) + (c+1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-1)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c-0)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c-0)] == val)
 	  count++;
-	if(board[BOARD_SIZE * (r+1) + (c+1)] == side)
+	if(board[BOARD_SIZE * (r+1) + (c+1)] == val)
 	  count++;
       }
     }

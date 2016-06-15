@@ -113,7 +113,9 @@ int can_place_at(State state, Pos pos, int side){
 
 
 int allowed_moves(State state, Pos *store, int side){
-
+  assert(state != NULL);
+  assert(check_side(side) == 0);
+  
   if(side == state->turn){
     if(state->control.trans_filled == false){
       fill_trans(state);
@@ -170,13 +172,9 @@ int allowed_moves(State state, Pos *store, int side){
 
 
 int place_piece(State state, Pos pos, int side){
-  
-  if(state == NULL)
-    return -1;
-  if(check_pos(pos) < 0)
-    return -2;
-  if(check_val(side) < 0)
-    return -3;
+  assert(state != NULL);
+  assert(check_pos(pos) == 0);
+  assert(check_side(side) == 0);
 
   if(state->control.trans_filled && (side == state->turn)){
     int i;
@@ -184,6 +182,7 @@ int place_piece(State state, Pos pos, int side){
       if(pos.r == state->moves[i].r && pos.c == state->moves[i].c){
 	memcpy(state->board, state->positions[i], BOARD_SIZE_SQR * sizeof(char));
 	state->control.trans_filled = false;
+	record_seq(state, pos);
 	return 0;
       }
     }
@@ -223,26 +222,21 @@ int place_piece(State state, Pos pos, int side){
       }
     }
   }
+  record_seq(state, pos);
   return count;
 }
 
 
 int state_switch_turn(State state){
-  if(state == NULL)
-    return -1;
+  assert(state != NULL);
   state->turn = opposite_side(state->turn);
   return 0;
 }
 
 
 int count_pieces(State state, int side){
-
-  if(state == NULL)
-    return -1;
-  if(check_val(side) < 0)
-    return -2;
-  if(side == X)
-    return -2;
+  assert(state != NULL);
+  assert(check_side(side) == 0);
 
   Board board = state->board;
   int r, c;
@@ -259,8 +253,8 @@ int count_pieces(State state, int side){
 }
 
 int state_final(State state){
-  if(state == NULL)
-    return -1;
+  assert(state != NULL);
+
   if((allowed_moves(state, NULL, W) == 0) && (allowed_moves(state, NULL, B) == 0))
     return 1;
   return 0;
@@ -270,6 +264,8 @@ int state_final(State state){
 /* below are internal function: no error checking */
 
 void fill_trans(State state){
+  assert(state != NULL);
+  
   if(state->control.trans_filled == false){
     Board board = state->board;
     int movec = 0;
@@ -289,6 +285,11 @@ void fill_trans(State state){
 
 
 int try_to_place(Board board, Board dest, Pos pos, int side){
+  assert(board != NULL);
+  assert(dest != NULL);
+  assert(check_pos(pos) == 0);
+  assert(check_side(side) == 0);
+  
   memcpy(dest, board, BOARD_SIZE_SQR * sizeof(char));
 
   int opp_side = opposite_side(side);
@@ -330,6 +331,9 @@ int try_to_place(Board board, Board dest, Pos pos, int side){
 }
 
 void record_seq(State state, Pos pos){
+  assert(state != NULL);
+  assert(check_pos(pos) == 0);
+  
   state->seq[state->seq_num++] = pos;
 }
 

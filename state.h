@@ -1,13 +1,16 @@
 // implements core game utilities
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <time.h>
 #include <stdbool.h>
 #include "board.h"
 
 #ifndef STATE_H
 #define STATE_H
+
 
 typedef struct {
   // info that determines the state
@@ -18,7 +21,7 @@ typedef struct {
     // true when transposition info are filled accordingly
     bool trans_filled;
     // true when previous move data exists (dependent on external info)
-    bool seq_valid;
+    bool seq_valid; // seems useless, should delete
   } control;
   
   // transposition info (dependent only on board and turn)
@@ -32,8 +35,9 @@ typedef struct {
   int seq_num;
 } *State, State_store;
 
+/* assertions for wrong inputs */
+
 // return 0 at success, unless otherwise specified
-// return -k for error at k-th argument
 
 State create_state(void);
 int free_state(State state);

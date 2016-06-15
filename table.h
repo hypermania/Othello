@@ -1,8 +1,6 @@
 /* A hash table for storing game State information,
    as well as an interface for reading/writing information
    to the table.
-   
-
  */
 
 #include <stdlib.h>
