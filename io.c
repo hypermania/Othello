@@ -127,7 +127,6 @@ int print_config(Config config){
 	 __builtin_popcountl(config->b)
 	 );
   printf("is_board = %d\n", check_board_as_config(*config));
-  printf("\n");
   
   return 0;
 }

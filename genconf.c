@@ -61,11 +61,16 @@ int board_to_conf(Board board, Config config){
 
 int match_conf(Config boards, Config config, int n){
   assert(boards != NULL);
+  int i;
+  /*
+  for(i=0;i<n;i++){
+    assert(check_board_as_config(boards[i]));
+  }
+  */
   assert(config != NULL);
 
   Config board = create_and_init_config();
   
-  int i;
   int count = 0;
   for(i=0;i<n;i++){
     memcpy(board, &boards[i], sizeof(Config_store));
@@ -73,12 +78,42 @@ int match_conf(Config boards, Config config, int n){
     board->w &= config->w;
     board->b &= config->b;
 
-    if(board->x==config->x && board->w==config->w && board->b==config->b){
+    if((board->x==config->x) && (board->w==config->w) && (board->b==config->b)){
+      count++;
+    }
+
+  }
+  free(board);
+  return count;
+}
+
+int match_conf_nocreate(Config boards, Config config, int n){
+  assert(boards != NULL);
+  int i;
+  assert(config != NULL);
+  
+  int count = 0;
+  for(i=0;i<n;i++){
+    if(((boards[i].x & config->x)==config->x) &&
+       ((boards[i].w & config->w)==config->w) &&
+       ((boards[i].b & config->b)==config->b)){
       count++;
     }
 
   }
   return count;
+}
+
+int match_one_conf(Config boards, Config config){
+  assert(boards != NULL);
+  assert(config != NULL);
+  if(((boards->x & config->x)==config->x) &&
+     ((boards->w & config->w)==config->w) &&
+     ((boards->b & config->b)==config->b)){
+    return 1;
+
+  }
+  return 0;
 }
 
 
@@ -90,7 +125,7 @@ int genconf_from_seq(State state, Pos *seq, Config boards){
   int turn = 0;
   board_to_conf(state->board, &boards[turn]);
   Pos moves[POS_STORE_SIZE]; int movec; 
-  //init_state(state);
+  init_state(state);
   while(!state_final(state)){
     movec = allowed_moves(state, moves, state->turn);
     if(movec == 0){
@@ -102,9 +137,11 @@ int genconf_from_seq(State state, Pos *seq, Config boards){
 	  place_piece(state, seq[turn], state->turn);
 	  state_switch_turn(state);
 	  moved = 1;
+	  break;
 	}
       }
       if(moved == 0){
+	turn = 0;
 	break;
       }
       turn++;
@@ -113,4 +150,5 @@ int genconf_from_seq(State state, Pos *seq, Config boards){
   }
   return turn;
 }
+
 

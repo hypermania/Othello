@@ -1,14 +1,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
-
+#include <math.h>
+#include <fcntl.h>
 #include "state.h"
 #include "io.h"
 #include "genconf.h"
 #include "game.h"
+#include "fit_weight.h"
 #include "test.h"
 
 #define BUFF_SIZE 256
+#define TOTAL_GAMES 117752
+
+int match_one_config(void);
+int process_games_into_configs(Example *examples);
+int read_examples_from_file(Example *examples);
 
 int main(int argc, char **argv){
   // set up random number generator
@@ -17,37 +24,79 @@ int main(int argc, char **argv){
   //srand((long int) t.tv_usec);
   srand((long int) 100);
 
-  int total_match = 0;
+  int n = 8;
   
-  char buff[BUFF_SIZE];
-  memset(buff, 0, BUFF_SIZE);
-   
-  FILE *fp;
-  fp = fopen("./game_base/all_games.txt", "r");
-  State state = create_state();
+  Weight weight;
+  weight.n = n;
+  weight.c = create_and_init_config_list(n);
+  weight.w = malloc(n * sizeof(double));
+  /*
   int i;
-  
-  while(!feof(fp)){
-    fgets(buff, BUFF_SIZE, fp);
-    Pos *seq = file_to_seq(buff, BUFF_SIZE);
-    
-    
-    Config boards = create_and_init_config_list(100);
-    Config config = create_and_init_config();
-    init_state(state);
-    int turns = genconf_from_seq(state, seq, boards);
-    if(turns > 0){
-      
-      config->w = 0x00000000000000ff;
-      int matches = match_conf(boards, config, turns);
-      total_match += matches;
-    }
-    
+  for(i=0;i<n;i++){
+    weight.c[i].w = rand();
+    weight.c[i].b = 0;
+    weight.c[i].x = 0;
+
+    weight.w[i] = 0;
   }
-  printf("total = %d\n", total_match);
-  printf("percentage = %lf\n", (double)total_match/(111000*60));
+  */
+  long int corners[4] = {0x0000000000000001,
+			 0x0000000000000080,
+			 0x8000000000000000,
+			 0x0100000000000000};
+
+  int i;
+  for(i=0;i<4;i++){
+    weight.c[2*i].w = corners[i];
+    weight.c[2*i].b = 0;
+    weight.c[2*i].x = 0;
+
+    weight.w[2*i] = 0;
+    
+    weight.c[2*i+1].w = 0;
+    weight.c[2*i+1].b = corners[i];
+    weight.c[2*i+1].x = 0;
+
+    weight.w[2*i+1] = 0;
+  }
+
+    
+  Example *examples = malloc(TOTAL_GAMES * 60 * sizeof(Example));
+
+
+  FILE *fp;
+  fp = fopen("./examples.dat", "r");
+
+  fseek(fp, 0L , SEEK_END);
+  long int lSize = ftell(fp);
+  rewind(fp);
+  int count_examples = lSize/sizeof(Example);
+  printf("lSize=%ld, lSize/sizeof(Example)=%ld\n", lSize, lSize/sizeof(Example));
+  fread(examples, lSize, 1, fp);
+
+  fclose(fp);
   
-  free_state(state);
+  //int count_examples = process_games_into_configs(examples);
+  printf("(main) count_examples = %d\n", count_examples);
+  
+  //int j; for(j=0;j<50;j++){
+  while(1){
+    //printf("%d-th iteration:\n", j);
+    fit_weight_from_examples(&weight, examples, count_examples, 0.0001);
+
+    for(i=0;i<n;i++){
+      printf("w[%d]=%30.20lf\n", i, weight.w[i]);
+    }
+    printf("\n");
+
+  }
+
+  /*
+  for(current = examples; current != end; current++){
+    print_config(&(current->board));
+    printf("score = %d\n\n", current->score);
+  }
+  */
 
   
   // run tests
@@ -65,3 +114,118 @@ int main(int argc, char **argv){
   exit(0);  
 }
 
+
+
+int process_games_into_configs(Example *examples){
+
+  FILE *fp;
+  fp = fopen("./game_base/all_games.txt", "r");
+  // temporary storage
+  State state = create_state();
+  char buff[BUFF_SIZE];
+  memset(buff, 0, BUFF_SIZE);
+
+  // examples to be loaded
+
+  Example *current = examples;
+  int count_games = 0; int count_examples = 0;
+  while(!feof(fp)){
+
+    fgets(buff, BUFF_SIZE, fp);
+    Pos *seq = file_to_seq(buff, BUFF_SIZE);
+    
+    int turns = example_from_seq(state, seq, current);
+    if(turns > 0){
+      current += turns; 
+      count_examples += turns;
+      count_games++;
+    }
+    if(count_games % 5000 == 0){
+      printf("count_games = %d\n", count_games);
+    }
+  }
+  //Example *end = current;
+
+  printf("count_games = %d\n", count_games);
+  printf("count_examples = %d\n", count_examples);
+  //printf("example size = %ld\n",  sizeof(Example));
+  
+  //int fd = open("examples.dat", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+  //write(fd, examples, count_examples * sizeof(Example));
+  //close(fd);
+  
+  fclose(fp);
+  
+  return count_examples;
+}
+
+
+
+int match_one_config(void){
+
+  FILE *fp;
+  fp = fopen("./game_base/all_games.txt", "r");
+
+  fseek( fp , 0L , SEEK_END);
+  long int lSize = ftell(fp);
+  rewind(fp);
+  
+  char *buff = calloc(1, lSize+1);
+  memset(buff, 0, BUFF_SIZE);
+
+  
+  // temporary storage
+  State state = create_state();
+  Config boards = create_and_init_config_list(100);
+
+  // the config to be tested
+  Config config = create_and_init_config();
+  config->w = 0x000000000000ffff;
+  config->b = 0x0000000000000000;
+  config->x = 0x0000000000000000;
+
+  // the percentage aimed for and its standard deviation (for d = 1)
+  double q = 0.00001;
+  double sd = sqrt(q * (1-q));
+
+  // total match for the config
+  int total_match = 0; int total_boards = 0; int total_games = 0;
+  while(!feof(fp)){
+    // read a line of file
+    fgets(buff, BUFF_SIZE, fp);
+    Pos *seq = file_to_seq(buff, BUFF_SIZE);
+    
+    // generate the board in config form from the read line of file
+    init_state(state);
+    int turns = genconf_from_seq(state, seq, boards);
+    // if the generated board is valid, compare it to the config to be tested
+    if(turns > 0){
+      int matches = match_conf(boards, config, turns);
+      total_match += matches;
+      total_boards += turns;
+      total_games += 1;
+    }
+    if(total_games % 1 == 0){
+      // normalized standard deviation
+    double z = ((double)total_match)/((double)total_boards) - q;
+    z /= sd/sqrt((double)total_boards);
+    if(z > +8)
+      break;
+    if(z < -8)
+      break;
+    printf("total_games = %d\n", total_games);
+    printf("z-score = %lf\n", z);
+    printf("percentage = %lf\n\n", (double)total_match/total_boards);
+    }
+  }
+  
+  printf("total_games = %d\n", total_games);
+  printf("total_boards = %d\n", total_boards);
+  printf("total_match = %d\n", total_match);
+  printf("percentage = %lf\n\n", (double)total_match/total_boards);
+  
+  free_state(state);
+
+  return 0;
+
+}

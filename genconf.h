@@ -8,6 +8,7 @@
 
 #define LOG_BOARD_SIZE 3
 #define ATOM(r,c) (((unsigned long int) 0x8000000000000000) >> ((r << LOG_BOARD_SIZE) + c))
+#define GAME_LENGTH 60
 
 typedef struct {
   /* The long ints here have 64 bits, 
@@ -23,6 +24,7 @@ typedef struct {
 
 } Config_store, *Config;
 
+
 Config create_and_init_config(void);
 Config create_and_init_config_list(int length);
 
@@ -35,12 +37,14 @@ int board_to_conf(Board board, Config config);
 
 // match a maximum of n (converted) boards to a given config
 // returns number of matches
-int match_conf(Config boards, Config config, int n);
+int match_conf(Config boards, Config config, int n); // deprecated
+int match_conf_nocreate(Config boards, Config config, int n);
+int match_one_conf(Config boards, Config config);
 
-// return number of boards generated at success
+
+// return number of boards/examples generated at success
 // return 0 at failure (such as incorrect game sequence)
 int genconf_from_seq(State state, Pos *seq, Config boards);
-
 
 
 
