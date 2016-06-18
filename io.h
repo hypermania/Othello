@@ -6,6 +6,7 @@
 #include "board.h"
 #include "state.h"
 #include "genconf.h"
+#include "fit_weight.h"
 
 #ifndef IO_H
 #define IO_H
@@ -22,6 +23,9 @@ void print_options(Pos *moves, int movec);
 int get_human_response(int movec);
 // change (in place) a string (of max size n) read from a file to a Pos sequence
 Pos *file_to_seq(char *buff, int n);
+Pos *randomized_file_to_seq(char *buff, int n);
+
+Example *read_examples_from_file(const char *filename, int *count_examples);
 
 
 #endif

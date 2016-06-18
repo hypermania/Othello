@@ -102,15 +102,41 @@ Pos *file_to_seq(char *buff, int n){
   for(i=0;i<n/2;i++){
     buff[2*i+0] -= 'A';
     buff[2*i+1] -= '1';
-    /* swapping adjacent char
-    char c;
-    c = buff[2*i+1];
-    buff[2*i+1] = buff[2*i+0];
-    buff[2*i+0] = c;
-    */
+    // swapping adjacent char
     buff[2*i+1] ^= buff[2*i+0];
     buff[2*i+0] ^= buff[2*i+1];
     buff[2*i+1] ^= buff[2*i+0];
+  }
+  return (Pos *)buff;
+}
+
+Pos *randomized_file_to_seq(char *buff, int n){
+  assert(buff != NULL);
+  int i;
+  for(i=0;i<n/2;i++){
+    // preprocess
+    buff[2*i+0] -= 'A';
+    buff[2*i+1] -= '1';
+    // swapping adjacent char
+    buff[2*i+1] ^= buff[2*i+0];
+    buff[2*i+0] ^= buff[2*i+1];
+    buff[2*i+1] ^= buff[2*i+0];
+  }
+  // filp along diagonal at random
+  if(rand() % 2){
+    for(i=0;i<n/2;i++){
+      // swap row and column
+      buff[2*i+1] ^= buff[2*i+0];
+      buff[2*i+0] ^= buff[2*i+1];
+      buff[2*i+1] ^= buff[2*i+0];
+    }
+  }
+  // flip along reverse diagonal at random
+  if(rand() % 2){
+    for(i=0;i<n/2;i++){
+      buff[2*i+0] = BOARD_SIZE - 1 - buff[2*i+0];
+      buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+1];
+    }
   }
   return (Pos *)buff;
 }
@@ -129,4 +155,28 @@ int print_config(Config config){
   printf("is_board = %d\n", check_board_as_config(*config));
   
   return 0;
+}
+
+Example *read_examples_from_file(const char *filename, int *count_examples_ptr){
+
+  printf("reading examples from file %s .....\n", filename);
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("failed: file access error\n");
+    exit(0);
+    //return NULL;
+  }
+
+  fseek(fp, 0L , SEEK_END);
+  long int lSize = ftell(fp);
+  rewind(fp);
+  *count_examples_ptr = lSize/sizeof(Example);
+  
+  printf("file size= %ld\ncount_examples = %d\n", lSize, *count_examples_ptr);
+
+  Example *examples = malloc(lSize);
+  fread(examples, lSize, 1, fp);
+  fclose(fp);
+
+  return examples;
 }

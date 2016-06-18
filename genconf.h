@@ -7,7 +7,7 @@
 #define CONFIG_H
 
 #define LOG_BOARD_SIZE 3
-#define ATOM(r,c) (((unsigned long int) 0x8000000000000000) >> ((r << LOG_BOARD_SIZE) + c))
+#define ATOM(r,c) (((unsigned long int) 0x8000000000000000) >> (((r) << LOG_BOARD_SIZE) + (c)))
 #define GAME_LENGTH 60
 
 typedef struct {
@@ -17,7 +17,7 @@ typedef struct {
      and 1 denotes occupied spot. (by black or white, respectively)
    */
   /* should satisfy x&w == 0, w&b == 0, x&b==0 */
-  /* board represents a config such that x^w^b == 0xff...ff*/
+  /* board represents a config such that x^w^b == 0xff...ff */
   unsigned long int x;
   unsigned long int w;
   unsigned long int b;
