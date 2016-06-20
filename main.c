@@ -29,37 +29,80 @@ int main(int argc, char **argv){
   process_games_into_examples(examples);
   */
 
+  // specifying the weight
+  /*
+  int i;
   const int n = 32;
   Weight weight;
   weight.n = n;
   weight.c = create_and_init_config_list(n);
   weight.w = malloc(n * sizeof(double));
 
-  long int corners[16] = {ATOM(0,0), ATOM(0,1), ATOM(1,0), ATOM(1,1),
+
+  long int places[64] = {ATOM(0,0), ATOM(0,1), ATOM(1,0), ATOM(1,1),
 			  ATOM(0,7), ATOM(0,6), ATOM(1,7), ATOM(1,6),
 			  ATOM(7,0), ATOM(7,1), ATOM(6,0), ATOM(6,1),
 			  ATOM(7,7), ATOM(7,6), ATOM(6,7), ATOM(6,6)
   };
-  
-  int i;
+
+
   for(i=0;i<n/2;i++){
-    weight.c[2*i].w = corners[i];
+    weight.c[2*i].w = places[i];
     weight.c[2*i].b = 0;
     weight.c[2*i].x = 0;
 
     weight.w[2*i] = 0;
     
     weight.c[2*i+1].w = 0;
-    weight.c[2*i+1].b = corners[i];
+    weight.c[2*i+1].b = places[i];
     weight.c[2*i+1].x = 0;
 
     weight.w[2*i+1] = 0;
   }
-
+  */
+  
   /*
   int count_examples;
   Example *examples = read_examples_from_file("./example_dat/randomized_examples.dat", &count_examples);
 
+  Config boards = malloc(count_examples * sizeof(Config_store));
+  int i;
+  for(i=0;i<count_examples;i++){
+    boards[i].x = examples[i].board.x;
+    boards[i].w = examples[i].board.w;
+    boards[i].b = examples[i].board.b;
+  }
+  */
+
+
+  int i;
+  int count_examples;
+  Config boards = read_configs_from_file("./genconf_dat/boards.dat", &count_examples);
+  
+  int n_v; int n_b = count_examples;
+  Config variations =
+    list_variations(ATOM(0,0) | ATOM(0,1)
+		    , &n_v);
+
+  int *matches = match_variations(variations, boards, n_v, n_b);
+  for(i=0;i<n_v;i++){
+    print_config(&variations[i]);
+    printf("matches[%d] = %d\n\n", i, matches[i]);
+  }
+
+  double *freqs = malloc(n_v * sizeof(double)); double total = 0;
+  for(i=0;i<n_v;i++){
+    freqs[i] = (double)matches[i]/n_b/4;
+    total += freqs[i];
+    printf("freqs[%d] = %12.10lf\n", i, freqs[i]);
+  }
+
+  printf("total = %lf\n", total);
+
+
+  
+  
+  /*
   // categorizing examples by number of pieces
   Example *categories[CAT_NUM];
   int cat_sizes[CAT_NUM];
@@ -80,7 +123,7 @@ int main(int argc, char **argv){
   */
 
   // read categorized examples from file
-
+  /*
   Example *categories[CAT_NUM];
   int cat_sizes[CAT_NUM];
 
@@ -94,11 +137,13 @@ int main(int argc, char **argv){
   int cat = 8;
   Example *examples = categories[cat]; int N = cat_sizes[cat];
 
-  fit_to_precision(&weight, examples, N, 0.0003, 0.00000001, true);
+  grad_descent(&weight, examples, N, 0.00001, 0.00001, true);
 
   for(i=0;i<weight.n;i++){
     printf("weight.w[%d]=%30.20lf\n", i, weight.w[i]);
   }
+
+  printf("total error = %30.20lf\n", total_error(weight, examples, N));
   
   for(i=0;i<CAT_NUM;i++){
     free(categories[i]);
@@ -106,47 +151,14 @@ int main(int argc, char **argv){
 
   free(weight.c);
   free(weight.w);
-
-  for(i=0;i<CAT_NUM;i++){
-    free(categories[i]);
-  }
-
-  
-  // weight fitting
-  /*
-  int cat = 8;
-  while(1){
-    
-    double *delta = fit_weight_from_examples(&weight, categories[cat], cat_sizes[cat], 0.0001);
-
-    for(i=0;i<n;i++){
-      printf("w[%d]=%30.20lf\n", i, weight.w[i]);
-    }
-    double delta_l1_norm = 0;
-    for(i=0;i<weight.n;i++){
-      delta_l1_norm += fabs(delta[i]);
-    }
-    printf("delta_l1_norm = %30.20lf\n", delta_l1_norm);
-    if(delta_l1_norm < 0.00000001){
-      free(delta);
-      break;
-    }
-    free(delta);
-    printf("\n");
-    break;
-  }
-
-  for(i=0;i<CAT_NUM;i++){
-    free(categories[i]);
-  }
-
-*/
+  */
   
   // run tests
   /*
   printf("test_board = %d\n", test_board());
   printf("test_state = %d\n", test_state());
   printf("test_table = %d\n", test_table());
+
   printf("test_genconf = %d\n", test_genconf());
   */
 
@@ -245,7 +257,7 @@ int match_one_config(void){
     int turns = genconf_from_seq(state, seq, boards);
     // if the generated board is valid, compare it to the config to be tested
     if(turns > 0){
-      int matches = match_conf(boards, config, turns);
+      int matches = match_conf_nocreate(boards, config, turns);
       total_match += matches;
       total_boards += turns;
       total_games += 1;

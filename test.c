@@ -2,33 +2,77 @@
 
 int test_genconf(void){
 
-  int i; int j;
-  for(i=0;i<BOARD_SIZE;i++){
-    for(j=0;j<BOARD_SIZE;j++){
-      printf("ATOM(%d,%d) = %016lx\n", i, j,  ATOM(i,j));
+  int r, c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      Config_store conf;
+      conf.x = ATOM(r, c);
+      conf.w = 0;
+      conf.b = 0;
+
+      Config_store diag = reflect_diag(conf);
+      if(ATOM(c,r) != diag.x){
+	printf("reflect error\n");
+	return 1;
+      }
+      
+      Config_store rdiag = reflect_rdiag(conf);
+      if(ATOM(BOARD_SIZE-r-1, BOARD_SIZE-c-1) != rdiag.x){
+	printf("reflect error\n");
+	return 1;
+      }
+
+      Config_store bdiag = reflect_rdiag(reflect_diag(conf));
+      if(ATOM(BOARD_SIZE-c-1, BOARD_SIZE-r-1) != bdiag.x){
+	printf("reflect error\n");
+	return 1;
+      }
     }
   }
 
-  printf("init state board and convert it to config:\n");
+  /*
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      printf("ATOM(%d,%d) = %016lx\n", r, c,  ATOM(r,c));
+    }
+  }
+  */
   State state = create_state();
   init_state(state);
   Config config = create_and_init_config();
   board_to_conf(state->board, config);
 
-  printf("config->x = %016lx\n",config->x);
-  printf("config->w = %016lx\n",config->w);
-  printf("config->b = %016lx\n",config->b);
-
+  if(config->x != 0xffffffe7e7ffffff){
+    printf("config->x = %016lx\n",config->x);
+    return 1;
+  }
+  if(config->w != 0x0000001008000000){
+    printf("config->w = %016lx\n",config->w);
+    return 1;
+  }
+  if(config->b != 0x0000000810000000){
+    printf("config->b = %016lx\n",config->b);
+    return 1;
+  }
+  
   unsigned long int x, w, b;
   x = config->x;
   w = config->w;
   b = config->b;
-  
-  printf("x&b = %016lx, x&w = %016lx, b&w = %016lx\n", x&b, x&w, b&w);
-  printf("x|w|b = %016lx\n", x|w|b);
-  printf("x^w^b = %016lx\n", x^w^b);
+  if((x&b) != 0 || (x&w) != 0 || (b&w) != 0){
+    printf("x&b = %016lx, x&w = %016lx, b&w = %016lx\n", x&b, x&w, b&w);
+    return 1;
+  }
+  if((x|w|b) != 0xffffffffffffffff){
+    printf("x|w|b = %016lx\n", x|w|b);
+    return 1;
+  }
+  if((x^w^b) != 0xffffffffffffffff){
+    printf("x^w^b = %016lx\n", x^w^b);
+    return 1;
+  }
 
-  int match;
+
   Config boards = create_and_init_config_list(10);
 
   board_to_conf(state->board, boards);
@@ -36,9 +80,27 @@ int test_genconf(void){
   config->x = 0x0000000020000000;
   config->b = 0x0000000810000000;
   
-  match = match_conf(boards, config, 1);
-  printf("match = %d\n", match);
+  int match = match_one_conf(boards, config);
+  int symm_match = symmetric_match_one_conf(boards, config);
+  
+  if(match != 1){
+    printf("match = %d\n", match);
+    return 1;
+  }
+  if(symm_match != 4){
+    printf("symm_match = %d\n", symm_match);
+    return 1;
+  }
 
+  int n;
+  Config variations = list_variations(0x000000000000000f, &n);
+  int i;
+  printf("n = %d\n", n);
+  for(i=0;i<n;i++){
+    print_config(&variations[i]);
+  }
+
+  
   free_state(state);
   free_config(config);
   free_config(boards);

@@ -17,7 +17,7 @@ CFLAGS += -Ofast -pthread -Wall
 #CPPFLAGS += -pg
 #CFLAGS += -pg
 
-CFLAGS += -DNDEBUG
+#CFLAGS += -DNDEBUG
 
 .PHONY: all clean distclean
 

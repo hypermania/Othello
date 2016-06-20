@@ -1,4 +1,5 @@
 #include "genconf.h"
+#include "const.h"
 
 Config create_and_init_config(void){
   Config config = (Config) malloc(sizeof(Config_store));
@@ -116,6 +117,110 @@ int match_one_conf(Config boards, Config config){
   return 0;
 }
 
+int symmetric_match_one_conf(Config boards, Config config){
+  assert(boards != NULL);
+  assert(config != NULL);
+
+  int matches = 0;
+
+  Config_store orig = *config;
+  if(((boards->x & orig.x)==orig.x) &&
+     ((boards->w & orig.w)==orig.w) &&
+     ((boards->b & orig.b)==orig.b)){
+    matches++;
+  }
+  
+  Config_store reflection = reflect_diag(orig);
+  if(((boards->x & reflection.x)==reflection.x) &&
+     ((boards->w & reflection.w)==reflection.w) &&
+     ((boards->b & reflection.b)==reflection.b)){
+    matches++;
+  }
+  
+  reflection = reflect_rdiag(orig);
+  if(((boards->x & reflection.x)==reflection.x) &&
+     ((boards->w & reflection.w)==reflection.w) &&
+     ((boards->b & reflection.b)==reflection.b)){
+    matches++;
+  }
+  
+  reflection = reflect_bdiag(orig);
+  if(((boards->x & reflection.x)==reflection.x) &&
+     ((boards->w & reflection.w)==reflection.w) &&
+     ((boards->b & reflection.b)==reflection.b)){
+    matches++;
+  }
+  
+  return matches;
+}
+
+Config list_variations(Pattern pattern, int *n_var){
+  assert(n_var != NULL);
+  int s = __builtin_popcountl(pattern);
+
+  if(s == 0){
+    Config base_variation = malloc(sizeof(Config_store));
+    base_variation->x = 0;
+    base_variation->w = 0;
+    base_variation->b = 0;
+    *n_var = 1;
+    return base_variation;
+  }
+
+  long int mask = 1;
+  while((mask & pattern) == 0){
+    mask <<= 1;
+  }
+
+  Pattern sub_pattern = mask ^ pattern;
+  int sub_n = 1;
+  Config sub_variations = list_variations(sub_pattern, &sub_n);
+
+  int N = 3 * sub_n;
+  *n_var = N;
+  Config variations = malloc(N * sizeof(Config_store));
+  memcpy(variations, sub_variations, sub_n * sizeof(Config_store));
+  memcpy(variations + sub_n, sub_variations, sub_n * sizeof(Config_store));
+  memcpy(variations + 2*sub_n, sub_variations, sub_n * sizeof(Config_store));
+  free(sub_variations);
+  int i;
+  for(i=0;i<sub_n;i++){
+    variations[i].x |= mask;
+  }
+  for(i=0;i<sub_n;i++){
+    variations[i+sub_n].w |= mask;
+  }
+  for(i=0;i<sub_n;i++){
+    variations[i+2*sub_n].b |= mask;
+  }
+  
+  return variations;
+}
+
+int *match_variations(Config variations, Config boards, int n_v, int n_b){
+  assert(variations != NULL);
+  assert(boards != NULL);
+  assert(n_v >= 0);
+  assert(n_b >= 0);
+
+  int *matches = malloc(n_v * sizeof(int));
+  memset(matches, 0, n_v * sizeof(int));
+  int v; int b;
+  for(b=0;b<n_b;b++){
+    /*
+    if(b % 10000 == 0)
+      printf("b = %d\n", b);
+    */
+    for(v=0;v<n_v;v++){
+      Config board = &boards[b];
+      Config config = &variations[v];
+      matches[v] += symmetric_match_one_conf(board, config);
+    }
+  }
+
+  return matches;
+}
+
 
 int genconf_from_seq(State state, Pos *seq, Config boards){
   assert(state != NULL);
@@ -151,4 +256,176 @@ int genconf_from_seq(State state, Pos *seq, Config boards){
   return turn;
 }
 
+Config_store reflect_diag(Config_store config){
 
+  Config_store result;
+  result.x = 0;
+  result.w = 0;
+  result.b = 0;
+
+  result.x |= row_diag[(config.x & ROW(7)) >> 0] << 0;
+  result.x |= row_diag[(config.x & ROW(6)) >> 8] << 1;
+  result.x |= row_diag[(config.x & ROW(5)) >> 16] << 2;
+  result.x |= row_diag[(config.x & ROW(4)) >> 24] << 3;
+  result.x |= row_diag[(config.x & ROW(3)) >> 32] << 4;
+  result.x |= row_diag[(config.x & ROW(2)) >> 40] << 5;
+  result.x |= row_diag[(config.x & ROW(1)) >> 48] << 6;
+  result.x |= row_diag[(config.x & ROW(0)) >> 56] << 7;
+
+  result.w |= row_diag[(config.w & ROW(7)) >> 0] << 0;
+  result.w |= row_diag[(config.w & ROW(6)) >> 8] << 1;
+  result.w |= row_diag[(config.w & ROW(5)) >> 16] << 2;
+  result.w |= row_diag[(config.w & ROW(4)) >> 24] << 3;
+  result.w |= row_diag[(config.w & ROW(3)) >> 32] << 4;
+  result.w |= row_diag[(config.w & ROW(2)) >> 40] << 5;
+  result.w |= row_diag[(config.w & ROW(1)) >> 48] << 6;
+  result.w |= row_diag[(config.w & ROW(0)) >> 56] << 7;
+
+  result.b |= row_diag[(config.b & ROW(7)) >> 0] << 0;
+  result.b |= row_diag[(config.b & ROW(6)) >> 8] << 1;
+  result.b |= row_diag[(config.b & ROW(5)) >> 16] << 2;
+  result.b |= row_diag[(config.b & ROW(4)) >> 24] << 3;
+  result.b |= row_diag[(config.b & ROW(3)) >> 32] << 4;
+  result.b |= row_diag[(config.b & ROW(2)) >> 40] << 5;
+  result.b |= row_diag[(config.b & ROW(1)) >> 48] << 6;
+  result.b |= row_diag[(config.b & ROW(0)) >> 56] << 7;
+
+  /*
+  int r,c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(ATOM(r,c) & config.x){
+	result.x |= ATOM(c,r);
+      } else if(ATOM(r,c) & config.b){
+	result.b |= ATOM(c,r);
+      } else if(ATOM(r,c) & config.w){
+	result.w |= ATOM(c,r);
+      }
+    }
+  }
+  */
+  
+  return result;
+}
+
+Config_store reflect_rdiag(Config_store config){
+  
+  Config_store result;
+  result.x = 0;
+  result.w = 0;
+  result.b = 0;
+
+  result.x |= row_rdiag[(config.x & ROW(7)) >> 0] >> 0;
+  result.x |= row_rdiag[(config.x & ROW(6)) >> 8] >> 1;
+  result.x |= row_rdiag[(config.x & ROW(5)) >> 16] >> 2;
+  result.x |= row_rdiag[(config.x & ROW(4)) >> 24] >> 3;
+  result.x |= row_rdiag[(config.x & ROW(3)) >> 32] >> 4;
+  result.x |= row_rdiag[(config.x & ROW(2)) >> 40] >> 5;
+  result.x |= row_rdiag[(config.x & ROW(1)) >> 48] >> 6;
+  result.x |= row_rdiag[(config.x & ROW(0)) >> 56] >> 7;
+
+  result.w |= row_rdiag[(config.w & ROW(7)) >> 0] >> 0;
+  result.w |= row_rdiag[(config.w & ROW(6)) >> 8] >> 1;
+  result.w |= row_rdiag[(config.w & ROW(5)) >> 16] >> 2;
+  result.w |= row_rdiag[(config.w & ROW(4)) >> 24] >> 3;
+  result.w |= row_rdiag[(config.w & ROW(3)) >> 32] >> 4;
+  result.w |= row_rdiag[(config.w & ROW(2)) >> 40] >> 5;
+  result.w |= row_rdiag[(config.w & ROW(1)) >> 48] >> 6;
+  result.w |= row_rdiag[(config.w & ROW(0)) >> 56] >> 7;
+
+  result.b |= row_rdiag[(config.b & ROW(7)) >> 0] >> 0;
+  result.b |= row_rdiag[(config.b & ROW(6)) >> 8] >> 1;
+  result.b |= row_rdiag[(config.b & ROW(5)) >> 16] >> 2;
+  result.b |= row_rdiag[(config.b & ROW(4)) >> 24] >> 3;
+  result.b |= row_rdiag[(config.b & ROW(3)) >> 32] >> 4;
+  result.b |= row_rdiag[(config.b & ROW(2)) >> 40] >> 5;
+  result.b |= row_rdiag[(config.b & ROW(1)) >> 48] >> 6;
+  result.b |= row_rdiag[(config.b & ROW(0)) >> 56] >> 7;
+
+  
+  /*  
+      int r,c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(ATOM(r,c) & config.x){
+	result.x |= ATOM(BOARD_SIZE-1-c, BOARD_SIZE-1-r);
+      } else if(ATOM(r,c) & config.b){
+	result.b |= ATOM(BOARD_SIZE-1-c, BOARD_SIZE-1-r);	
+      } else if(ATOM(r,c) & config.w){
+	result.w |= ATOM(BOARD_SIZE-1-c, BOARD_SIZE-1-r);	
+      }
+    }
+  }
+  */
+  return result;
+}
+
+Config_store reflect_bdiag(Config_store config){
+ Config_store result;
+  result.x = 0;
+  result.w = 0;
+  result.b = 0;
+
+  result.x |= row_bdiag[(config.x & ROW(7)) >> 0] >> 0*8;
+  result.x |= row_bdiag[(config.x & ROW(6)) >> 8] >> 1*8;
+  result.x |= row_bdiag[(config.x & ROW(5)) >> 16] >> 2*8;
+  result.x |= row_bdiag[(config.x & ROW(4)) >> 24] >> 3*8;
+  result.x |= row_bdiag[(config.x & ROW(3)) >> 32] >> 4*8;
+  result.x |= row_bdiag[(config.x & ROW(2)) >> 40] >> 5*8;
+  result.x |= row_bdiag[(config.x & ROW(1)) >> 48] >> 6*8;
+  result.x |= row_bdiag[(config.x & ROW(0)) >> 56] >> 7*8;
+
+  result.w |= row_bdiag[(config.w & ROW(7)) >> 0] >> 0*8;
+  result.w |= row_bdiag[(config.w & ROW(6)) >> 8] >> 1*8;
+  result.w |= row_bdiag[(config.w & ROW(5)) >> 16] >> 2*8;
+  result.w |= row_bdiag[(config.w & ROW(4)) >> 24] >> 3*8;
+  result.w |= row_bdiag[(config.w & ROW(3)) >> 32] >> 4*8;
+  result.w |= row_bdiag[(config.w & ROW(2)) >> 40] >> 5*8;
+  result.w |= row_bdiag[(config.w & ROW(1)) >> 48] >> 6*8;
+  result.w |= row_bdiag[(config.w & ROW(0)) >> 56] >> 7*8;
+
+  result.b |= row_bdiag[(config.b & ROW(7)) >> 0] >> 0*8;
+  result.b |= row_bdiag[(config.b & ROW(6)) >> 8] >> 1*8;
+  result.b |= row_bdiag[(config.b & ROW(5)) >> 16] >> 2*8;
+  result.b |= row_bdiag[(config.b & ROW(4)) >> 24] >> 3*8;
+  result.b |= row_bdiag[(config.b & ROW(3)) >> 32] >> 4*8;
+  result.b |= row_bdiag[(config.b & ROW(2)) >> 40] >> 5*8;
+  result.b |= row_bdiag[(config.b & ROW(1)) >> 48] >> 6*8;
+  result.b |= row_bdiag[(config.b & ROW(0)) >> 56] >> 7*8;
+
+  return result;
+  
+}
+
+/*
+00 00000000
+00 00000000
+00 00000000
+00 00000000
+28 00101000
+65 01100101
+82 10000010
+b8 10111000
+
+diag
+
+00000011
+00000100
+00001101
+00000001
+00001001
+00000100
+00000010
+00000100
+
+rdiag_diag
+
+00011101 1d
+01000001 41
+10100110 a6
+00010100 14
+00000000
+00000000
+00000000
+00000000
+*/

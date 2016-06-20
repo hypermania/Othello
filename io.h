@@ -26,6 +26,7 @@ Pos *file_to_seq(char *buff, int n);
 Pos *randomized_file_to_seq(char *buff, int n);
 
 Example *read_examples_from_file(const char *filename, int *count_examples);
+Config read_configs_from_file(const char *filename, int *count_boards);
 
 
 #endif

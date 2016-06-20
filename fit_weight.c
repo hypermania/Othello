@@ -120,7 +120,7 @@ double *compute_delta(Weight weight, Example *examples, int N, char **hik, doubl
   
   return delta;
 }
-int fit_to_precision(Weight *weight, Example *examples, int N, double alpha, double precision, bool print_iters){
+int grad_descent(Weight *weight, Example *examples, int N, double alpha, double precision, bool print_iters){
   int i;
   
   char **hik = compute_hik(*weight, examples, N);
@@ -128,30 +128,50 @@ int fit_to_precision(Weight *weight, Example *examples, int N, double alpha, dou
 
   int iter = 0;
   
+  double last_deriv_norm = DBL_MAX;
+  double delta_norm = 0;
+  double deriv_norm = 0;
+
+  int count_seq = 0;
+  
   while(1){
     iter++;
     double *sum_wi_hik = compute_sum_wi_hik(*weight, hik, N);
     double *delta = compute_delta(*weight, examples, N, hik, sum_wi_hik, sum_hik, alpha);
-    double delta_l1_norm = 0;
+    delta_norm = 0;
     for(i=0;i<weight->n;i++){
-	delta_l1_norm += fabs(delta[i]);
+	delta_norm += fabs(delta[i]) * fabs(delta[i]);
 	weight->w[i] += delta[i];
     }
-    
-    if(print_iters && (iter % 1 == 0))
-      printf("iteration %5d,    delta_l1_norm = %24.20lf\n", iter, delta_l1_norm);
+    delta_norm = sqrt(delta_norm);
+    deriv_norm = delta_norm / alpha;
 
-    bool precision_reached = true;
-
-    for(i=0;i<weight->n;i++){
-      if(fabs(delta[i]) > precision){
-	precision_reached = false;
-	break;
-      }
-    }
+    double quotient = (deriv_norm - last_deriv_norm)/last_deriv_norm;
     
-    if(precision_reached && (iter > 10))
+    if(print_iters)
+      printf("iteration %5d,    deriv_norm = %12.10lf,   alpha = %12.10lf,   quotient = %12.20lf\n",
+	     iter,
+	     deriv_norm,
+	     alpha,
+	     quotient);
+
+    if(deriv_norm < precision){
+      free(delta);
+      free(sum_wi_hik);
       break;
+    }
+
+    const double mult = 1.2;
+    
+    if(count_seq > 5 && quotient > -0.2 && quotient < 0){
+      alpha *= mult;
+      count_seq = 0;
+    }
+
+    
+    count_seq++;
+
+    last_deriv_norm = deriv_norm;
     
     free(delta);
     free(sum_wi_hik);
@@ -167,49 +187,32 @@ int fit_to_precision(Weight *weight, Example *examples, int N, double alpha, dou
   
 }
 
-double *fit_weight_from_examples(Weight *weight, Example *examples, int N, double alpha){
-  assert(weight != NULL);
+double total_error(Weight weight, Example *examples, int N){
+
   assert(examples != NULL);
-  assert(N>=0);
-  assert(alpha>0);
+  assert(N > 0);
   
-  double *delta = malloc(weight->n * sizeof(double));
-  int *sum_hik = malloc(weight->n * sizeof(int));
-  char *hik = malloc(weight->n * sizeof(char));
-  memset(delta, 0, weight->n * sizeof(double));
-  memset(sum_hik, 0, weight->n * sizeof(int));
+  char **hik = compute_hik(weight, examples, N);
+  double *sum_wi_hik = compute_sum_wi_hik(weight, hik, N);
+
+  double total_error = 0;
   
   int i;
   for(i=0;i<N;i++){
-    double x_score = weighted_score_for_board_info(*weight, &(examples[i].board), hik);
-    if(i < 100 && x_score > 0){
-	printf("sum_wi_hik[%d] = %30.20lf\n", i, x_score);
-    }
-    double g_score = link_function(x_score);
-  // weighted_score_for_board_info(*weight, &(examples[i].board), hik));
-    double g_deriv = link_function_deriv_relation(g_score);
-    int j;
-    for(j=0;j<weight->n;j++){
-      if(hik[j]){
-	delta[j] += alpha * 2 * g_deriv
-	  * (examples[i].score - g_score);
-	sum_hik[j] += 1;
-      }
-    }
+    double error = examples[i].score - link_function(sum_wi_hik[i]);
+    error *= error;
+    total_error += error;
   }
 
+  total_error /= N;
   
-  for(i=0;i<weight->n;i++){
-    if(sum_hik[i] != 0){
-      delta[i] /= sum_hik[i];
-      weight->w[i] += delta[i];
-    }
-    printf("delta[%d] = %30.20lf\n", i, delta[i]);
+  free(sum_wi_hik);
+  for(i=0;i<weight.n;i++){
+    free(hik[i]);
   }
   free(hik);
-  free(sum_hik);
-  //free(delta);
-  return delta;
+
+  return total_error;
 }
 
 
@@ -363,47 +366,6 @@ Weight symmetrize_weight(Weight *weight){
 }
 
 
-Config_store reflect_diag(Config_store config){
-  int r,c;
-  Config_store result;
-  result.x = 0;
-  result.w = 0;
-  result.b = 0;
-  
-  for(r=0;r<BOARD_SIZE;r++){
-    for(c=0;c<BOARD_SIZE;c++){
-      if(ATOM(r,c) & config.x){
-	result.x |= ATOM(c,r);
-      } else if(ATOM(r,c) & config.b){
-	result.b |= ATOM(c,r);
-      } else if(ATOM(r,c) & config.w){
-	result.w |= ATOM(c,r);
-      }
-    }
-  }
-  return result;
-}
-
-Config_store reflect_rdiag(Config_store config){
-  int r,c;
-  Config_store result;
-  result.x = 0;
-  result.w = 0;
-  result.b = 0;
-  
-  for(r=0;r<BOARD_SIZE;r++){
-    for(c=0;c<BOARD_SIZE;c++){
-      if(ATOM(r,c) & config.x){
-	result.x |= ATOM(BOARD_SIZE-1-r, BOARD_SIZE-1-c);
-      } else if(ATOM(r,c) & config.b){
-	result.b |= ATOM(BOARD_SIZE-1-r, BOARD_SIZE-1-c);	
-      } else if(ATOM(r,c) & config.w){
-	result.w |= ATOM(BOARD_SIZE-1-r, BOARD_SIZE-1-c);	
-      }
-    }
-  }
-  return result;
-}
 
 */
 

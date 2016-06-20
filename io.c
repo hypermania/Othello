@@ -157,7 +157,7 @@ int print_config(Config config){
   return 0;
 }
 
-Example *read_examples_from_file(const char *filename, int *count_examples_ptr){
+Example *read_examples_from_file(const char *filename, int *count_examples){
 
   printf("reading examples from file %s .....\n", filename);
   FILE *fp;
@@ -170,13 +170,36 @@ Example *read_examples_from_file(const char *filename, int *count_examples_ptr){
   fseek(fp, 0L , SEEK_END);
   long int lSize = ftell(fp);
   rewind(fp);
-  *count_examples_ptr = lSize/sizeof(Example);
+  *count_examples = lSize/sizeof(Example);
   
-  printf("file size= %ld\ncount_examples = %d\n", lSize, *count_examples_ptr);
+  printf("file size= %ld\ncount_examples = %d\n", lSize, *count_examples);
 
   Example *examples = malloc(lSize);
   fread(examples, lSize, 1, fp);
   fclose(fp);
 
   return examples;
+}
+
+Config read_configs_from_file(const char *filename, int *count_configs){
+
+  printf("reading configs from file %s .....\n", filename);
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("failed: file access error\n");
+    exit(0);
+  }
+
+  fseek(fp, 0L , SEEK_END);
+  long int lSize = ftell(fp);
+  rewind(fp);
+  *count_configs = lSize/sizeof(Config_store);
+  
+  printf("file size= %ld\ncount_configs = %d\n", lSize, *count_configs);
+
+  Config configs = malloc(lSize);
+  fread(configs, lSize, 1, fp);
+  fclose(fp);
+
+  return configs;
 }
