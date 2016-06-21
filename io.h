@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "board.h"
 #include "state.h"
@@ -27,6 +28,8 @@ Pos *randomized_file_to_seq(char *buff, int n);
 
 Example *read_examples_from_file(const char *filename, int *count_examples);
 Config read_configs_from_file(const char *filename, int *count_boards);
+void *read_dat_from_file(const char *filename, int obj_size, int *count_obj);
+void save_dat_to_file(const char *file_name, void *dat, int file_size);
 
 
 #endif

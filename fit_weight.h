@@ -57,15 +57,9 @@ int sort_examples_into_categories(Example *examples, Example **categories, int *
 int example_from_seq(State state, Pos *seq, Example *example);
 
 
-/* deprecated functions */
-double weighted_score_for_board(Weight weight, Config board);// deprecated
-double weighted_score_for_board_nocreate(Weight weight, Config board);
-double weighted_score_for_board_info(Weight weight, Config board, char *hik);
-
 
 /*
 Weight symmetrize_weight(Weight *weight);
-
 */
 
 #endif

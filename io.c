@@ -143,6 +143,23 @@ Pos *randomized_file_to_seq(char *buff, int n){
 
 int print_config(Config config){
   assert(config != NULL);
+
+  Board board = create_board();
+  init_board(board);
+  int r, c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(ATOM(r,c) & config->x){
+	board_set_pos(board, (Pos) {r,c}, X);
+      } else if(ATOM(r,c) & config->w){
+	board_set_pos(board, (Pos) {r,c}, W);	
+      } else if(ATOM(r,c) & config->b){
+	board_set_pos(board, (Pos) {r,c}, B);
+      }
+    }
+  }
+  print_board(board);
+  free_board(board);
   
   printf("config->x = %016lx\n", config->x);
   printf("config->w = %016lx\n", config->w);
@@ -152,7 +169,8 @@ int print_config(Config config){
 	 __builtin_popcountl(config->w) +
 	 __builtin_popcountl(config->b)
 	 );
-  printf("is_board = %d\n", check_board_as_config(*config));
+
+  
   
   return 0;
 }
@@ -202,4 +220,35 @@ Config read_configs_from_file(const char *filename, int *count_configs){
   fclose(fp);
 
   return configs;
+}
+
+
+void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
+  
+  printf("reading data from file %s .....\n", filename);
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("failed: file access error\n");
+    exit(0);
+  }
+
+  fseek(fp, 0L , SEEK_END);
+  long int lSize = ftell(fp);
+  rewind(fp);
+  *count_obj = lSize/obj_size;
+  
+  printf("file size= %ld\ncount_configs = %d\n", lSize, *count_obj);
+
+  Config data = malloc(lSize);
+  fread(data, lSize, 1, fp);
+  fclose(fp);
+
+  return data;
+}
+
+void save_dat_to_file(const char *file_name, void *dat, int file_size){
+  int fd = open(file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+  printf("writing to file %s: file_size = %d\n", file_name, file_size);
+  write(fd, dat, file_size);
+  close(fd);
 }

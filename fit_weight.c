@@ -216,56 +216,6 @@ double total_error(Weight weight, Example *examples, int N){
 }
 
 
-double weighted_score_for_board(Weight weight, Config board){
-  assert(board != NULL);
-  assert(check_board_as_config(*board));
-  int i;
-  double score = 0;
-  for(i=0;i<weight.n;i++){
-    if(match_one_conf(board, &weight.c[i])){
-      score += weight.w[i];
-    }
-  }
-  
-  return score;
-}
-
-double weighted_score_for_board_nocreate(Weight weight, Config board){
-  assert(board != NULL);
-  assert(check_board_as_config(*board));
-  int i;
-  double score = 0;
-  for(i=0;i<weight.n;i++){
-    if(match_one_conf(board, &weight.c[i])){
-      score += weight.w[i];
-    }
-  }
-  
-  return score;
-
-}
-
-
-double weighted_score_for_board_info(Weight weight, Config board, char *hik){
-  assert(board != NULL);
-  assert(check_board_as_config(*board));
-  assert(hik != NULL);
-
-  double score = 0;
-  int i;
-  for(i=0;i<weight.n;i++){
-    if(match_one_conf(board, &weight.c[i])){
-      score += weight.w[i];
-      hik[i] = 1;
-    } else {
-      hik[i] = 0;
-    }
-  }
-  
-  return score;
-}
-
-
 double link_function(double x){
   return 2*BOARD_SIZE_SQR/(1+exp((-1)*x)) - BOARD_SIZE_SQR;
 }
@@ -377,14 +327,10 @@ int sort_examples_into_categories(Example *examples, Example **categories, int *
   int allocated[CAT_NUM];
   int i;
   for(i=0;i<CAT_NUM;i++){
-    //categories[i] = malloc((example_size/CAT_NUM + 1) * sizeof(Example));
-    //categories[i] = malloc(TOTAL_GAMES * 4 * sizeof(Example));
     allocated[i] = chunk;
     categories[i] = malloc(allocated[i] * sizeof(Example));
-    
     cat_sizes[i] = 0;
   }
-
 
   for(i=0;i<example_size;i++){
     int pieces = BOARD_SIZE_SQR - __builtin_popcountl(examples[i].board.x);
@@ -397,6 +343,11 @@ int sort_examples_into_categories(Example *examples, Example **categories, int *
     
     categories[cat][cat_sizes[cat]] = examples[i];
     cat_sizes[cat]++;
+  }
+  // the following were added without testing
+  int cat;
+  for(cat=0;cat<CAT_NUM;cat++){
+    categories[cat] = realloc(categories[cat], cat_sizes[cat] * sizeof(Example));
   }
   
   return 0;

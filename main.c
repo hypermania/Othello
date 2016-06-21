@@ -23,12 +23,10 @@ int main(int argc, char **argv){
   //srand((long int) t.tv_usec);
   srand((long int) 100);
 
-  // creating examples and write to file
-  /*
-  Example *examples = malloc(TOTAL_GAMES * 60 * sizeof(Example));
-  process_games_into_examples(examples);
-  */
+  // temporary variable
+  int i, j;
 
+  
   // specifying the weight
   /*
   int i;
@@ -60,13 +58,15 @@ int main(int argc, char **argv){
     weight.w[2*i+1] = 0;
   }
   */
-  
+
+  // read examples from file and process them into configs
   /*
   int count_examples;
-  Example *examples = read_examples_from_file("./example_dat/randomized_examples.dat", &count_examples);
+  //Example *examples = read_examples_from_file("./example_dat/randomized_examples.dat", &count_examples);
+  Example *examples = read_examples_from_file("./example_dat/cat_14.dat", &count_examples);
 
   Config boards = malloc(count_examples * sizeof(Config_store));
-  int i;
+
   for(i=0;i<count_examples;i++){
     boards[i].x = examples[i].board.x;
     boards[i].w = examples[i].board.w;
@@ -74,33 +74,97 @@ int main(int argc, char **argv){
   }
   */
 
+  /*    
+  int *matches = match_variations(variations, boards, n_v, n_b);
 
-  int i;
+  save_dat_to_file("./genconf_dat/corner_variation_matches.dat", matches, n_v * sizeof(int));
+  */
+
   int count_examples;
   Config boards = read_configs_from_file("./genconf_dat/boards.dat", &count_examples);
-  
+
   int n_v; int n_b = count_examples;
-  Config variations =
-    list_variations(ATOM(0,0) | ATOM(0,1)
-		    , &n_v);
+  
+  int n_v1, n_v2;
+  Config variations_1 =
+    list_variations(
+		    ATOM(0,0) | ATOM(0,1) | ATOM(0,2) |
+		    ATOM(1,0) | ATOM(1,1) | ATOM(1,2) |
+		    ATOM(2,0) | ATOM(2,1) | ATOM(2,2)
+		    , &n_v1);
+  Config variations_2 =
+    list_variations(
+		    ROW(0)
+		    , &n_v2);
 
-  int *matches = match_variations(variations, boards, n_v, n_b);
-  for(i=0;i<n_v;i++){
-    print_config(&variations[i]);
-    printf("matches[%d] = %d\n\n", i, matches[i]);
+  int *matches_1 = read_dat_from_file("./genconf_dat/corner_variation_matches.dat", sizeof(int), &n_v1);
+  int *matches_2 = read_dat_from_file("./genconf_dat/edge_variation_matches.dat", sizeof(int), &n_v2);
+
+  const double threshold = 0.0027; // 3 sigmas
+  int count_filtered_1, count_filtered_2;
+  Config filtered_1 = filter_variations(variations_1, matches_1, n_v1, n_b, &count_filtered_1, threshold);
+  Config filtered_2 = filter_variations(variations_2, matches_2, n_v2, n_b, &count_filtered_2, threshold);
+  printf("count_filtered_1 = %d\n", count_filtered_1);
+  printf("count_filtered_2 = %d\n", count_filtered_2);
+  
+  int total;
+  Config crossover =
+    cross_match(filtered_1, filtered_2,
+		count_filtered_1, count_filtered_2,
+		&total);
+  
+  printf("n_v1 = %d\n", n_v1);
+  printf("n_v2 = %d\n", n_v2);
+  printf("total = %d\n", total);
+
+  n_v = total; int count;
+
+  //int *matches = match_variations(crossover, boards, n_v, n_b);
+  int *matches = read_dat_from_file("./genconf_dat/corner_row_variation_matches_0.0027.dat", sizeof(int), &n_v);
+  
+  //save_dat_to_file("./genconf_dat/corner_row_variation_matches_0.0027.dat", matches, n_v * sizeof(int));
+  
+  Config filtered = filter_variations(crossover, matches, n_v, n_b, &count, threshold);
+
+  for(i=0;i<25;i++){
+    print_config(&filtered[rand() % count]);
   }
 
-  double *freqs = malloc(n_v * sizeof(double)); double total = 0;
-  for(i=0;i<n_v;i++){
-    freqs[i] = (double)matches[i]/n_b/4;
-    total += freqs[i];
-    printf("freqs[%d] = %12.10lf\n", i, freqs[i]);
+  printf("count = %d\n", count);
+
+
+    /*  
+  int count = 0;
+  for(i=0;i<20;i++){
+    if(true){
+      print_config(&filtered[i]);
+      //printf("freqs[%d] = %12.10lf\n", i, freqs[i]);
+      //printf("matches[%d] = %d\n", i, matches[i]);
+    }
+    count++;
+    if(count < 0)
+      break;
   }
-
-  printf("total = %lf\n", total);
-
+  */
 
   
+  /*
+  double *freqs = malloc(n_v * sizeof(double));
+  for(i=0;i<k;i++){
+    freqs[i] = (double)matches[i]/n_b;
+  }
+  */
+
+  /*
+  int n_v1, n_v2;
+  Config variations_1 =
+    list_variations(
+		    ATOM(0,0) | ATOM(0,1), &n_v1);
+  Config variations_2 =
+    list_variations(
+		    ATOM(0,0) | ATOM(0,1) | ATOM(0,2), &n_v2);
+  */
+
   
   /*
   // categorizing examples by number of pieces

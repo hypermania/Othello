@@ -2,9 +2,8 @@
 
 #include <stdlib.h>
 #include <assert.h>
-//#include <math.h>
-
-
+#include <pthread.h>
+#include <math.h>
 
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -71,12 +70,20 @@ int board_to_conf(Board board, Config config);
 int match_conf_nocreate(Config boards, Config config, int n);
 int match_one_conf(Config boards, Config config);
 
+int match_one_conf_inline(Config_store boards, Config_store config);
+
 //int symmetric_match_conf_nocreate(Config boards, Config config, int n);
 int symmetric_match_one_conf(Config boards, Config config);
+int symmetric_match_one_conf_inline(Config_store boards, Config_store config);
 
 Config_store reflect_diag(Config_store config);
 Config_store reflect_rdiag(Config_store config);
 Config_store reflect_bdiag(Config_store config);
+
+
+/* pattern related utilities */
+
+// 2. generate all variations among these patterns
 
 // variation generation (step 2 in the process above)
 /* return the poiner to the variations generated
@@ -84,15 +91,33 @@ Config_store reflect_bdiag(Config_store config);
  */
 Config list_variations(Pattern pattern, int *n_var);
 
+
+// 3. for each pattern, filter the configs that appear with probability < 0.01%
+
 // filter invalid configs in a set of variations
 /* count the (symmetric) number of matches to "boards" for each variation;
    returns the match number table */
 int *match_variations(Config variations, Config boards, int n_v, int n_b);
 /* returns the filtered table of configs
    stores the number of configs that passed the filter */
-Config filter_variations(Config variations, int *matches, int n, int *k, double freq);
+Config filter_variations(Config variations, int *matches, int n_v, int n_b, int *k, double threshold);
 
-//3. for each pattern, filter the configs that appear with probability < 0.01%
+
+// 4. create a scheme for storing the patterns in a table
+
+/* "Multiplying" two sets of variations together:
+   For each pair of variation, if they are compatible,
+   join them to form a new variation.
+   Return this set of variations.
+*/
+Config cross_match(Config variations_1, Config variations_2, int n_v1, int n_v2, int *total);
+
+/* Join two configs.
+   Requirement: the two configs be compatible
+ */
+Config_store config_join(Config_store config_1, Config_store config_2);
+int match_pair_conf(Config_store config_1, Config_store config_2);
+
 
 // return number of boards/examples generated at success
 // return 0 at failure (such as incorrect game sequence)

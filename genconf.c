@@ -117,6 +117,17 @@ int match_one_conf(Config boards, Config config){
   return 0;
 }
 
+int match_one_conf_inline(Config_store boards, Config_store config){
+
+  if(((boards.x & config.x)==config.x) &&
+     ((boards.w & config.w)==config.w) &&
+     ((boards.b & config.b)==config.b)){
+    return 1;
+
+  }
+  return 0;
+}
+
 int symmetric_match_one_conf(Config boards, Config config){
   assert(boards != NULL);
   assert(config != NULL);
@@ -153,6 +164,41 @@ int symmetric_match_one_conf(Config boards, Config config){
   
   return matches;
 }
+
+int symmetric_match_one_conf_inline(Config_store boards, Config_store config){
+  int matches = 0;
+
+  Config_store orig = config;
+  if(((boards.x & orig.x)==orig.x) &&
+     ((boards.w & orig.w)==orig.w) &&
+     ((boards.b & orig.b)==orig.b)){
+    matches++;
+  }
+  
+  Config_store reflection = reflect_diag(orig);
+  if(((boards.x & reflection.x)==reflection.x) &&
+     ((boards.w & reflection.w)==reflection.w) &&
+     ((boards.b & reflection.b)==reflection.b)){
+    matches++;
+  }
+  
+  reflection = reflect_rdiag(orig);
+  if(((boards.x & reflection.x)==reflection.x) &&
+     ((boards.w & reflection.w)==reflection.w) &&
+     ((boards.b & reflection.b)==reflection.b)){
+    matches++;
+  }
+  
+  reflection = reflect_bdiag(orig);
+  if(((boards.x & reflection.x)==reflection.x) &&
+     ((boards.w & reflection.w)==reflection.w) &&
+     ((boards.b & reflection.b)==reflection.b)){
+    matches++;
+  }
+  
+  return matches;
+}
+
 
 Config list_variations(Pattern pattern, int *n_var){
   assert(n_var != NULL);
@@ -197,6 +243,27 @@ Config list_variations(Pattern pattern, int *n_var){
   return variations;
 }
 
+Config global_boards;
+Config global_variations;
+int *global_matches;
+int global_n_b;
+
+void *match_variations_thread(void *i){
+  int begin = ((int *)i)[0];
+  int end = ((int *)i)[1];
+  int v; int b;
+  for(v=begin;v<end;v++){
+    Config config = &global_variations[v];
+    int match = 0;
+    for(b=0;b<global_n_b;b++){
+      Config board = &global_boards[b];
+      match += symmetric_match_one_conf_inline(*board, *config);
+    }
+    global_matches[v] = match;
+  }
+  return 0;
+}
+
 int *match_variations(Config variations, Config boards, int n_v, int n_b){
   assert(variations != NULL);
   assert(boards != NULL);
@@ -205,18 +272,37 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b){
 
   int *matches = malloc(n_v * sizeof(int));
   memset(matches, 0, n_v * sizeof(int));
+
+  pthread_t tids[4];
+  global_boards = boards;
+  global_variations = variations;
+  global_matches = matches;
+  global_n_b = n_b;
+
+  int bounds[5];
+  int i; int interval = n_v/4;
+  for(i=0;i<4;i++){
+    bounds[i] = interval * i;
+  }
+  bounds[4] = n_v;
+  
+  for(i=0;i<4;i++){
+    pthread_create(&(tids[i]), NULL, match_variations_thread, &bounds[i]);
+  }
+  for(i=0;i<4;i++){
+      pthread_join(tids[i], NULL);
+  }
+
+  /*
   int v; int b;
-  for(b=0;b<n_b;b++){
-    /*
-    if(b % 10000 == 0)
-      printf("b = %d\n", b);
-    */
-    for(v=0;v<n_v;v++){
+  for(v=0;v<n_v;v++){
+    for(b=0;b<n_b;b++){
       Config board = &boards[b];
       Config config = &variations[v];
       matches[v] += symmetric_match_one_conf(board, config);
     }
   }
+  */
 
   return matches;
 }
@@ -397,35 +483,82 @@ Config_store reflect_bdiag(Config_store config){
   
 }
 
-/*
-00 00000000
-00 00000000
-00 00000000
-00 00000000
-28 00101000
-65 01100101
-82 10000010
-b8 10111000
 
-diag
+Config filter_variations(Config variations, int *matches, int n_v, int n_b, int *k, double threshold){
+  assert(variations != NULL);
+  assert(matches != NULL);
+  assert(k != NULL);
+  assert(n_v >= 0);
+  assert(n_b >= 0);
 
-00000011
-00000100
-00001101
-00000001
-00001001
-00000100
-00000010
-00000100
+  int allocated = 10;
+  Config result = malloc(allocated * sizeof(Config_store));
 
-rdiag_diag
+  int count = 0;
+  int v;
+  for(v=0;v<n_v;v++){
+    double freq = (double)matches[v] / (double)n_b;
+    if(freq > threshold){
+      if(allocated == count){
+	allocated += 10;
+	result = realloc(result, allocated * sizeof(Config_store));
+      }
+      result[count++] = variations[v];
+    }
+  }
+  result = realloc(result, count * sizeof(Config_store));
+  *k = count;
+  return result;
+}
 
-00011101 1d
-01000001 41
-10100110 a6
-00010100 14
-00000000
-00000000
-00000000
-00000000
-*/
+Config_store config_join(Config_store config_1, Config_store config_2){
+  Config_store sum = config_1;
+  sum.x |= config_2.x;
+  sum.w |= config_2.w;
+  sum.b |= config_2.b;
+
+  return sum;
+}
+
+Config cross_match(Config variations_1, Config variations_2, int n_v1, int n_v2, int *total){
+  assert(variations_1 != NULL);
+  assert(variations_2 != NULL);
+  assert(n_v1 >= 0);
+  assert(n_v2 >= 0);
+  assert(total != NULL);
+
+  int allocated = 100;
+  Config result = malloc(allocated * sizeof(Config_store));
+  
+  int v1, v2; int count = 0;
+  for(v1=0;v1<n_v1;v1++){
+    for(v2=0;v2<n_v2;v2++){
+      Config var1 = &variations_1[v1];
+      Config var2 = &variations_2[v2];
+
+      if(match_pair_conf(*var1, *var2)){
+	if(allocated == count){
+	  allocated += 100;
+	  result = realloc(result, allocated * sizeof(Config_store));
+	}
+	result[count++] = config_join(*var1, *var2);
+      }
+      
+    }
+  }
+  *total = count;
+  result = realloc(result, count * sizeof(Config_store));
+  return result;
+}
+
+int match_pair_conf(Config_store config_1, Config_store config_2){
+  unsigned long int xw = config_1.x & config_2.w;
+  unsigned long int xb = config_1.x & config_2.b;
+  unsigned long int wx = config_1.w & config_2.x;
+  unsigned long int wb = config_1.w & config_2.b;
+  unsigned long int bx = config_1.b & config_2.x;
+  unsigned long int bw = config_1.b & config_2.w;
+  if(xw | xb | wx | wb | bx | bw)
+    return 0;
+  return 1;
+}
