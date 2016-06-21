@@ -50,11 +50,24 @@ char **compute_hik(Weight weight, Example *examples, int N){
   for(i=0;i<weight.n;i++){
     hik[i] = malloc(N * sizeof(char));
     for(j=0;j<N;j++){
-      if(match_one_conf(&examples[j].board, &weight.c[i])){
-	hik[i][j] = 1;
-      } else {
-	hik[i][j] = 0;
-      }
+      hik[i][j] = match_one_conf_inline(examples[j].board, weight.c[i]);
+    }
+  }
+
+  return hik;
+}
+
+char **compute_symmetric_hik(Weight weight, Example *examples, int N){
+  assert(examples != NULL);
+  assert(N >= 0);
+
+  char **hik = malloc(weight.n * sizeof(char *));
+  
+  int i; int j;
+  for(i=0;i<weight.n;i++){
+    hik[i] = malloc(N * sizeof(char));
+    for(j=0;j<N;j++){
+      hik[i][j] = symmetric_match_one_conf_inline(examples[j].board, weight.c[i]);
     }
   }
 
@@ -70,8 +83,8 @@ double *compute_sum_wi_hik(Weight weight, char **hik, int N){
   int i; int j;
   for(i=0;i<weight.n;i++){
     for(j=0;j<N;j++){
-      if(hik[i][j])
-	sum_wi_hik[j] += weight.w[i];
+      //if(hik[i][j])
+      sum_wi_hik[j] += weight.w[i] * hik[i][j];
     }
   }
   return sum_wi_hik;
@@ -86,9 +99,7 @@ int *compute_sum_hik(Weight weight, char **hik, int N){
   int i; int j;
   for(i=0;i<weight.n;i++){
     for(j=0;j<N;j++){
-      if(hik[i][j]){
-	sum_hik[i] += 1;
-      }
+      sum_hik[i] += hik[i][j];
     }
   }
   return sum_hik;
@@ -120,10 +131,11 @@ double *compute_delta(Weight weight, Example *examples, int N, char **hik, doubl
   
   return delta;
 }
+
 int grad_descent(Weight *weight, Example *examples, int N, double alpha, double precision, bool print_iters){
   int i;
   
-  char **hik = compute_hik(*weight, examples, N);
+  char **hik = compute_symmetric_hik(*weight, examples, N);
   int *sum_hik = compute_sum_hik(*weight, hik, N);
 
   int iter = 0;
@@ -132,7 +144,8 @@ int grad_descent(Weight *weight, Example *examples, int N, double alpha, double 
   double delta_norm = 0;
   double deriv_norm = 0;
 
-  int count_seq = 0;
+  double *last_delta = malloc(weight->n * sizeof(double));
+  memset(last_delta, 0, weight->n * sizeof(double));
   
   while(1){
     iter++;
@@ -141,7 +154,7 @@ int grad_descent(Weight *weight, Example *examples, int N, double alpha, double 
     delta_norm = 0;
     for(i=0;i<weight->n;i++){
 	delta_norm += fabs(delta[i]) * fabs(delta[i]);
-	weight->w[i] += delta[i];
+	weight->w[i] += delta[i] + 0.5 * last_delta[i];
     }
     delta_norm = sqrt(delta_norm);
     deriv_norm = delta_norm / alpha;
@@ -154,23 +167,15 @@ int grad_descent(Weight *weight, Example *examples, int N, double alpha, double 
 	     deriv_norm,
 	     alpha,
 	     quotient);
-
+    //printf("total error = %30.20lf\n", total_error(*weight, examples, N));
     if(deriv_norm < precision){
       free(delta);
       free(sum_wi_hik);
       break;
     }
 
-    const double mult = 1.2;
+    memcpy(last_delta, delta, weight->n * sizeof(double));
     
-    if(count_seq > 5 && quotient > -0.2 && quotient < 0){
-      alpha *= mult;
-      count_seq = 0;
-    }
-
-    
-    count_seq++;
-
     last_deriv_norm = deriv_norm;
     
     free(delta);
@@ -183,9 +188,103 @@ int grad_descent(Weight *weight, Example *examples, int N, double alpha, double 
   }
   free(hik);
 
-  return 0;
+  return iter;
   
 }
+
+int sto_grad_descent(Weight *weight, Example *examples, int N, double alpha, double precision, bool print_iters){
+
+  char **hik = compute_hik(*weight, examples, N);
+  int *sum_hik = compute_sum_hik(*weight, hik, N);
+
+
+  double *sum_wi_hik_init = compute_sum_wi_hik(*weight, hik, N);
+  double *total_delta_init = compute_delta(*weight, examples, N, hik, sum_wi_hik_init, sum_hik, 1);
+  
+  double init_deriv = 0;
+  int w_index;
+  for(w_index = 0; w_index < weight->n; w_index++){
+    init_deriv += fabs(total_delta_init[w_index]) * fabs(total_delta_init[w_index]);
+  }
+  init_deriv = sqrt(init_deriv);
+
+  free(sum_wi_hik_init);
+  free(total_delta_init);
+  
+  int iter = 0;
+  double alpha_now = alpha;
+  double alpha_min = alpha;
+  
+  while(1){
+    iter++;
+
+    int w_index;
+    int e_index = rand() % N;
+
+    // compute sum_wi_hik
+    double sum_wi_hik = 0;
+    for(w_index = 0; w_index < weight->n; w_index++){
+      if(hik[w_index][e_index]){
+	sum_wi_hik += weight->w[w_index];
+      }
+    }
+
+    // compute link function values
+    double g_score = link_function(sum_wi_hik);
+    double g_deriv = link_function_deriv_relation(g_score);
+
+    // compute delta and update weight
+    short game_score = examples[e_index].score;    
+    for(w_index = 0; w_index < weight->n; w_index++){
+      if(hik[w_index][e_index]){
+	weight->w[w_index] += g_deriv * (game_score - g_score) * alpha_now;
+      }
+    }
+    
+    // check how good is the weight every 10000 iteration
+    if(iter % 1000000 == 0){
+      // compute total derivative
+      double *sum_wi_hik = compute_sum_wi_hik(*weight, hik, N);
+      double *total_delta = compute_delta(*weight, examples, N, hik, sum_wi_hik, sum_hik, 1);
+      
+      double deriv_norm = 0;
+      for(w_index = 0; w_index < weight->n; w_index++){
+	deriv_norm += fabs(total_delta[w_index]) * fabs(total_delta[w_index]);
+      }
+
+      deriv_norm = sqrt(deriv_norm);
+      printf("iteration %5d,    deriv_norm = %12.10lf,   alpha = %24.20lf\n",
+	     iter,
+	     deriv_norm,
+	     alpha_now);
+
+      free(sum_wi_hik);
+      free(total_delta);
+      
+      //alpha_now = pow(deriv_norm / init_deriv, 1) * alpha ;
+      if(alpha_min < alpha_now){
+	alpha_now = alpha_min;
+      } else {
+	alpha_min = alpha_now;
+      }
+      
+      if(deriv_norm < precision)
+	break;
+    }
+
+  }
+    
+
+  int i;
+  for(i=0;i<weight->n;i++){
+    free(hik[i]);
+  }
+  free(sum_hik);
+  free(hik);
+
+  return iter;
+}
+
 
 double total_error(Weight weight, Example *examples, int N){
 
@@ -353,3 +452,22 @@ int sort_examples_into_categories(Example *examples, Example **categories, int *
   return 0;
 
 }
+
+Weight init_weight_from_configs(Config configs, int n){
+  Weight weight;
+  weight.n = n;
+  weight.c = malloc(n * sizeof(Config_store));
+  weight.w = malloc(n * sizeof(double));
+
+  memcpy(weight.c, configs, n * sizeof(Config_store));
+  memset(weight.w, 0, n * sizeof(double));
+  
+  return weight;
+}
+
+void free_weight(Weight weight){
+  free(weight.c);
+  free(weight.w);
+}
+
+

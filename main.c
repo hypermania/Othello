@@ -28,8 +28,8 @@ int main(int argc, char **argv){
 
   
   // specifying the weight
+
   /*
-  int i;
   const int n = 32;
   Weight weight;
   weight.n = n;
@@ -38,12 +38,16 @@ int main(int argc, char **argv){
 
 
   long int places[64] = {ATOM(0,0), ATOM(0,1), ATOM(1,0), ATOM(1,1),
-			  ATOM(0,7), ATOM(0,6), ATOM(1,7), ATOM(1,6),
-			  ATOM(7,0), ATOM(7,1), ATOM(6,0), ATOM(6,1),
-			  ATOM(7,7), ATOM(7,6), ATOM(6,7), ATOM(6,6)
+			 ATOM(0,7), ATOM(0,6), ATOM(1,7), ATOM(1,6),
+			 ATOM(7,0), ATOM(7,1), ATOM(6,0), ATOM(6,1),
+			 ATOM(7,7), ATOM(7,6), ATOM(6,7), ATOM(6,6)
   };
-
-
+  */
+  /*
+  long int places[64] = {ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3),
+			 ATOM(0,4), ATOM(0,5), ATOM(0,6), ATOM(0,7)};
+  */
+  /*
   for(i=0;i<n/2;i++){
     weight.c[2*i].w = places[i];
     weight.c[2*i].b = 0;
@@ -59,12 +63,11 @@ int main(int argc, char **argv){
   }
   */
 
-  // read examples from file and process them into configs
-  /*
-  int count_examples;
-  //Example *examples = read_examples_from_file("./example_dat/randomized_examples.dat", &count_examples);
-  Example *examples = read_examples_from_file("./example_dat/cat_14.dat", &count_examples);
 
+
+  
+  
+  /*
   Config boards = malloc(count_examples * sizeof(Config_store));
 
   for(i=0;i<count_examples;i++){
@@ -73,6 +76,7 @@ int main(int argc, char **argv){
     boards[i].b = examples[i].board.b;
   }
   */
+  
 
   /*    
   int *matches = match_variations(variations, boards, n_v, n_b);
@@ -133,6 +137,35 @@ int main(int argc, char **argv){
   printf("count = %d\n", count);
 
 
+
+  
+  // read examples from file
+
+  //int count_examples;
+  //Example *examples = read_examples_from_file("./example_dat/randomized_examples.dat", &count_examples);
+  for(i=0;i<CAT_NUM;i++){
+    char filename[100];
+    sprintf(filename, "./example_dat/cat_%02d.dat", i);
+    Example *examples = read_examples_from_file(filename, &count_examples);
+    
+    int N = count_examples;
+    
+    Weight weight = init_weight_from_configs(filtered, count);
+    grad_descent(&weight, examples, N, 0.00001, 1, true);
+    
+    for(j=0;j<weight.n;j++){
+      printf("weight.w[%d]=%30.20lf\n", i, weight.w[i]);
+    }
+    
+    printf("total error = %30.20lf\n", total_error(weight, examples, N));
+
+    sprintf(filename, "./weight_dat/weight_%02d.dat", i);
+    save_dat_to_file(filename, weight.w, weight.n * sizeof(double));
+    free(examples);
+
+  }
+
+  
     /*  
   int count = 0;
   for(i=0;i<20;i++){
