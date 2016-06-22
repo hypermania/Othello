@@ -234,16 +234,16 @@ int state_switch_turn(State state){
 }
 
 
-int count_pieces(State state, int side){
+int count_pieces(State state, int val){
   assert(state != NULL);
-  assert(check_side(side) == 0);
+  assert(check_val(val) == 0);
 
   Board board = state->board;
   int r, c;
   int count = 0;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
-      if(board_get_pos(board, (Pos) {r,c}) == side)
+      if(board_get_pos(board, (Pos) {r,c}) == val)
 	count++;
     }
   }

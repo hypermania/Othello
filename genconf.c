@@ -1,5 +1,6 @@
 #include "genconf.h"
 #include "const.h"
+#include "io.h"
 
 Config create_and_init_config(void){
   Config config = (Config) malloc(sizeof(Config_store));
@@ -243,12 +244,12 @@ Config list_variations(Pattern pattern, int *n_var){
   return variations;
 }
 
-Config global_boards;
-Config global_variations;
-int *global_matches;
-int global_n_b;
+static Config global_boards;
+static Config global_variations;
+static int *global_matches;
+static int global_n_b;
 
-void *match_variations_thread(void *i){
+static void *match_variations_thread_symmetrize(void *i){
   int begin = ((int *)i)[0];
   int end = ((int *)i)[1];
   int v; int b;
@@ -264,12 +265,47 @@ void *match_variations_thread(void *i){
   return 0;
 }
 
-int *match_variations(Config variations, Config boards, int n_v, int n_b){
+static void *match_variations_thread(void *i){
+  int begin = ((int *)i)[0];
+  int end = ((int *)i)[1];
+  int v; int b;
+  for(v=begin;v<end;v++){
+    Config config = &global_variations[v];
+    int match = 0;
+    for(b=0;b<global_n_b;b++){
+      Config board = &global_boards[b];
+      match += match_one_conf_inline(*board, *config);
+    }
+    global_matches[v] = match;
+  }
+  return 0;
+}
+
+
+int *match_variations(Config variations, Config boards, int n_v, int n_b, int symmetrize){
   assert(variations != NULL);
   assert(boards != NULL);
   assert(n_v >= 0);
   assert(n_b >= 0);
 
+
+  
+  unsigned int hash_variations =
+    hash_mem((char *)variations, n_v * sizeof(Config_store));
+
+  unsigned int hash_boards =
+    hash_mem((char *)boards, n_b * sizeof(Config_store));
+  
+  char filename[200];
+  sprintf(filename, "./dat/match_variations/%x_%x_%x.dat", hash_variations, hash_boards, symmetrize);
+
+  if(access(filename, F_OK | R_OK) == 0){
+    printf("saved data exists, reading from file %s ...\n", filename);
+    int *matches = read_dat_from_file(filename, sizeof(int), &n_v);
+    return matches;
+  }
+
+  
   int *matches = malloc(n_v * sizeof(int));
   memset(matches, 0, n_v * sizeof(int));
 
@@ -287,23 +323,18 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b){
   bounds[4] = n_v;
   
   for(i=0;i<4;i++){
-    pthread_create(&(tids[i]), NULL, match_variations_thread, &bounds[i]);
+    if(symmetrize){
+      pthread_create(&(tids[i]), NULL, match_variations_thread_symmetrize, &bounds[i]);
+    } else {
+      pthread_create(&(tids[i]), NULL, match_variations_thread, &bounds[i]);
+    }
   }
   for(i=0;i<4;i++){
       pthread_join(tids[i], NULL);
   }
 
-  /*
-  int v; int b;
-  for(v=0;v<n_v;v++){
-    for(b=0;b<n_b;b++){
-      Config board = &boards[b];
-      Config config = &variations[v];
-      matches[v] += symmetric_match_one_conf(board, config);
-    }
-  }
-  */
-
+  save_dat_to_file(filename, matches, n_v * sizeof(int));
+  
   return matches;
 }
 

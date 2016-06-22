@@ -121,7 +121,7 @@ double *compute_delta(Weight weight, Example *examples, int N, char **hik, doubl
 	double g_score = link_function(sum_wi_hik[j]);
 	double g_deriv = link_function_deriv_relation(g_score);
 	delta[i] += alpha * 2 * g_deriv
-	  * (examples[j].score - g_score);
+	  * (examples[j].score - g_score) * hik[i][j];
       }
     }
     if(sum_hik[i]){
@@ -146,6 +146,8 @@ int grad_descent(Weight *weight, Example *examples, int N, double alpha, double 
 
   double *last_delta = malloc(weight->n * sizeof(double));
   memset(last_delta, 0, weight->n * sizeof(double));
+
+  int count_seq = 0;
   
   while(1){
     iter++;
@@ -168,6 +170,16 @@ int grad_descent(Weight *weight, Example *examples, int N, double alpha, double 
 	     alpha,
 	     quotient);
     //printf("total error = %30.20lf\n", total_error(*weight, examples, N));
+
+    if(count_seq >= 10 && quotient < 0 && quotient > -0.002){
+      alpha *= 1.5;
+      count_seq = 0;
+    } else if(quotient > 0) {
+      alpha /= 10;
+    } else {
+      count_seq++;
+    }
+    
     if(deriv_norm < precision){
       free(delta);
       free(sum_wi_hik);
@@ -291,7 +303,7 @@ double total_error(Weight weight, Example *examples, int N){
   assert(examples != NULL);
   assert(N > 0);
   
-  char **hik = compute_hik(weight, examples, N);
+  char **hik = compute_symmetric_hik(weight, examples, N);
   double *sum_wi_hik = compute_sum_wi_hik(weight, hik, N);
 
   double total_error = 0;

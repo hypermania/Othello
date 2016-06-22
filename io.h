@@ -31,5 +31,6 @@ Config read_configs_from_file(const char *filename, int *count_boards);
 void *read_dat_from_file(const char *filename, int obj_size, int *count_obj);
 void save_dat_to_file(const char *file_name, void *dat, int file_size);
 
+int get_file_size(const char *filename, size_t obj_size);
 
 #endif

@@ -26,9 +26,7 @@ int heuristic_score_1(State state, int side, int is_at_final){
   }
   */
 
-  //Pos neighbours[4][3] = {{(Pos) {0,1}, (Pos) {1,0}, (Pos) {1,1}}, {(Pos) {0,BOARD_SIZE-2}, (Pos) {1,BOARD_SIZE-1}, (Pos) {1,BOARD_SIZE-2}}, {(Pos) {BOARD_SIZE-2,0}, (Pos) {BOARD_SIZE-1,1}, (Pos) {BOARD_SIZE-2,1}}, {(Pos) {BOARD_SIZE-1,BOARD_SIZE-2}, (Pos) {BOARD_SIZE-2,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-2,BOARD_SIZE-2}}};
-
-  if(is_at_final){//state_final(state) == 1){
+  if(is_at_final){
     if(mypieces <= opppieces){
       return INT_MIN + 16384 + (mypieces - opppieces);
     }
@@ -47,7 +45,6 @@ int heuristic_score_1(State state, int side, int is_at_final){
       result -= 10;
     //dangerous optimization using board interface
 
-    //int oppcount = adj_given_pos(state->board, corners[i], neighbours, opp_side);
     int mycount = adj_given_pos(state->board, corners[i], NULL, side);
     if(corner_val == side) {
       result += 8*mycount;
@@ -61,23 +58,52 @@ int heuristic_score_1(State state, int side, int is_at_final){
   return result;
 }
 
-int state_score(State state, int my_side, int param){
+Weight *global_weights;
+
+double heuristic_score_2(State state){
+
+  Weight *weights = global_weights;
+  assert(state != NULL);
+  assert(weights != NULL);
+  double score = 0;
+
+  int pieces = BOARD_SIZE_SQR - count_pieces(state, X);
+  int cat = CAT(pieces);
+  Config board = create_and_init_config();
+  
+  board_to_conf(state->board, board);
+
+  char **hik = compute_symmetric_hik(weights[cat], (Example *)board, 1);
+  double *sc= compute_sum_wi_hik(weights[cat], hik, 1);
+
+  score = *sc;
+  free_config(board);
+  free(hik);
+  free(sc);
+  
+  //printf("score = %lf\n", score);
+  return score;
+}
+
+
+
+double state_score(State state, int my_side, int param){
   //int result = abpruning(state, param, -ROUNDS, ROUNDS, my_side);
-  int result = abpruning(state, param, INT_MIN, INT_MAX, my_side);
+  double result = abpruning(state, param, DBL_MIN, DBL_MAX, my_side);
   //int result = mcts(state, param, my_side);
   return result;
 }
 
 // private static function with no error checking
 // returns the score my making the move
-static int get_score_for_move(State state, Pos move,  int param){
+double get_score_for_move(State state, Pos move,  int param){
   State hold = create_state();
   cpy_state(hold, state);
   int my_side = hold->turn;
-  //printf("gsfm:my_side = %d\n", my_side);
+
   place_piece(hold, move, my_side);
   state_switch_turn(hold);
-  int score = state_score(hold, my_side, param);
+  double score = state_score(hold, my_side, param);
   
   free_state(hold);
   return score;
@@ -85,7 +111,7 @@ static int get_score_for_move(State state, Pos move,  int param){
 
 State global_state;
 Pos *global_moves;
-int *global_scores;
+double *global_scores;
 int global_param;
 
 static void *store_score(void *vargp){
@@ -99,16 +125,10 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   if(moves == NULL)
     return -2;
   // should try to eliminate error conditions
-  /*
-  int i;
-  for(i=0;i<movec;i++){
-    printf("moves:%d:(%d,%d)\n",i, moves[i].r, moves[i].c);
-  }
-  */
   if(movec == 1)
     return 0;
   
-  int scores[POS_STORE_SIZE];
+  double scores[POS_STORE_SIZE];
   global_state = state;
   global_moves = moves;
   global_scores = scores;
@@ -122,12 +142,15 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   for(i=0;i<movec;i++){
       pthread_join(tids[i], NULL);
   }
+
+  for(i=0;i<movec;i++){
+    printf("move (%d,%d): %lf\n", moves[i].r, moves[i].c, scores[i]);
+  }
   
   int max_moves[POS_STORE_SIZE];
   int num_max_moves = 0;
-  int max_score = INT_MIN; // int sum_scores = 0;
+  double max_score = DBL_MIN;
   for(i=0;i<movec;i++){
-    //printf("thread:i=%d, scores[i]=%d, max_score=%d, num_max_moves=%d\n", i, scores[i], max_score, num_max_moves);
     if(scores[i] > max_score){
       num_max_moves = 0;
       max_moves[num_max_moves] = i;
@@ -137,68 +160,53 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       max_moves[num_max_moves] = i;
       num_max_moves++;
     }
-    //sum_scores += scores[i];
-    //printf("move (%d,%d): %lf\n", moves[i].r, moves[i].c, scores[i]/((double)ROUNDS));
   }
-  //printf("avg = %lf\n", sum_scores/movec/((double)ROUNDS));
-  /*
-  for(i=0;i<movec;i++){
-    printf("thread:moves[%d] (%d,%d), score = %d\n", i,  moves[i].r, moves[i].c, scores[i]);
-  }
-  */
+
   int r = rand() % num_max_moves;
   return max_moves[r];
   
-  return 0;
+  //return 0;
 }
 
-//TODO
-/*
-int strategy_control(State state, Pos *moves, int movec, int param, int side){
-  if(side == B){
-    return best_next_state(State state, Pos *moves, int movec, int param);
-  } else {
-    return best_next_state(State state, Pos *moves, int movec, int param);
-  }
-  return 0;
-}
-*/
-
-int abpruning(State state, int depth, int a, int b, int side){
+double abpruning(State state, int depth, double a, double b, int side){
+  
   if(state == NULL)
     return -1;
   int is_at_final = 0;
-  if((depth == 0) || (is_at_final = (state_final(state) == 1)))
-    //return mcts(state, ROUNDS ,side);
-    return heuristic_score_1(state, side, is_at_final);
+  if((depth == 0) || (is_at_final = (state_final(state) == 1))){
+    //return heuristic_score_1(state, side, is_at_final);
+    return heuristic_score_2(state) * ((side == W) ? 1 : (-1) );
+  }
   
   Pos moves[POS_STORE_SIZE];
   int movec = allowed_moves(state, moves, state->turn);
   State next = create_state();
-  int v;
+  double v;
   if(side == state->turn){
-    v = INT_MIN;
-    
+    v = DBL_MIN;
     int i;
+    
     for(i=0;i<movec;i++){
       cpy_state(next, state);
       place_piece(next, moves[i], next->turn);
       state_switch_turn(next);
-      int score = abpruning(next, depth-1, a, b, side);
+      double score = abpruning(next, depth-1, a, b, side);
       v = (v > score) ? v : score; // v = max(v, score)
       a = (a > v) ? a : v; // a = max(a, v)
       if(b <= a)
 	break;
+
+
     }
   } else {
-    v = INT_MAX;
+    v = DBL_MAX;
     
     int i;
     for(i=0;i<movec;i++){
       cpy_state(next, state);
       place_piece(next, moves[i], next->turn);
       state_switch_turn(next);
-      int score = abpruning(next, depth-1, a, b, side);
+      double score = abpruning(next, depth-1, a, b, side);
       v = (v < score) ? v : score; // v = min(v, score)
       b = (b < v) ? b : v; // b = min(b, v)
       if(b <= a)

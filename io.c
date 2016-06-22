@@ -190,10 +190,11 @@ Example *read_examples_from_file(const char *filename, int *count_examples){
   rewind(fp);
   *count_examples = lSize/sizeof(Example);
   
-  printf("file size= %ld\ncount_examples = %d\n", lSize, *count_examples);
-
   Example *examples = malloc(lSize);
   fread(examples, lSize, 1, fp);
+  
+  printf("read %d examples.\n", *count_examples);
+
   fclose(fp);
 
   return examples;
@@ -213,10 +214,11 @@ Config read_configs_from_file(const char *filename, int *count_configs){
   rewind(fp);
   *count_configs = lSize/sizeof(Config_store);
   
-  printf("file size= %ld\ncount_configs = %d\n", lSize, *count_configs);
-
   Config configs = malloc(lSize);
   fread(configs, lSize, 1, fp);
+  
+  printf("read %d configs.\n", *count_configs);
+  
   fclose(fp);
 
   return configs;
@@ -237,10 +239,11 @@ void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   rewind(fp);
   *count_obj = lSize/obj_size;
   
-  printf("file size= %ld\ncount_configs = %d\n", lSize, *count_obj);
-
   Config data = malloc(lSize);
   fread(data, lSize, 1, fp);
+  
+  printf("read %d items.\n", *count_obj);
+  
   fclose(fp);
 
   return data;
@@ -251,4 +254,23 @@ void save_dat_to_file(const char *file_name, void *dat, int file_size){
   printf("writing to file %s: file_size = %d\n", file_name, file_size);
   write(fd, dat, file_size);
   close(fd);
+}
+
+
+int get_file_size(const char *filename, size_t obj_size){
+
+  int size;
+  
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("failed: file access error\n");
+    exit(0);
+  }
+
+  fseek(fp, 0L , SEEK_END);
+  long int lSize = ftell(fp);
+  //rewind(fp);
+  size = lSize/sizeof(Example);
+
+  return size;
 }

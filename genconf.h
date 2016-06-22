@@ -1,5 +1,7 @@
 #include "state.h"
+#include "hash.h"
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
@@ -36,7 +38,7 @@
   3. for each pattern, filter the configs that appear with probability < 0.01%
   4. create a scheme for storing the patterns in a table
   5. filter combinations of configs that appear with probability < 0.01%
-  6. 
+  6. repeat
  */
 
 typedef struct {
@@ -97,7 +99,7 @@ Config list_variations(Pattern pattern, int *n_var);
 // filter invalid configs in a set of variations
 /* count the (symmetric) number of matches to "boards" for each variation;
    returns the match number table */
-int *match_variations(Config variations, Config boards, int n_v, int n_b);
+int *match_variations(Config variations, Config boards, int n_v, int n_b, int symmetrize);
 /* returns the filtered table of configs
    stores the number of configs that passed the filter */
 Config filter_variations(Config variations, int *matches, int n_v, int n_b, int *k, double threshold);

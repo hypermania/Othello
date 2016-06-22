@@ -4,8 +4,10 @@
  */
 
 #include <stdlib.h>
-#include "state.h"
 #include <string.h>
+#include "hash.h"
+#include "state.h"
+
 
 #ifndef TABLE_H
 #define TABLE_H
@@ -56,13 +58,14 @@ int table_insert_state(Table table, State state);
 int table_delete_state(Table table, State state);
 
 
+
 /* the hash function */
+/*
 extern unsigned int hash_consts[];
 
 // hash 64 chars pointed by bytes
 unsigned int hash_board(char *bytes);
-
-
+*/
 
 //int table_insert_node(Table table, State state);
 

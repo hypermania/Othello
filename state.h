@@ -62,9 +62,8 @@ int allowed_moves(State state, Pos *store, int side);
 int place_piece(State state, Pos pos, int side);
 int state_switch_turn(State state);
 
-// return number of pieces given side
-// return -2 also if side is neither black or white
-int count_pieces(State state, int side);
+// return number of pieces given side (including empty spot)
+int count_pieces(State state, int val);
 
 // return 1 if this is a final state (neither player can move)
 // 0 if not

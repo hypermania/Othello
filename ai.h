@@ -5,7 +5,7 @@
 #include "state.h"
 #include "board.h"
 #include "table.h"
-
+#include "fit_weight.h"
 
 #ifndef AI_H
 #define AI_H
@@ -19,16 +19,18 @@
 
 // heuristic scoring functions
 int total_pieces(State state, int side);
-//int consider_corner(State state, int side, int is_at_final);
+int heuristic_score_1(State state, int side, int is_at_final);
+double heuristic_score_2(State state);
 
-int strategy_control(State state, Pos *moves, int movec, int param);
-
+double get_score_for_move(State state, Pos move,  int param);
+double state_score(State state, int my_side, int param);
 // state searching algorithms
 int best_next_state(State state, Pos *moves, int movec, int param);
 
 // scoring functions
-int abpruning(State state, int depth, int a, int b, int side);
+double abpruning(State state, int depth, double a, double b, int side);
 int mcts(State state, int width, int my_side);
+
 
 
 #endif

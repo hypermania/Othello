@@ -13,6 +13,8 @@
 #define BUFF_SIZE 256
 
 
+Weight *global_weights;
+
 int match_one_config(void);
 int process_games_into_examples(Example *examples);
 
@@ -26,57 +28,6 @@ int main(int argc, char **argv){
   // temporary variable
   int i, j;
 
-  
-  // specifying the weight
-
-  /*
-  const int n = 32;
-  Weight weight;
-  weight.n = n;
-  weight.c = create_and_init_config_list(n);
-  weight.w = malloc(n * sizeof(double));
-
-
-  long int places[64] = {ATOM(0,0), ATOM(0,1), ATOM(1,0), ATOM(1,1),
-			 ATOM(0,7), ATOM(0,6), ATOM(1,7), ATOM(1,6),
-			 ATOM(7,0), ATOM(7,1), ATOM(6,0), ATOM(6,1),
-			 ATOM(7,7), ATOM(7,6), ATOM(6,7), ATOM(6,6)
-  };
-  */
-  /*
-  long int places[64] = {ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3),
-			 ATOM(0,4), ATOM(0,5), ATOM(0,6), ATOM(0,7)};
-  */
-  /*
-  for(i=0;i<n/2;i++){
-    weight.c[2*i].w = places[i];
-    weight.c[2*i].b = 0;
-    weight.c[2*i].x = 0;
-
-    weight.w[2*i] = 0;
-    
-    weight.c[2*i+1].w = 0;
-    weight.c[2*i+1].b = places[i];
-    weight.c[2*i+1].x = 0;
-
-    weight.w[2*i+1] = 0;
-  }
-  */
-
-
-
-  
-  
-  /*
-  Config boards = malloc(count_examples * sizeof(Config_store));
-
-  for(i=0;i<count_examples;i++){
-    boards[i].x = examples[i].board.x;
-    boards[i].w = examples[i].board.w;
-    boards[i].b = examples[i].board.b;
-  }
-  */
-  
 
   /*    
   int *matches = match_variations(variations, boards, n_v, n_b);
@@ -84,11 +35,24 @@ int main(int argc, char **argv){
   save_dat_to_file("./genconf_dat/corner_variation_matches.dat", matches, n_v * sizeof(int));
   */
 
-  int count_examples;
-  Config boards = read_configs_from_file("./genconf_dat/boards.dat", &count_examples);
+  /*
+  int n_v; int n_b;
+  Config variations = list_variations(ROW(0) , &n_v);
+  Config boards = read_configs_from_file("./genconf_dat/boards.dat", &n_b);
 
-  int n_v; int n_b = count_examples;
+  int *matches = match_variations(variations, boards, n_v, n_b, 0);
+
+  for(i=0;i<25;i++){
+      print_config(&variations[i]);
+      printf("matches = %d\n", matches[i]);
+  }
   
+  free(matches);
+  */
+  
+
+  int n_b;
+  Config boards = read_configs_from_file("./genconf_dat/boards.dat", &n_b);
   int n_v1, n_v2;
   Config variations_1 =
     list_variations(
@@ -101,7 +65,12 @@ int main(int argc, char **argv){
 		    ROW(0)
 		    , &n_v2);
 
+  int *matches_1 = match_variations(variations_1, boards, n_v1, n_b, 1);
+  int *matches_2 = match_variations(variations_2, boards, n_v2, n_b, 1);
+  
+  /*
   int *matches_1 = read_dat_from_file("./genconf_dat/corner_variation_matches.dat", sizeof(int), &n_v1);
+
   int *matches_2 = read_dat_from_file("./genconf_dat/edge_variation_matches.dat", sizeof(int), &n_v2);
 
   const double threshold = 0.0027; // 3 sigmas
@@ -123,48 +92,47 @@ int main(int argc, char **argv){
 
   n_v = total; int count;
 
+
+  
   //int *matches = match_variations(crossover, boards, n_v, n_b);
   int *matches = read_dat_from_file("./genconf_dat/corner_row_variation_matches_0.0027.dat", sizeof(int), &n_v);
   
   //save_dat_to_file("./genconf_dat/corner_row_variation_matches_0.0027.dat", matches, n_v * sizeof(int));
   
   Config filtered = filter_variations(crossover, matches, n_v, n_b, &count, threshold);
-
-  for(i=0;i<25;i++){
-    print_config(&filtered[rand() % count]);
-  }
-
+  
   printf("count = %d\n", count);
-
-
-
+  */
   
   // read examples from file
 
   //int count_examples;
   //Example *examples = read_examples_from_file("./example_dat/randomized_examples.dat", &count_examples);
+  /*
   for(i=0;i<CAT_NUM;i++){
+    //i = 14;
     char filename[100];
     sprintf(filename, "./example_dat/cat_%02d.dat", i);
     Example *examples = read_examples_from_file(filename, &count_examples);
     
     int N = count_examples;
     
+    filtered = list_variations(ATOM(0,0), &count);
     Weight weight = init_weight_from_configs(filtered, count);
-    grad_descent(&weight, examples, N, 0.00001, 1, true);
+    grad_descent(&weight, examples, N, 0.0003, 1, true);
     
     for(j=0;j<weight.n;j++){
-      printf("weight.w[%d]=%30.20lf\n", i, weight.w[i]);
+      printf("weight.w[%d]=%30.20lf\n", j, weight.w[j]);
     }
     
-    printf("total error = %30.20lf\n", total_error(weight, examples, N));
+    printf("total error = %30.20lf\n\n\n", total_error(weight, examples, N));
 
-    sprintf(filename, "./weight_dat/weight_%02d.dat", i);
-    save_dat_to_file(filename, weight.w, weight.n * sizeof(double));
+    //sprintf(filename, "./weight_dat/weight_%02d.dat", i);
+    //save_dat_to_file(filename, weight.w, weight.n * sizeof(double));
     free(examples);
 
-  }
-
+    }
+  */
   
     /*  
   int count = 0;
@@ -251,17 +219,27 @@ int main(int argc, char **argv){
   */
   
   // run tests
+
+  //printf("test_board = %d\n", test_board());
+  //printf("test_state = %d\n", test_state());
+  //printf("test_table = %d\n", test_table());
+  //printf("test_genconf = %d\n", test_genconf());
+
   /*
-  printf("test_board = %d\n", test_board());
-  printf("test_state = %d\n", test_state());
-  printf("test_table = %d\n", test_table());
+  EvalFunc weights;
+  for(i=0;i<CAT_NUM;i++){
+    char filename[100];
+    sprintf(filename, "./weight_dat/weight_%02d.dat", i);
+    weights[i].n = count;
+    weights[i].c = filtered;
+    weights[i].w = read_dat_from_file(filename, sizeof(double), &count);
+  }
+  global_weights = weights;
 
-  printf("test_genconf = %d\n", test_genconf());
-  */
-
+  
   // run the game
-  //run_game(1,1,1,6,6);
-
+  run_game(1,1,1,6,10);
+  */
   
   exit(0);  
 }

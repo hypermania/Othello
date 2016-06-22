@@ -12,6 +12,8 @@
 #define CATEGORY_SIZE 4
 #define INIT_PIECE_NUM 4
 #define CAT_NUM ((BOARD_SIZE_SQR - INIT_PIECE_NUM)/CATEGORY_SIZE)
+#define CAT(pieces) (((pieces) - 1 - INIT_PIECE_NUM) / CATEGORY_SIZE)
+
 
 #define TOTAL_GAMES 117752
 
