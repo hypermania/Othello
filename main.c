@@ -26,7 +26,7 @@ int main(int argc, char **argv){
 
   // temporary variable
   int i, j;
-
+  
   /*    
   int *matches = match_variations(variations, boards, n_v, n_b);
 
@@ -47,25 +47,85 @@ int main(int argc, char **argv){
   
   free(matches);
   */
-  
 
+  //Pattern pattern = ATOM(0,0) | ATOM(0,1) | ATOM(0,2) | ATOM(0,3);
+  Pattern pattern = ROW(0) | ROW(1) | ATOM(2,0);
+  
+  Config_store config;
+  config.w = pattern;
+  config.b = 0;
+  config.x = 0;
+
+  print_config(&config);
+  
+  int n_v; int n_b;
+  int s = __builtin_popcountl(pattern);
+  n_v = ipow(3,s);
+  Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
+  //Config variations = list_variations(pattern, &n_v);
+  printf("n_v = %d\n", n_v);
+
+  int *matches = match_std_variation_list(pattern, boards, n_b);
+
+  save_dat_to_file("./dat/test_fast_match_var.dat", matches, n_v * sizeof(int));
+  //int *matches_old = match_variations(variations, boards, n_v, n_b, 0);
+  
+  free(matches);
+  /*
+  Config_store config;
+  for(i=0;i<n_b;i++){
+    config = boards[i];
+    
+    unsigned long int index = index_for_config(pattern, config);
+    int valid = match_one_conf_inline(config, variations[index]);
+    if(!valid){
+      printf("incorrect for:\n");
+      printf("i = %ld\n", i);
+      printf("index = %ld\n", index);
+      print_config(&config);
+      print_config(&variations[index]);
+    }
+  }
+
+  printf("valid\n");
+  */
+  //printf("correct = %d\n", memcmp(&config, &variations[index], sizeof(Config_store)) == 0);
+
+  
+  /*
   int n_b;
-  Config boards = read_configs_from_file("./genconf_dat/boards.dat", &n_b);
+  Config boards = read_configs_from_file("./dat/boards/cat_14.dat", &n_b);
 
   Pattern patterns[64];
+
   for(i=0;i<BOARD_SIZE_SQR;i++){
     patterns[i] = ((unsigned long int)1) << i;
   }
-  
-  GeneratedConf gc = genconf_for_patterns(patterns, boards, 64, n_b, 0.00001, 0);
+  */
+  //Pattern patterns[64] = {ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3), ATOM(0,4)};
+  /*
+  Pattern patterns[64] = {
+    ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3),
+    ATOM(0,4), ATOM(0,5), ATOM(0,6), ATOM(0,7),
+    ATOM(1,0), ATOM(2,0), ATOM(3,0), ATOM(4,0),
+    ATOM(5,0), ATOM(6,0), ATOM(7,0), ATOM(7,1),
+    ATOM(7,2), ATOM(7,3), ATOM(7,4), ATOM(7,5),
+    ATOM(7,6), ATOM(7,7), ATOM(6,7), ATOM(5,7),
+    ATOM(4,7), ATOM(3,7), ATOM(2,7), ATOM(1,7),
+    ATOM(1,1), ATOM(1,6), ATOM(6,6), ATOM(6,1)
+  };
+  GeneratedConf gc = genconf_for_patterns(patterns, boards, 32, n_b, 0.000001, 0);
 
   printf("gc.n = %d\n", gc.n);
-  
-  for(i=0;i<gc.n && i<100;i++){
-    print_config(&gc.variations[i]);
-    printf("matches = %d\n", gc.matches[i]);
-  }
 
+  if(true){
+  for(i=0;i<200;i++){
+    int r = rand() % gc.n;
+    print_config(&gc.variations[r]);
+    printf("matches = %d, freq = %12.10lf\n", gc.matches[r], (double)gc.matches[r]/n_b);
+  }
+  }
+  */
   
   /*
   int n_v1, n_v2;

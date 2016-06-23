@@ -214,12 +214,11 @@ Config list_variations(Pattern pattern, int *n_var){
     *n_var = 1;
     return base_variation;
   }
-
-  long int mask = 1;
+  unsigned long int mask = 1;
   while((mask & pattern) == 0){
     mask <<= 1;
   }
-
+  
   Pattern sub_pattern = mask ^ pattern;
   int sub_n = 1;
 
@@ -291,8 +290,6 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b, int sy
   assert(boards != NULL);
   assert(n_v >= 0);
   assert(n_b >= 0);
-
-
   
   unsigned int hash_variations =
     hash_mem((char *)variations, n_v * sizeof(Config_store));
@@ -626,4 +623,61 @@ GeneratedConf genconf_for_patterns(Pattern *patterns, Config boards, int n_p, in
 
   return gc;
   
+}
+
+unsigned long int index_for_config(Pattern pattern, Config_store config){
+  unsigned long int mask;
+  unsigned long int result = 0;
+  for(mask = 1; mask != 0; mask <<= 1){
+    if(mask & pattern){
+      result *= 3;
+      if(config.x & mask){
+	result += 0;
+      } else if(config.w & mask){
+	result += 1;
+      } else {
+	result += 2;
+      }
+    }
+  }
+  return result;
+}
+
+int ipow(int base, int exp){
+  int result = 1;
+  while(exp){
+    if (exp & 1)
+      result *= base;
+    exp >>= 1;
+    base *= base;
+  }
+  
+  return result;
+}
+
+int *match_std_variation_list(Pattern pattern, Config boards, int n_b){
+  int s = __builtin_popcountl(pattern);
+  int n_v = ipow(3,s);
+  int *matches = malloc(n_v * sizeof(int));
+  memset(matches, 0, n_v * sizeof(int));
+  
+  int b;
+  for(b=0;b<n_b;b++){
+    matches[index_for_config(pattern, boards[b])]++;
+  }
+  
+  return matches;
+}
+
+GeneratedConf genconf_single_pattern(Pattern pattern, Config boards, int n_b, double threshold){
+
+  GeneratedConf gc;
+  
+  int n_v;
+  Config variations = list_variations(pattern, &n_v);
+  int *matches = match_std_variation_list(pattern, boards, n_b);
+
+  Config filtered = filter_variations(variations, matches, n_v, n_b, &gc.n);
+  gc.variations = filtered;
+  //gc.matches = 
 }
