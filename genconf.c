@@ -205,6 +205,7 @@ Config list_variations(Pattern pattern, int *n_var){
   assert(n_var != NULL);
   int s = __builtin_popcountl(pattern);
 
+
   if(s == 0){
     Config base_variation = malloc(sizeof(Config_store));
     base_variation->x = 0;
@@ -221,13 +222,14 @@ Config list_variations(Pattern pattern, int *n_var){
 
   Pattern sub_pattern = mask ^ pattern;
   int sub_n = 1;
+
   Config sub_variations = list_variations(sub_pattern, &sub_n);
 
   int N = 3 * sub_n;
   *n_var = N;
-  Config variations = malloc(N * sizeof(Config_store));
-  memcpy(variations, sub_variations, sub_n * sizeof(Config_store));
-  memcpy(variations + sub_n, sub_variations, sub_n * sizeof(Config_store));
+  Config variations = malloc(N * sizeof(Config_store));   
+  memcpy(variations, sub_variations, sub_n * sizeof(Config_store)); 
+  memcpy(variations + sub_n, sub_variations, sub_n * sizeof(Config_store)); 
   memcpy(variations + 2*sub_n, sub_variations, sub_n * sizeof(Config_store));
   free(sub_variations);
   int i;
@@ -274,7 +276,9 @@ static void *match_variations_thread(void *i){
     int match = 0;
     for(b=0;b<global_n_b;b++){
       Config board = &global_boards[b];
-      match += match_one_conf_inline(*board, *config);
+      if(match_one_conf_inline(*board, *config)){
+	match += 1;//match_one_conf_inline(*board, *config);
+      }
     }
     global_matches[v] = match;
   }
@@ -336,41 +340,6 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b, int sy
   save_dat_to_file(filename, matches, n_v * sizeof(int));
   
   return matches;
-}
-
-
-int genconf_from_seq(State state, Pos *seq, Config boards){
-  assert(state != NULL);
-  assert(seq != NULL);
-  assert(boards != NULL);
-  
-  int turn = 0;
-  board_to_conf(state->board, &boards[turn]);
-  Pos moves[POS_STORE_SIZE]; int movec; 
-  init_state(state);
-  while(!state_final(state)){
-    movec = allowed_moves(state, moves, state->turn);
-    if(movec == 0){
-      state_switch_turn(state);
-    } else {
-      int i; int moved = 0;
-      for(i=0;i<movec;i++){
-	if(moves[i].r == seq[turn].r && moves[i].c == seq[turn].c){
-	  place_piece(state, seq[turn], state->turn);
-	  state_switch_turn(state);
-	  moved = 1;
-	  break;
-	}
-      }
-      if(moved == 0){
-	turn = 0;
-	break;
-      }
-      turn++;
-      board_to_conf(state->board, &boards[turn]);
-    }
-  }
-  return turn;
 }
 
 Config_store reflect_diag(Config_store config){
@@ -592,4 +561,69 @@ int match_pair_conf(Config_store config_1, Config_store config_2){
   if(xw | xb | wx | wb | bx | bw)
     return 0;
   return 1;
+}
+
+
+GeneratedConf genconf_for_patterns(Pattern *patterns, Config boards, int n_p, int n_b, double threshold, int symmetrize){
+  assert(patterns != NULL);
+  assert(threshold >= 0);
+  
+  Pattern empty = 0;
+  
+  int n_v;
+  Config variations = list_variations(empty, &n_v);
+
+
+  int i;
+  for(i=0;i<n_p;i++){
+    // compute variations
+
+    int new_n_v;
+    Config new_variations = list_variations(patterns[i], &new_n_v);
+
+    // find matches and filter new variations
+    int *new_matches =
+      match_variations(new_variations, boards, new_n_v, n_b, symmetrize);
+    int filtered_num;  
+    Config filtered =
+      filter_variations(new_variations, new_matches,
+			new_n_v, n_b, &filtered_num, threshold);
+
+    // cross-matching known variations with variations of the new known pattern
+    int cross_num;
+    Config cross =
+      cross_match(variations, filtered, n_v, filtered_num, &cross_num);
+
+    // match the joined variations
+    int *joined_matches =
+      match_variations(cross, boards, cross_num, n_b, symmetrize);
+    int joined_filtered_num; 
+    Config joined_filtered =
+      filter_variations(cross, joined_matches,
+			cross_num, n_b,
+			&joined_filtered_num, threshold);
+
+
+    // free redundant info
+    free(new_variations); 
+    free(new_matches);
+    free(filtered);
+    free(cross);
+    free(variations);
+    n_v = joined_filtered_num;
+    variations = joined_filtered;
+
+    printf("phase %d finished\ncurrent number of variations: %d\n\n", i, n_v);
+    
+  }
+  
+  int *matches = match_variations(variations, boards, n_v, n_b, symmetrize);  
+
+  GeneratedConf gc;
+  gc.n = n_v;
+  gc.variations = variations;
+  gc.matches = matches;
+
+  return gc;
+  
 }

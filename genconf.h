@@ -120,10 +120,13 @@ Config cross_match(Config variations_1, Config variations_2, int n_v1, int n_v2,
 Config_store config_join(Config_store config_1, Config_store config_2);
 int match_pair_conf(Config_store config_1, Config_store config_2);
 
+typedef struct {
+  int n;
+  Config variations;
+  int *matches;
+} GeneratedConf;
 
-// return number of boards/examples generated at success
-// return 0 at failure (such as incorrect game sequence)
-int genconf_from_seq(State state, Pos *seq, Config boards);
+GeneratedConf genconf_for_patterns(Pattern *patterns, Config boards, int n_p, int n_b, double threshold, int symmetrize);
 
 
 
