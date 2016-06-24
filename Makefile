@@ -14,8 +14,8 @@ LDFLAGS += $(foreach library,$(program_LIBRARIES),-l$(library))
 
 CFLAGS += -Ofast -pthread -Wall 
 
-CPPFLAGS += -pg
-CFLAGS += -pg
+#CPPFLAGS += -pg
+#CFLAGS += -pg
 
 #CFLAGS += -DNDEBUG
 

@@ -625,7 +625,31 @@ GeneratedConf genconf_for_patterns(Pattern *patterns, Config boards, int n_p, in
   
 }
 
+const int pow3[20] = {
+  1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049,
+  177147, 531441, 1594323, 4782969
+};
+
+const unsigned long int row_0_squares[8] = {
+  ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3), 
+  ATOM(0,4), ATOM(0,5), ATOM(0,6), ATOM(0,7)
+};
+
 unsigned long int index_for_config(Pattern pattern, Config_store config){
+
+  if(pattern == ROW(0)){
+    unsigned long int index = 0;
+    int i;
+    for(i=0;i<8;i++){
+      if(config.w & row_0_squares[i]){
+	index += pow3[i];
+      } else if(config.b & row_0_squares[i]){
+	index += 2 * pow3[i];
+      }
+    }
+    return index;
+  }
+
   unsigned long int mask;
   unsigned long int result = 0;
   for(mask = 1; mask != 0; mask <<= 1){
@@ -669,15 +693,112 @@ int *match_std_variation_list(Pattern pattern, Config boards, int n_b){
   return matches;
 }
 
-GeneratedConf genconf_single_pattern(Pattern pattern, Config boards, int n_b, double threshold){
 
-  GeneratedConf gc;
+FlatConfTable genconf_single_pattern(Pattern pattern, Config boards, int n_b, int threshold){
+  FlatConfTable fct;
   
   int n_v;
   Config variations = list_variations(pattern, &n_v);
   int *matches = match_std_variation_list(pattern, boards, n_b);
 
-  Config filtered = filter_variations(variations, matches, n_v, n_b, &gc.n);
-  gc.variations = filtered;
-  //gc.matches = 
+  fct.n = n_v;
+  fct.pattern = pattern;
+  fct.variations = variations;
+  fct.matches = matches;
+  fct.valid = malloc(n_v * sizeof(char));
+  memset(fct.valid, 0, n_v * sizeof(char));
+  int i;
+  for(i=0;i<n_v;i++){
+    if(matches[i] > threshold){
+      fct.valid[i] = 1;
+    }
+  }
+  return fct;
+}
+
+int init_weights_for_fct(FlatConfTable *fct){
+  assert(fct != NULL);
+  fct->weights = malloc(fct->n * sizeof(double));
+  memset(fct->weights, 0, fct->n * sizeof(double));
+  return 0;
+}
+
+// TODO
+Pattern *complete_pattern_set(Pattern *pattern, int n_p, int *n_c){
+  int allocated = 10;
+  Pattern *result = malloc(allocated * sizeof(Pattern));
+
+  int count = 0;
+  int p;
+  for(p=0;p<n_p;p++){
+    Pattern e = pattern[p];
+    Pattern r = pattern_rotate_90(e);
+    Pattern rr = pattern_rotate_180(e);
+    Pattern rrr = pattern_rotate_270(e);
+
+    Pattern s = pattern_reflect_diag(e);
+    Pattern sr = pattern_reflect_diag(r);
+    Pattern srr = pattern_reflect_diag(rr);
+    Pattern srrr = pattern_reflect_diag(rrr);
+
+    Pattern list[8] = {e, r, rr, rrr, s, sr, srr, srrr};
+    int l;
+    for(l=0;l<8;l++){
+      int i; char is_in_result = 0;
+      for(i=0;i<count;i++){
+	if(list[l] == result[i]){
+	  is_in_result = 1;
+	  break;
+	}
+      }
+      if(is_in_result)
+	continue;
+
+      if(allocated == count){
+	allocated += 10;
+	result = realloc(result, allocated * sizeof(Pattern));
+      }
+      result[count++] = list[l];
+    }
+  }
+  *n_c = count;
+  
+  return result;
+}
+
+Pattern pattern_reflect_diag(Pattern pattern){
+  Pattern result = 0;
+
+  result |= row_diag[(pattern & ROW(7)) >> 0] << 0;
+  result |= row_diag[(pattern & ROW(6)) >> 8] << 1;
+  result |= row_diag[(pattern & ROW(5)) >> 16] << 2;
+  result |= row_diag[(pattern & ROW(4)) >> 24] << 3;
+  result |= row_diag[(pattern & ROW(3)) >> 32] << 4;
+  result |= row_diag[(pattern & ROW(2)) >> 40] << 5;
+  result |= row_diag[(pattern & ROW(1)) >> 48] << 6;
+  result |= row_diag[(pattern & ROW(0)) >> 56] << 7;
+
+  return result;
+}
+
+Pattern pattern_rotate_90(Pattern pattern){
+  Pattern result = 0;
+  int r;
+  int c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(ATOM(r,c) & pattern){
+	result |= ATOM(BOARD_SIZE - 1 - c, r);
+      }
+    }
+  }
+  return result;
+}
+
+Pattern pattern_rotate_180(Pattern pattern){
+  return pattern_rotate_90(pattern_rotate_90(pattern));
+}
+
+Pattern pattern_rotate_270(Pattern pattern){
+  return pattern_rotate_90(pattern_rotate_90(pattern_rotate_90(pattern)));
 }

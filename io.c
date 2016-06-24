@@ -169,9 +169,26 @@ int print_config(Config config){
 	 __builtin_popcountl(config->w) +
 	 __builtin_popcountl(config->b)
 	 );
+  return 0;
+}
 
-  
-  
+int print_pattern(Pattern pattern){
+
+  Board board = create_board();
+  init_board(board);
+  int r, c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(ATOM(r,c) & pattern){
+	board_set_pos(board, (Pos) {r,c}, W);
+      }
+    }
+  }
+  print_board(board);
+  free_board(board);
+  printf("pattern = %016lx\n", pattern);
+  printf("degree = %d\n", __builtin_popcountl(pattern));
+
   return 0;
 }
 

@@ -483,3 +483,121 @@ void free_weight(Weight weight){
 }
 
 
+double get_weight_from_fct(FlatConfTable fct, Config_store board){
+  unsigned long int index = index_for_config(fct.pattern, board);
+  if(fct.valid[index]){
+    return fct.weights[index];
+  } else {
+    return 0;
+  }
+  return 0;
+}
+
+double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk){
+
+  double deriv = DBL_MAX;
+  double last_total_error = DBL_MAX;
+  int iter = 0;
+  while(deriv > precision){
+    deriv = iterate_descent_for_fct_list(fct_list, examples, n_f, n_e, alpha);
+    printf("iteration %3d, deriv = %20.15lf\n", iter++, deriv);
+
+    if(iter % chunk == 0){
+      double total_error = total_error_fct_list(fct_list, examples, n_f, n_e);
+      double change = (total_error - last_total_error)/last_total_error;
+      printf("total error = %20.15lf, change = %20.15lf\n", total_error, change);
+      if(fabs(change) < precision){
+	break;
+      }
+      last_total_error = total_error;
+    }
+    
+  }
+
+  return 0;
+}
+
+double iterate_descent_for_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha){
+
+  int e, f;
+
+  double deriv = 0;
+
+  unsigned long int *indices = malloc(n_f * sizeof(unsigned long int));
+  double **delta_fct_list = malloc(n_f * sizeof(double *));
+  for(f=0;f<n_f;f++){
+    delta_fct_list[f] = malloc(fct_list[f].n * sizeof(double));
+    memset(delta_fct_list[f], 0, fct_list[f].n * sizeof(double));
+  }
+  
+  double sum_hik = 0;
+  
+  for(e=0;e<n_e;e++){
+    double x_score = 0;
+    for(f=0;f<n_f;f++){
+      unsigned long int index =
+	index_for_config(fct_list[f].pattern, examples[e].board);
+      indices[f] = index;
+      if(fct_list[f].valid[index]){
+	x_score += fct_list[f].weights[index];
+	sum_hik += 1;
+      }
+    }
+    
+    double g_score = link_function(x_score);
+    double g_deriv = link_function_deriv_relation(g_score);
+    for(f=0;f<n_f;f++){
+      unsigned long int index = indices[f];
+      if(fct_list[f].valid[index]){
+	double delta =
+	  alpha * 2 //* ((double)1/(double)n_e)
+	  * g_deriv * (examples[e].score - g_score);
+	
+	delta_fct_list[f][index] = delta;
+	
+	fct_list[f].weights[index] += delta;
+      }
+    }
+  }
+
+  for(f=0;f<n_f;f++){
+    int i;
+    for(i=0;i<fct_list[f].n;i++){
+      if(fct_list[f].valid[i]){
+	double delta = delta_fct_list[f][i] / sum_hik;
+	fct_list[f].weights[i] += delta;
+	deriv += fabs(delta) * fabs(delta);
+      }
+    }
+  }
+  
+  for(f=0;f<n_f;f++){
+    free(delta_fct_list[f]);
+  }
+  free(delta_fct_list);
+  free(indices);
+  deriv = sqrt(deriv)/alpha;
+  return deriv;
+}
+
+double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e){
+  assert(fct_list != NULL);
+  assert(examples != NULL);
+
+  double total_error = 0;
+  
+  int e, f;
+  for(e=0;e<n_e;e++){
+    double x_score = 0;
+    for(f=0;f<n_f;f++){
+      x_score += get_weight_from_fct(fct_list[f], examples[e].board);
+    }
+    double g_score = link_function(x_score);
+    double case_error = examples[e].score - g_score;
+    case_error *= case_error;
+    total_error += case_error;
+  }
+  
+  return total_error/n_e;
+}
+

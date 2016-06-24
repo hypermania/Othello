@@ -20,6 +20,7 @@ static const char black_str[] = "black";
 int print_board(Board board);
 int print_state(State state);
 int print_config(Config config);
+int print_pattern(Pattern pattern);
 void print_options(Pos *moves, int movec);
 int get_human_response(int movec);
 // change (in place) a string (of max size n) read from a file to a Pos sequence

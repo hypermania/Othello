@@ -66,5 +66,21 @@ int example_from_seq(State state, Pos *seq, Example *example);
 Weight init_weight_from_configs(Config configs, int n);
 void free_weight(Weight weight);
 
+/* fct utilities */
+
+/* Returns the weight store in fct for board.
+   If the pattern is not active for this board: return 0.
+ */
+double get_weight_from_fct(FlatConfTable fct, Config_store board);
+double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e);
+
+double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk);
+
+// returns the norm of the derivative
+double iterate_descent_for_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha);
+
+
+
+
 
 #endif

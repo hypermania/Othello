@@ -48,29 +48,126 @@ int main(int argc, char **argv){
   free(matches);
   */
 
-  //Pattern pattern = ATOM(0,0) | ATOM(0,1) | ATOM(0,2) | ATOM(0,3);
-  Pattern pattern = ROW(0) | ROW(1) | ATOM(2,0);
-  
-  Config_store config;
-  config.w = pattern;
-  config.b = 0;
-  config.x = 0;
 
-  print_config(&config);
   
-  int n_v; int n_b;
-  int s = __builtin_popcountl(pattern);
-  n_v = ipow(3,s);
+
+  const int pattern_set_size = 12; // max 12
+  Pattern patterns[20] =
+    {
+      DIAG(0),
+      
+      ATOM(0,1)|ATOM(1,2)|ATOM(2,3)|ATOM(3,4)|ATOM(4,5)|ATOM(5,6)|ATOM(6,7),
+      
+      ATOM(0,2)|ATOM(1,3)|ATOM(2,4)|ATOM(3,5)|ATOM(4,6)|ATOM(5,7),
+      
+      ATOM(0,3)|ATOM(1,4)|ATOM(2,5)|ATOM(3,6)|ATOM(4,7),
+      
+      ATOM(0,4)|ATOM(1,5)|ATOM(2,6)|ATOM(3,7),
+      
+      ROW(0),
+      
+      ROW(1),
+      
+      ROW(2),
+      
+      ROW(3),
+
+      ROW(0)|ATOM(1,1)|ATOM(1,6),
+      
+      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|
+      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|
+      ATOM(2,0)|ATOM(2,1)|ATOM(2,2),
+
+      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|ATOM(0,3)|ATOM(0,4)|
+      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|ATOM(1,3)|ATOM(1,4)  
+    };
+
+  
+  int n_f;
+  Pattern *completion = complete_pattern_set(patterns, pattern_set_size, &n_f);
+  //Pattern *completion = patterns; n_f = 1;
+  //printf("n_f = %d\n", n_f);
+
+  for(i=0;i<n_f;i++){
+    printf("const unsigned long int pat_%02d_squares[12] = {", i);
+    unsigned long int max = 0x8000000000000000;
+    unsigned long int mask;
+    int count = 0;
+    for(mask = max; mask != 0; mask >>= 1){
+      if(mask & completion[i]){
+	printf("0x%016lx", mask);
+	count++;
+	if(count < __builtin_popcountl(completion[i])){
+	  printf(", ");
+	}
+      }
+    }
+    printf("};\n");
+  }
+  
+
+  /*
+  int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
-  //Config variations = list_variations(pattern, &n_v);
-  printf("n_v = %d\n", n_v);
+  int n_e;
+  Example *examples = read_examples_from_file("./dat/examples/cat_14.dat", &n_e);
 
-  int *matches = match_std_variation_list(pattern, boards, n_b);
+  int threshold = 25;
+  printf("q = %20.15lf\n", (double)threshold/n_b);
 
-  save_dat_to_file("./dat/test_fast_match_var.dat", matches, n_v * sizeof(int));
-  //int *matches_old = match_variations(variations, boards, n_v, n_b, 0);
+  int count_weights = 0;
+  FlatConfTable *fct_list = malloc(n_f * sizeof(FlatConfTable));
+  for(i=0;i<n_f;i++){
+    fct_list[i] = genconf_single_pattern(completion[i], boards, n_b, threshold);
+    init_weights_for_fct(&fct_list[i]);
+    //print_pattern(fct_list[i].pattern);
+    //printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
+    count_weights += fct_list[i].n;
+  }
+  printf("count_weights = %d\n", count_weights);
+
+  fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.00001, 250);
+
+  for(i=0;i<100;i++){
+    FlatConfTable fct = fct_list[rand() % n_f];
+    int r = rand() % fct.n;
+    if(fct.valid[r] && fabs(fct.weights[r]) > 0.01){
+      //print_config(&fct.variations[r]);
+      //printf("r = %d\n", r);
+      //printf("weight = %20.15lf\n", fct.weights[r]);
+    }
+  }
+  */
+
+  /*
+  int n_b;
+  Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
+
+  int pow3[20] = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049};
+  Pattern pattern = ROW(0);
+  int r;
+  for(r=0;r<n_b*20;r++){
+    i = r % n_b;
+    Config_store config = boards[i];
+    
+    if(false){
+      volatile unsigned long int index_old = index_for_config(pattern, config);
+    } else {
+      volatile unsigned long int index = 0;
+      for(j=0;j<8;j++){
+	if(config.w & ATOM(0,j)){
+	  index += pow3[j];
+	} else if(config.b & ATOM(0,j)){
+	  index += 2 * pow3[j];
+	}
+      }
+    }
+  }
+    
+  */
+
   
-  free(matches);
+  
   /*
   Config_store config;
   for(i=0;i<n_b;i++){

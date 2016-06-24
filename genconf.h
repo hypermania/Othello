@@ -64,6 +64,14 @@ typedef struct {
   int *matches;
 } GeneratedConf;
 
+typedef struct {
+  int n;
+  Pattern pattern;
+  char *valid;
+  Config variations;
+  int *matches;
+  double *weights;
+} FlatConfTable;
 
 Config create_and_init_config(void);
 Config create_and_init_config_list(int length);
@@ -89,7 +97,6 @@ int symmetric_match_one_conf_inline(Config_store boards, Config_store config);
 Config_store reflect_diag(Config_store config);
 Config_store reflect_rdiag(Config_store config);
 Config_store reflect_bdiag(Config_store config);
-
 
 
 /* pattern related utilities */
@@ -124,7 +131,22 @@ Config filter_variations(Config variations, int *matches, int n_v, int n_b, int 
 unsigned long int index_for_config(Pattern pattern, Config_store config);
 // not symmetrized
 int *match_std_variation_list(Pattern pattern, Config boards, int n_b);
-GeneratedConf genconf_single_pattern(Pattern pattern, Config boards, int n_b, double threshold);
+FlatConfTable genconf_single_pattern(Pattern pattern, Config boards, int n_b, int threshold);
+int init_weights_for_fct(FlatConfTable *fct);
+
+
+/* pattern utilities */
+// dihedral group
+Pattern pattern_reflect_diag(Pattern pattern);
+Pattern pattern_rotate_90(Pattern pattern);
+Pattern pattern_rotate_180(Pattern pattern);
+Pattern pattern_rotate_270(Pattern pattern);
+
+/* complete the pattern set via rotation/reflection
+   stores the total number of patterns generated in n_c
+*/
+Pattern *complete_pattern_set(Pattern *pattern, int n_p, int *n_c);
+
 
 // repeat
 /* "Multiplying" two sets of variations together:
