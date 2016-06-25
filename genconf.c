@@ -1,6 +1,5 @@
 #include "genconf.h"
-#include "const.h"
-#include "io.h"
+
 
 Config create_and_init_config(void){
   Config config = (Config) malloc(sizeof(Config_store));
@@ -290,7 +289,8 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b, int sy
   assert(boards != NULL);
   assert(n_v >= 0);
   assert(n_b >= 0);
-  
+
+  /*
   unsigned int hash_variations =
     hash_mem((char *)variations, n_v * sizeof(Config_store));
 
@@ -305,7 +305,7 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b, int sy
     int *matches = read_dat_from_file(filename, sizeof(int), &n_v);
     return matches;
   }
-
+  */
   
   int *matches = malloc(n_v * sizeof(int));
   memset(matches, 0, n_v * sizeof(int));
@@ -334,7 +334,7 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b, int sy
       pthread_join(tids[i], NULL);
   }
 
-  save_dat_to_file(filename, matches, n_v * sizeof(int));
+  //save_dat_to_file(filename, matches, n_v * sizeof(int));
   
   return matches;
 }
@@ -625,18 +625,9 @@ GeneratedConf genconf_for_patterns(Pattern *patterns, Config boards, int n_p, in
   
 }
 
-const int pow3[20] = {
-  1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049,
-  177147, 531441, 1594323, 4782969
-};
-
-const unsigned long int row_0_squares[8] = {
-  ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3), 
-  ATOM(0,4), ATOM(0,5), ATOM(0,6), ATOM(0,7)
-};
 
 unsigned long int index_for_config(Pattern pattern, Config_store config){
-
+  /*
   if(pattern == ROW(0)){
     unsigned long int index = 0;
     int i;
@@ -649,7 +640,14 @@ unsigned long int index_for_config(Pattern pattern, Config_store config){
     }
     return index;
   }
+  */
+  return index_for_config_fast(pattern, config);
+  
+  unsigned long int fast_result = index_for_config_fast(pattern, config);
+  if(fast_result != ULLONG_MAX)
+    return fast_result;
 
+  printf("point 0\n");
   unsigned long int mask;
   unsigned long int result = 0;
   for(mask = 1; mask != 0; mask <<= 1){

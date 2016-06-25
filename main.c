@@ -17,6 +17,96 @@ Weight *global_weights;
 
 int process_games_into_examples(Example *examples);
 
+void binarize_items(Pattern *patterns, int *indices, int n){
+  if(n<=2){
+    int i;
+    for(i=0;i<n;i++){
+      printf("if(pattern == 0x%016lx) return index_for_config_%02d(config);\n",
+	     patterns[i], indices[i]);
+    }
+    return;
+  }
+
+  int half = n/2;
+  int best_count = 0;
+  unsigned long int best_mask;
+  
+  int i, j;
+  for(i=0;i<1000;i++){
+    unsigned long int mask = 0;
+    for(j=0;j<64;j++){
+      if(!(rand() % 10)){
+	mask |= (unsigned long int)1 << j;
+      }
+    }
+    int count = 0;
+    for(j=0;j<n;j++){
+      if(patterns[j] & mask){
+	count++;
+      }
+    }
+    if(abs(best_count - half) > abs(count - half)){
+      best_count = count;
+      best_mask = mask;
+      //printf("best_count = %d\n", count);
+      if(best_count == half)
+	break;
+    }
+  }
+
+  int m = best_count;
+  unsigned long int class = best_mask;
+
+  Pattern *left_p = malloc(m * sizeof(Pattern));
+  Pattern *right_p = malloc((n-m) * sizeof(Pattern));
+
+  int *left_i = malloc(m * sizeof(int));
+  int *right_i = malloc((n-m) * sizeof(int));
+
+  int l = 0; int r = 0;
+  
+  for(i=0;i<n;i++){
+    if(class & patterns[i]){
+      left_p[l] = patterns[i];
+      left_i[l] = indices[i];
+      l++;
+    } else {
+      right_p[r] = patterns[i];
+      right_i[r] = indices[i];
+      r++;
+    }
+  }
+
+  printf("if(pattern & 0x%016lx){\n", class);
+  binarize_items(left_p, left_i, m);
+  printf("} else {\n");
+  binarize_items(right_p, right_i, n-m);
+  printf("}\n");
+
+  
+  free(left_p);
+  free(right_p);
+  free(left_i);
+  free(right_i);
+  /*
+
+  for(i=0;i<n;i++){
+    if(class & patterns[i]){
+      printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", patterns[i], i);
+    }
+  }
+  printf("} else {\n");
+  for(i=0;i<n;i++){
+    if(!(class & patterns[i])){
+      printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", patterns[i], i);
+    }
+  }
+  printf("}\n");
+  */
+  
+  return;
+}
+
 int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
@@ -82,31 +172,87 @@ int main(int argc, char **argv){
       ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|ATOM(1,3)|ATOM(1,4)  
     };
 
-  
+
   int n_f;
   Pattern *completion = complete_pattern_set(patterns, pattern_set_size, &n_f);
-  //Pattern *completion = patterns; n_f = 1;
-  //printf("n_f = %d\n", n_f);
-
+  printf("n_f = %d\n", n_f);
+  /*
+  int *indices = malloc(n_f * sizeof(int));
   for(i=0;i<n_f;i++){
-    printf("const unsigned long int pat_%02d_squares[12] = {", i);
-    unsigned long int max = 0x8000000000000000;
-    unsigned long int mask;
-    int count = 0;
-    for(mask = max; mask != 0; mask >>= 1){
-      if(mask & completion[i]){
-	printf("0x%016lx", mask);
-	count++;
-	if(count < __builtin_popcountl(completion[i])){
-	  printf(", ");
-	}
-      }
-    }
-    printf("};\n");
+    indices[i] = i;
   }
+  binarize_items(completion, indices, n_f);
+  */
   
+  /*  
+  unsigned long int class1 =
+    ATOM(0,0) | ATOM(7,7) | ATOM(0,7) | ATOM(7,0) | ATOM(4,4);
+
+  unsigned long int class2 = 
+    ATOM(1,1) | ATOM(6,6) | ATOM(5,7) | ATOM(5,5) | ATOM(5,4) | ATOM(5,3);
+  printf("class2 = 0x%016lx\n", class2);
+  unsigned long int class3 = 
+    ATOM(0,5) | ATOM(0,6) | ATOM(1,0) | ATOM(2,0) | ATOM(3,0) | ATOM(4,0) |
+    ATOM(5,0);
+  printf("if(pattern & 0x%016lx){\n", class3);
+
+
+  
+  int count = 0; int total = 0;
+  for(i=0;i<n_f;i++){
+    if((!(completion[i] & class1)) &&
+       ((completion[i] & class2)) &&
+       ((completion[i] & class3)) ){
+      printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", completion[i], i);
+      count++; total++;
+    }
+  }
+  printf("} else {\n");
+  for(i=0;i<n_f;i++){
+    if((!(completion[i] & class1)) &&
+       ((completion[i] & class2)) &&
+       (!(completion[i] & class3)) ){
+      printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", completion[i], i);
+      total++;
+    }
+  }
+  printf("}\n");
+  
+  printf("total = %d\n", total);
+  printf("count = %d\n", count);
+  */
 
   /*
+  for(j=0;j<10;j++){
+  unsigned long int mask = 0;
+  for(i=0;i<64;i++){
+    if(!(rand() % 10)){
+      mask |= (unsigned long int)1 << i;
+    }
+  }
+
+  int count = 0; int total = 0;
+  for(i=0;i<n_f;i++){
+    if(completion[i] & mask){
+      //printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", completion[i], i);
+      count++; total++;
+    }
+  }
+  //printf("} else {\n");
+  for(i=0;i<n_f;i++){
+    if(!(completion[i] & mask)){
+      //printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", completion[i], i);
+      total++;
+    }
+  }
+  //printf("}\n");
+  
+  //printf("total = %d\n", total);
+  printf("count = %d\n", count);
+
+  }  
+  */
+
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
   int n_e;
@@ -120,14 +266,20 @@ int main(int argc, char **argv){
   for(i=0;i<n_f;i++){
     fct_list[i] = genconf_single_pattern(completion[i], boards, n_b, threshold);
     init_weights_for_fct(&fct_list[i]);
-    //print_pattern(fct_list[i].pattern);
-    //printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
+    print_pattern(fct_list[i].pattern);
+    printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
     count_weights += fct_list[i].n;
   }
   printf("count_weights = %d\n", count_weights);
 
-  fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.00001, 250);
+  struct timeval start;
+  struct timeval end;
+  gettimeofday(&start, NULL);
+  fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.001, 10);
+  gettimeofday(&end, NULL);
 
+  printf("duration = %d\n", end.tv_sec - start.tv_sec);
+  
   for(i=0;i<100;i++){
     FlatConfTable fct = fct_list[rand() % n_f];
     int r = rand() % fct.n;
@@ -137,7 +289,7 @@ int main(int argc, char **argv){
       //printf("weight = %20.15lf\n", fct.weights[r]);
     }
   }
-  */
+
 
   /*
   int n_b;

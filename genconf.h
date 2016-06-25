@@ -1,5 +1,16 @@
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+
 #include "state.h"
 #include "hash.h"
+
+#include "const.h"
+//#include "io.h"
+
+
+
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -8,8 +19,6 @@
 #include <math.h>
 #include <limits.h>
 
-#ifndef CONFIG_H
-#define CONFIG_H
 
 #define LOG_BOARD_SIZE 3
 #define GAME_LENGTH 60

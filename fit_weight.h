@@ -1,13 +1,15 @@
+#ifndef FIT_WEIGHT_H
+#define FIT_WEIGHT_H
+
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
 #include <float.h>
 
-#include "state.h"
+
+#include "index_computation.h"
 #include "genconf.h"
 
-#ifndef FIT_WEIGHT_H
-#define FIT_WEIGHT_H
 
 #define CATEGORY_SIZE 4
 #define INIT_PIECE_NUM 4

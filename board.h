@@ -1,11 +1,11 @@
 // implements board interface
+#ifndef BOARD_H
+#define BOARD_H
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
-#ifndef BOARD_H
-#define BOARD_H
 
 
 #define BOARD_SIZE 8

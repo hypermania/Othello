@@ -1,9 +1,8 @@
-#include <stdlib.h>
-//#include "state.h"
-#include <string.h>
-
 #ifndef HASH_H
 #define HASH_H
+
+#include <stdlib.h>
+#include <string.h>
 
 
 /* the hash function */

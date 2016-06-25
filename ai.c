@@ -58,6 +58,7 @@ int heuristic_score_1(State state, int side, int is_at_final){
   return result;
 }
 
+/*
 Weight *global_weights;
 
 double heuristic_score_2(State state){
@@ -84,7 +85,7 @@ double heuristic_score_2(State state){
   //printf("score = %lf\n", score);
   return score;
 }
-
+*/
 
 
 double state_score(State state, int my_side, int param){
@@ -174,8 +175,8 @@ double abpruning(State state, int depth, double a, double b, int side){
     return -1;
   int is_at_final = 0;
   if((depth == 0) || (is_at_final = (state_final(state) == 1))){
-    //return heuristic_score_1(state, side, is_at_final);
-    return heuristic_score_2(state) * ((side == W) ? 1 : (-1) );
+    return heuristic_score_1(state, side, is_at_final);
+    //return heuristic_score_2(state) * ((side == W) ? 1 : (-1) );
   }
   
   Pos moves[POS_STORE_SIZE];

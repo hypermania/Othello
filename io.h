@@ -1,3 +1,6 @@
+#ifndef IO_H
+#define IO_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,8 +12,8 @@
 #include "genconf.h"
 #include "fit_weight.h"
 
-#ifndef IO_H
-#define IO_H
+
+
 
 static const char white_str[] = "white";
 static const char black_str[] = "black";

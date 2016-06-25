@@ -1,5 +1,7 @@
 // implements core game utilities
 
+#ifndef STATE_H
+#define STATE_H
 
 
 #include <stdio.h>
@@ -8,8 +10,6 @@
 #include <stdbool.h>
 #include "board.h"
 
-#ifndef STATE_H
-#define STATE_H
 
 
 typedef struct {

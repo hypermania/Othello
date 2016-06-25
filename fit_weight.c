@@ -498,7 +498,7 @@ double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e
   double deriv = DBL_MAX;
   double last_total_error = DBL_MAX;
   int iter = 0;
-  while(deriv > precision){
+  while(1){
     deriv = iterate_descent_for_fct_list(fct_list, examples, n_f, n_e, alpha);
     printf("iteration %3d, deriv = %20.15lf\n", iter++, deriv);
 

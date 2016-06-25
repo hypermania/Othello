@@ -1,14 +1,16 @@
+#ifndef AI_H
+#define AI_H
+
 #include <stdlib.h>
 #include <limits.h>
 #include <pthread.h>
+#include <float.h>
 
 #include "state.h"
 #include "board.h"
 #include "table.h"
 #include "fit_weight.h"
 
-#ifndef AI_H
-#define AI_H
 
 
 #define MAXIMIZE 1
