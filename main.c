@@ -264,7 +264,8 @@ int main(int argc, char **argv){
   printf("count_weights = %d\n", count_weights);
   printf("count_valid = %d\n", count_valid);
 
-  fit_fct_list(fct_list, examples, n_f, n_e, 0.0060439756, 0.01, 10);//0.00001, 10);
+  //fit_fct_list(fct_list, examples, n_f, n_e, 0.0060439756, 0.01, 10);
+  fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.01, 10);
 
   for(i=0;i<100;i++){
     FlatConfTable fct = fct_list[rand() % n_f];
