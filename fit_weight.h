@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <float.h>
+#include <semaphore.h>
 
 
 #include "index_computation.h"
@@ -54,7 +55,7 @@ double total_error(Weight weight, Example *examples, int N);
 
 double link_function(double x);
 double link_function_deriv_relation(double link_function_val);
-
+double link_function_2nd_deriv_relation(double g_score, double g_deriv);
 
 /* preprocessors */
 
@@ -80,6 +81,11 @@ double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e
 
 // returns the norm of the derivative
 double iterate_descent_for_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha);
+
+// TODO
+//double fit_fct_list_mt(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk);
+void *iterate_descent_fct_thread(void *index);
+double iterate_descent_for_fct_list_mt(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha);
 
 
 

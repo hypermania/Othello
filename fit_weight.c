@@ -335,6 +335,10 @@ double link_function_deriv_relation(double link_function_val){
   return  (link_function_val + BOARD_SIZE_SQR) * (BOARD_SIZE_SQR - link_function_val) / (2*BOARD_SIZE_SQR);
 }
 
+double link_function_2nd_deriv_relation(double g_score, double g_deriv){
+  return 2 * g_deriv * g_deriv / (g_score + BOARD_SIZE) - g_deriv;
+}
+
 /*
 // TODO
 Weight symmetrize_weight(Weight *weight){
@@ -496,42 +500,108 @@ double get_weight_from_fct(FlatConfTable fct, Config_store board){
 double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk){
 
   double deriv = DBL_MAX;
+  double last_deriv = DBL_MAX;
   double last_total_error = DBL_MAX;
   int iter = 0;
   while(1){
-    deriv = iterate_descent_for_fct_list(fct_list, examples, n_f, n_e, alpha);
-    printf("iteration %3d, deriv = %20.15lf\n", iter++, deriv);
-
+    deriv = iterate_descent_for_fct_list_mt(fct_list, examples, n_f, n_e, alpha);
+    double change_deriv = (deriv - last_deriv)/last_deriv;
+    printf("iteration %3d, deriv = %20.15lf, change_deriv = %20.15lf, alpha = %20.15lf\n", iter++, deriv, change_deriv, alpha);
+    
     if(iter % chunk == 0){
       double total_error = total_error_fct_list(fct_list, examples, n_f, n_e);
       double change = (total_error - last_total_error)/last_total_error;
       printf("total error = %20.15lf, change = %20.15lf\n", total_error, change);
-      if(fabs(change) < precision){
-	break;
-      }
       last_total_error = total_error;
     }
-    
-  }
 
+    if(fabs(deriv) < precision)
+      break;
+    
+    if(change_deriv < 0 && fabs(change_deriv) < 0.01){
+      alpha *= 1.1;
+    }
+    if(change_deriv > 0){
+      alpha /= 10;
+    }
+    last_deriv = deriv;
+      
+  }
+  
   return 0;
 }
+
+#define TH_NUM 4
+FlatConfTable *global_fct_list;
+Example *global_examples;
+void *global_bounds;
+int global_n_f;
+int global_n_e;
+
+struct {
+  double **deriv_fct_list;
+  //double sum_hik;
+} th_results[TH_NUM];
+
+void *iterate_descent_fct_thread(void *bounds){
+
+  int start = ((int *)bounds)[0];
+  int end = ((int *)bounds)[1];
+  
+  int n_f = global_n_f;
+  
+  double **deriv_fct_list = malloc(n_f * sizeof(double *));
+  
+  int e, f;  
+  for(f=0;f<n_f;f++){
+    deriv_fct_list[f] = malloc(global_fct_list[f].n * sizeof(double));
+    memset(deriv_fct_list[f], 0, global_fct_list[f].n * sizeof(double));
+  }
+  unsigned long int *indices = malloc(n_f * sizeof(unsigned long int));
+  
+  for(e = start; e < end; e++){
+    double x_score = 0;
+    for(f=0;f<n_f;f++){
+      unsigned long int index =
+	index_for_config(global_fct_list[f].pattern, global_examples[e].board);
+      indices[f] = index;
+      
+      if(global_fct_list[f].valid[index]){
+	x_score += global_fct_list[f].weights[index];
+      }
+    }
+
+    double g_score = link_function(x_score);
+    double g_deriv = link_function_deriv_relation(g_score);
+    for(f=0;f<n_f;f++){
+      unsigned long int index = indices[f];
+      if(global_fct_list[f].valid[index]){
+	double chi_deriv =
+	  2 * g_deriv * (global_examples[e].score - g_score) / global_n_e;
+	deriv_fct_list[f][index] += chi_deriv;
+      }
+    }
+  }
+  
+  int th = (bounds - global_bounds)/sizeof(int);
+  th_results[th].deriv_fct_list = deriv_fct_list;
+
+  free(indices);
+}
+
 
 double iterate_descent_for_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha){
 
   int e, f;
-
-  double deriv = 0;
-
-  unsigned long int *indices = malloc(n_f * sizeof(unsigned long int));
-  double **delta_fct_list = malloc(n_f * sizeof(double *));
+  double **deriv_fct_list = malloc(n_f * sizeof(double *));
+  
   for(f=0;f<n_f;f++){
-    delta_fct_list[f] = malloc(fct_list[f].n * sizeof(double));
-    memset(delta_fct_list[f], 0, fct_list[f].n * sizeof(double));
+    deriv_fct_list[f] = malloc(fct_list[f].n * sizeof(double));
+    memset(deriv_fct_list[f], 0, fct_list[f].n * sizeof(double));
   }
   
-  double sum_hik = 0;
-  
+  unsigned long int *indices = malloc(n_f * sizeof(unsigned long int));
+
   for(e=0;e<n_e;e++){
     double x_score = 0;
     for(f=0;f<n_f;f++){
@@ -540,45 +610,104 @@ double iterate_descent_for_fct_list(FlatConfTable *fct_list, Example *examples, 
       indices[f] = index;
       if(fct_list[f].valid[index]){
 	x_score += fct_list[f].weights[index];
-	sum_hik += 1;
       }
     }
-    
+
     double g_score = link_function(x_score);
     double g_deriv = link_function_deriv_relation(g_score);
     for(f=0;f<n_f;f++){
       unsigned long int index = indices[f];
       if(fct_list[f].valid[index]){
-	double delta =
-	  alpha * 2 //* ((double)1/(double)n_e)
-	  * g_deriv * (examples[e].score - g_score);
-	
-	delta_fct_list[f][index] = delta;
-	
-	fct_list[f].weights[index] += delta;
+	double chi_deriv =
+	  2 * g_deriv * (examples[e].score - g_score) / n_e;
+	deriv_fct_list[f][index] += chi_deriv;
       }
     }
   }
 
+  double deriv = 0;  
   for(f=0;f<n_f;f++){
     int i;
     for(i=0;i<fct_list[f].n;i++){
       if(fct_list[f].valid[i]){
-	double delta = delta_fct_list[f][i] / sum_hik;
+	double delta = alpha * deriv_fct_list[f][i];
+
 	fct_list[f].weights[i] += delta;
 	deriv += fabs(delta) * fabs(delta);
       }
     }
+    //debug
+    if(f == 0)
+      printf("deriv = %30.20lf\n", deriv);
+    
   }
   
   for(f=0;f<n_f;f++){
-    free(delta_fct_list[f]);
+    free(deriv_fct_list[f]);
   }
-  free(delta_fct_list);
+  free(deriv_fct_list);
   free(indices);
   deriv = sqrt(deriv)/alpha;
   return deriv;
 }
+
+double iterate_descent_for_fct_list_mt(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha){
+
+
+  int bounds[TH_NUM + 1];
+  
+  int th; int interval = n_e/4;
+  for(th=0;th<TH_NUM;th++){
+    bounds[th] = interval * th;
+  }
+  bounds[th] = n_e;
+
+  global_fct_list = fct_list;
+  global_examples = examples;
+  global_bounds = bounds;
+  global_n_f = n_f;
+  global_n_e = n_e;
+  
+  pthread_t tids[TH_NUM];
+  for(th=0;th<TH_NUM;th++){
+    pthread_create(&(tids[th]), NULL, iterate_descent_fct_thread, &bounds[th]);
+  }
+  for(th=0;th<TH_NUM;th++){
+    pthread_join(tids[th], NULL);
+  }
+
+  double deriv = 0;    
+  int f;
+  for(f=0;f<n_f;f++){
+    int i;
+    for(i=0;i<fct_list[f].n;i++){
+      if(fct_list[f].valid[i]){
+	double delta = 0;
+	for(th=0;th<TH_NUM;th++){
+	  delta += alpha * th_results[th].deriv_fct_list[f][i];
+	}
+	fct_list[f].weights[i] += delta;
+	deriv += fabs(delta) * fabs(delta);
+      }
+    }
+    //debug
+    if(f == 0)
+      printf("deriv = %30.20lf\n", deriv);
+    
+  }
+
+  for(th=0;th<TH_NUM;th++){
+    for(f=0;f<n_f;f++){
+      free(th_results[th].deriv_fct_list[f]);
+    }
+    free(th_results[th].deriv_fct_list);
+  }
+  
+  deriv = sqrt(deriv)/alpha;
+  return deriv;
+}
+
+
 
 double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e){
   assert(fct_list != NULL);

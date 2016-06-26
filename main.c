@@ -29,7 +29,7 @@ void binarize_items(Pattern *patterns, int *indices, int n){
 
   int half = n/2;
   int best_count = 0;
-  unsigned long int best_mask;
+  unsigned long int best_mask = 0;
   
   int i, j;
   for(i=0;i<1000;i++){
@@ -48,7 +48,6 @@ void binarize_items(Pattern *patterns, int *indices, int n){
     if(abs(best_count - half) > abs(count - half)){
       best_count = count;
       best_mask = mask;
-      //printf("best_count = %d\n", count);
       if(best_count == half)
 	break;
     }
@@ -88,21 +87,6 @@ void binarize_items(Pattern *patterns, int *indices, int n){
   free(right_p);
   free(left_i);
   free(right_i);
-  /*
-
-  for(i=0;i<n;i++){
-    if(class & patterns[i]){
-      printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", patterns[i], i);
-    }
-  }
-  printf("} else {\n");
-  for(i=0;i<n;i++){
-    if(!(class & patterns[i])){
-      printf("  if(pattern == 0x%016lx) return index_for_config_%02d(config);\n", patterns[i], i);
-    }
-  }
-  printf("}\n");
-  */
   
   return;
 }
@@ -256,30 +240,32 @@ int main(int argc, char **argv){
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
   int n_e;
-  Example *examples = read_examples_from_file("./dat/examples/cat_14.dat", &n_e);
+  Example *examples = read_examples_from_file("./dat/examples/cat_13.dat", &n_e);
 
-  int threshold = 25;
+  int threshold = 10;
   printf("q = %20.15lf\n", (double)threshold/n_b);
 
-  int count_weights = 0;
+  int count_weights = 0; int count_valid = 0;
   FlatConfTable *fct_list = malloc(n_f * sizeof(FlatConfTable));
   for(i=0;i<n_f;i++){
     fct_list[i] = genconf_single_pattern(completion[i], boards, n_b, threshold);
     init_weights_for_fct(&fct_list[i]);
-    print_pattern(fct_list[i].pattern);
+    //print_pattern(fct_list[i].pattern);
     printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
     count_weights += fct_list[i].n;
+    for(j=0;j<fct_list[i].n;j++){
+      if(fct_list[i].valid[j]){
+	count_valid++;
+      }
+    }
   }
-  printf("count_weights = %d\n", count_weights);
-
-  struct timeval start;
-  struct timeval end;
-  gettimeofday(&start, NULL);
-  fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.001, 10);
-  gettimeofday(&end, NULL);
-
-  printf("duration = %d\n", end.tv_sec - start.tv_sec);
   
+  
+  printf("count_weights = %d\n", count_weights);
+  printf("count_valid = %d\n", count_valid);
+
+  fit_fct_list(fct_list, examples, n_f, n_e, 0.0060439756, 0.01, 10);//0.00001, 10);
+
   for(i=0;i<100;i++){
     FlatConfTable fct = fct_list[rand() % n_f];
     int r = rand() % fct.n;
