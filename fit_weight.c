@@ -11,7 +11,7 @@ int example_from_seq(State state, Pos *seq, Example *example){
   init_state(state);
   while(!state_final(state)){
     
-    movec = allowed_moves(state, moves, state->turn);
+    movec = allowed_moves(state, moves);
     if(movec == 0){
       state_switch_turn(state);
     } else {

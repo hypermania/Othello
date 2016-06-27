@@ -3,14 +3,11 @@
 #ifndef STATE_H
 #define STATE_H
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include "board.h"
-
-
 
 typedef struct {
   // info that determines the state
@@ -21,7 +18,7 @@ typedef struct {
     // true when transposition info are filled accordingly
     bool trans_filled;
     // true when previous move data exists (dependent on external info)
-    bool seq_valid; // seems useless, should delete
+    bool score_valid;
   } control;
   
   // transposition info (dependent only on board and turn)
@@ -33,6 +30,9 @@ typedef struct {
   // previous move data (dependent on external info)
   Pos seq[BOARD_SIZE_SQR];
   int seq_num;
+
+  // score data
+  double score;
 } *State, State_store;
 
 /* assertions for wrong inputs */
@@ -53,7 +53,7 @@ int opposite_side(int side);
 
 // return number of allowed moves at success
 // is not considered an error if store == NULL
-int allowed_moves(State state, Pos *store, int side);
+int allowed_moves(State state, Pos *store);
 
 // put a piece for side at pos, flipping other pieces accordingly
 // no error check for whether piece is allowed to place there
@@ -79,8 +79,6 @@ void fill_trans(State state);
 // returns 0 otherwise
 // if 0 is returned, there is no guranteed behavior on dest
 int try_to_place(Board board, Board dest, Pos pos, int side); 
-
-
 
 /* private functions for managing past move data */
 void record_seq(State state, Pos pos);

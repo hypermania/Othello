@@ -27,7 +27,7 @@ int best_next_state(State state, Pos *moves, int movec, int param);
 
 // scoring functions
 double abpruning(State state, int depth, double a, double b, int side);
-int mcts(State state, int width, int my_side);
+//int mcts(State state, int width, int my_side);
 
 
 

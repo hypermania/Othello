@@ -35,17 +35,17 @@ int init_state(State state){
   if(state == NULL)
     return -1;
 
+  memset(state, 0, sizeof(State_store));
+  
   Board board = state->board;
   init_board(board);
   state->turn = B;
 
-  int r = BOARD_SIZE/2;
+  const int r = BOARD_SIZE/2;
   board_set_pos(board, (Pos) {r-1,r-1}, W);
   board_set_pos(board, (Pos) {r,r}, W);
   board_set_pos(board, (Pos) {r,r-1}, B);
   board_set_pos(board, (Pos) {r-1,r}, B);
-
-  memset((void *)&(state->control), 0, sizeof(State_store) - ((void *)&(state->control) - (void *)state));
   
   return 0;
 }
@@ -72,18 +72,6 @@ int opposite_side(int side){
 }
 
 int can_place_at(State state, Pos pos, int side){
-  /*
-  if(state == NULL)
-    return -1;
-  if(check_pos(pos) < 0)
-    return -2;
-  if(check_val(side) < 0)
-    return -3;
-
-  if(board_get_pos(state->board, pos) != X){
-    return 0;
-  }
-  */
   
   Board board = state->board;
   int opp_side = opposite_side(side);
@@ -112,62 +100,57 @@ int can_place_at(State state, Pos pos, int side){
 }
 
 
-int allowed_moves(State state, Pos *store, int side){
+int allowed_moves(State state, Pos *store){
   assert(state != NULL);
-  assert(check_side(side) == 0);
-  
-  if(side == state->turn){
-    if(state->control.trans_filled == false){
-      fill_trans(state);
-    }
-    if(store != NULL){
-      memcpy(store, state->moves, state->movec * sizeof(Pos));
-    }
-    return state->movec;
-  } else {
 
-    int need_to_store = 0;
-    if(state == NULL){
-      printf("state == NULL\n");
-      return -1;
-    }
-    if(store != NULL){
-      //printf("store == NULL\n");
-      need_to_store = 1;
-    }
-    if(check_val(side) < 0){
-      printf("check_val < 0\n");
-      return -3;
-    }
-    
-    Board board = state->board;
-    int count = 0;
-    int r,c;
-    if(need_to_store){
-      for(r=0;r<BOARD_SIZE;r++){
-	for(c=0;c<BOARD_SIZE;c++){
-	  if(board_get_pos(board, (Pos) {r,c}) != X)
-	    continue;
-	  if(can_place_at(state, (Pos) {r,c}, side)){
-	    store[count] = (Pos) {r,c};
-	    count++;
-	  }
-	}
-      }
-    } else {
-      for(r=0;r<BOARD_SIZE;r++){
-	for(c=0;c<BOARD_SIZE;c++){
-	  if(board_get_pos(board, (Pos) {r,c}) != X)
-	    continue;
-	  if(can_place_at(state, (Pos) {r,c}, side)){
-	    count++;
-	  }
-	}
-      }
-    }
-    
-    return count;
+  if(state->control.trans_filled == false){
+    fill_trans(state);
   }
+  if(store != NULL){
+    memcpy(store, state->moves, state->movec * sizeof(Pos));
+  }
+  return state->movec;
+  
+
+  int side = state->turn;
+  int need_to_store = 0;
+  if(state == NULL){
+    printf("state == NULL\n");
+    return -1;
+  }
+  if(store != NULL){
+    //printf("store == NULL\n");
+    need_to_store = 1;
+  }
+  
+  Board board = state->board;
+  int count = 0;
+  int r,c;
+  if(need_to_store){
+    for(r=0;r<BOARD_SIZE;r++){
+      for(c=0;c<BOARD_SIZE;c++){
+	if(board_get_pos(board, (Pos) {r,c}) != X)
+	  continue;
+	if(can_place_at(state, (Pos) {r,c}, side)){
+	  store[count] = (Pos) {r,c};
+	  count++;
+	}
+      }
+    }
+  } else {
+    for(r=0;r<BOARD_SIZE;r++){
+      for(c=0;c<BOARD_SIZE;c++){
+	if(board_get_pos(board, (Pos) {r,c}) != X)
+	  continue;
+	if(can_place_at(state, (Pos) {r,c}, side)){
+	  count++;
+	}
+      }
+    }
+  }
+  
+  return count;
+  
 }
 
 
@@ -255,7 +238,7 @@ int count_pieces(State state, int val){
 int state_final(State state){
   assert(state != NULL);
 
-  if((allowed_moves(state, NULL, W) == 0) && (allowed_moves(state, NULL, B) == 0))
+  if((allowed_moves(state, NULL) == 0) && (allowed_moves(state, NULL) == 0))
     return 1;
   return 0;
 }

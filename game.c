@@ -21,7 +21,7 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
       */
     }
     
-    movec = allowed_moves(state, moves, state->turn);
+    movec = allowed_moves(state, moves);
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
@@ -87,7 +87,7 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
       printf("(Turn %d)\n", turn);
       print_state(state);
     }
-    movec = allowed_moves(state, moves, state->turn);
+    movec = allowed_moves(state, moves);
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");

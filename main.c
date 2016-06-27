@@ -117,12 +117,8 @@ void fit_fct_for_categories(void){
     save_dat_to_file(filename, fct_list[i].weights, fct_list[i].n * sizeof(double));
   }
   
-  
   for(i=0;i<n_f;i++){
-    free(fct_list[i].valid);
-    free(fct_list[i].variations);
-    free(fct_list[i].matches);
-    free(fct_list[i].weights);
+    free_fct_contents(fct_list[i]);
   }
   free(fct_list);
   free(examples);
@@ -220,17 +216,13 @@ int main(int argc, char **argv){
   
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
-      free(fcts[cat][f].valid);
-      free(fcts[cat][f].variations);
-      free(fcts[cat][f].matches);
-      free(fcts[cat][f].weights);
+      free_fct_contents(fcts[cat][f]);
     }
     free(fcts[cat]);
   }
   free(fcts);
 
 
-  
   /*
   int *indices = malloc(n_f * sizeof(int));
   for(i=0;i<n_f;i++){

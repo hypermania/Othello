@@ -150,7 +150,7 @@ double abpruning(State state, int depth, double a, double b, int side){
   }
   
   Pos moves[POS_STORE_SIZE];
-  int movec = allowed_moves(state, moves, state->turn);
+  int movec = allowed_moves(state, moves);
   State next = create_state();
   double v;
   if(side == state->turn){
@@ -188,10 +188,10 @@ double abpruning(State state, int depth, double a, double b, int side){
   return v;
 }
 
+/*
 int mcts(State state, int width, int my_side){
   State hold = create_state();
 
-  //int my_side = opposite_side(hold->turn);
   int opp_side = opposite_side(my_side);
   
   int final_score = 0;
@@ -201,7 +201,7 @@ int mcts(State state, int width, int my_side){
   for(i=0;i<width;i++){
     cpy_state(hold, state);
     while(!state_final(hold)){
-      movec = allowed_moves(hold, moves, hold->turn);
+      movec = allowed_moves(hold, moves);
       if(movec>0){
 	place_piece(hold, moves[rand() % movec], hold->turn);
       }
@@ -210,19 +210,11 @@ int mcts(State state, int width, int my_side){
     
     int my_pieces = count_pieces(hold, my_side);
     int opp_pieces = count_pieces(hold, opp_side);
-    /*
-    if(my_pieces > opp_pieces){
-      final_score++;
-    } else if(my_pieces < opp_pieces){
-      final_score--;
-    }
-    */
     final_score += (my_pieces - opp_pieces);
   }
 
-  //printf("final_score = %d\n", final_score);
   free_state(hold);
   return final_score;
 }
 
-
+*/

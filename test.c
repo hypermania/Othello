@@ -252,7 +252,7 @@ int test_table(void){
     init_state(naive_table[i]);
     Pos alm[32]; int movec;
     while(!state_final(naive_table[i])){
-      if((movec = allowed_moves(naive_table[i], alm, naive_table[i]->turn)) > 0){
+      if((movec = allowed_moves(naive_table[i], alm)) > 0){
 	place_piece(naive_table[i], alm[rand() % movec], naive_table[i]->turn);
 	state_switch_turn(naive_table[i]);
       } else {
