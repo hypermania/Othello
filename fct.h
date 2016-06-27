@@ -15,4 +15,6 @@ typedef struct {
 } FlatConfTable;
 
 
+void free_fct_contents(FlatConfTable fct);
+
 #endif
