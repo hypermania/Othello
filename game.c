@@ -25,7 +25,7 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
-      state_switch_turn(state);
+      skip_turn(state);
     } else {
       int r;
       if(human_player_flag){
@@ -43,8 +43,8 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
 	}
       }
 
-      place_piece(state, moves[r], state->turn);
-      state_switch_turn(state);
+      place_piece(state, moves[r]);
+      //state_switch_turn(state);
       
       if(print_midgame_flag)
 	printf("(makes move at (%d,%d))\n", moves[r].r, moves[r].c);
@@ -60,8 +60,8 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
   
   if(print_endgame_flag){
     
-    int wp = count_pieces(state, W);
-    int bp = count_pieces(state, B);
+    int wp = count_pieces(state->board, W);
+    int bp = count_pieces(state->board, B);
     if(wp > bp){
       printf("White wins: %d - %d\n", wp, bp);
     } else if(wp < bp){
@@ -91,13 +91,13 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
-      state_switch_turn(state);
+      skip_turn(state);
     } else {
       int i; int moved = 0;
       for(i=0;i<movec;i++){
 	if(moves[i].r == seq[turn].r && moves[i].c == seq[turn].c){
-	  place_piece(state, seq[turn], state->turn);
-	  state_switch_turn(state);
+	  place_piece(state, seq[turn]);
+	  //state_switch_turn(state);
 	  moved = 1;
 	}
       }
@@ -120,8 +120,8 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
   
   if(print_endgame_flag){
     
-    int wp = count_pieces(state, W);
-    int bp = count_pieces(state, B);
+    int wp = count_pieces(state->board, W);
+    int bp = count_pieces(state->board, B);
     if(wp > bp){
       printf("White wins: %d - %d\n", wp, bp);
     } else if(wp < bp){

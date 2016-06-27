@@ -157,6 +157,7 @@ int test_board(void){
 
 int test_state(void){
 
+  /*
   //printf("create state\n");
   State state = create_state();
   //printf("\n");
@@ -191,7 +192,7 @@ int test_state(void){
 
   
   free_state(state);
-
+  */
 
   
   /*
@@ -209,9 +210,8 @@ int test_state(void){
     while(!state_final(naive_table[i])){
       if((movec = allowed_moves(naive_table[i], alm, naive_table[i]->turn)) > 0){
 	place_piece(naive_table[i], alm[rand() % movec], naive_table[i]->turn);
-	state_switch_turn(naive_table[i]);
       } else {
-	state_switch_turn(naive_table[i]);
+	skipturn(naive_table[i]);
       }
     }
 
@@ -253,10 +253,10 @@ int test_table(void){
     Pos alm[32]; int movec;
     while(!state_final(naive_table[i])){
       if((movec = allowed_moves(naive_table[i], alm)) > 0){
-	place_piece(naive_table[i], alm[rand() % movec], naive_table[i]->turn);
-	state_switch_turn(naive_table[i]);
+	place_piece(naive_table[i], alm[rand() % movec]);
+	//state_switch_turn(naive_table[i]);
       } else {
-	state_switch_turn(naive_table[i]);
+	skip_turn(naive_table[i]);
       }
     }
   }

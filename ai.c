@@ -2,16 +2,17 @@
 
 // heuristic scoring functions
 int total_pieces(State state, int side){
-  return count_pieces(state, side) - count_pieces(state, opposite_side(side));
+  return count_pieces(state->board, side)
+    - count_pieces(state->board, opposite_side(side));
 }
 
 int heuristic_score_1(State state, int side, int is_at_final){
   //printf("heuristic_score_1\n");
   int result;
-  int mypieces = count_pieces(state, side);
+  int mypieces = count_pieces(state->board, side);
   int opp_side = opposite_side(side);
   result = mypieces;
-  int opppieces = count_pieces(state, opp_side);
+  int opppieces = count_pieces(state->board, opp_side);
 
   /*
   if(mypieces + opppieces == BOARD_SIZE * BOARD_SIZE){
@@ -36,7 +37,7 @@ int heuristic_score_1(State state, int side, int is_at_final){
   Pos corners[4] = {(Pos) {0,0}, (Pos) {0,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-1,0}, (Pos) {BOARD_SIZE-1,BOARD_SIZE-1}};  
   int i;
   for(i=0;i<4;i++){
-    int corner_val = state_get_pos(state, corners[i]);
+    int corner_val = board_get_pos(state->board, corners[i]);
     if(corner_val == side)
       result += 10;
     if(corner_val == opp_side)
@@ -61,7 +62,6 @@ int heuristic_score_1(State state, int side, int is_at_final){
 double state_score(State state, int my_side, int param){
   //int result = abpruning(state, param, -ROUNDS, ROUNDS, my_side);
   double result = abpruning(state, param, DBL_MIN, DBL_MAX, my_side);
-  //int result = mcts(state, param, my_side);
   return result;
 }
 
@@ -72,8 +72,8 @@ double get_score_for_move(State state, Pos move,  int param){
   cpy_state(hold, state);
   int my_side = hold->turn;
 
-  place_piece(hold, move, my_side);
-  state_switch_turn(hold);
+  place_piece(hold, move);
+  //state_switch_turn(hold);
   double score = state_score(hold, my_side, param);
   
   free_state(hold);
@@ -159,8 +159,8 @@ double abpruning(State state, int depth, double a, double b, int side){
     
     for(i=0;i<movec;i++){
       cpy_state(next, state);
-      place_piece(next, moves[i], next->turn);
-      state_switch_turn(next);
+      place_piece(next, moves[i]);
+      //state_switch_turn(next);
       double score = abpruning(next, depth-1, a, b, side);
       v = (v > score) ? v : score; // v = max(v, score)
       a = (a > v) ? a : v; // a = max(a, v)
@@ -175,8 +175,8 @@ double abpruning(State state, int depth, double a, double b, int side){
     int i;
     for(i=0;i<movec;i++){
       cpy_state(next, state);
-      place_piece(next, moves[i], next->turn);
-      state_switch_turn(next);
+      place_piece(next, moves[i]);
+      //state_switch_turn(next);
       double score = abpruning(next, depth-1, a, b, side);
       v = (v < score) ? v : score; // v = min(v, score)
       b = (b < v) ? b : v; // b = min(b, v)
@@ -187,34 +187,3 @@ double abpruning(State state, int depth, double a, double b, int side){
   free_state(next);
   return v;
 }
-
-/*
-int mcts(State state, int width, int my_side){
-  State hold = create_state();
-
-  int opp_side = opposite_side(my_side);
-  
-  int final_score = 0;
-  Pos moves[POS_STORE_SIZE];
-  int movec;
-  int i;
-  for(i=0;i<width;i++){
-    cpy_state(hold, state);
-    while(!state_final(hold)){
-      movec = allowed_moves(hold, moves);
-      if(movec>0){
-	place_piece(hold, moves[rand() % movec], hold->turn);
-      }
-      state_switch_turn(hold);
-    }
-    
-    int my_pieces = count_pieces(hold, my_side);
-    int opp_pieces = count_pieces(hold, opp_side);
-    final_score += (my_pieces - opp_pieces);
-  }
-
-  free_state(hold);
-  return final_score;
-}
-
-*/

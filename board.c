@@ -54,6 +54,11 @@ int check_side(char side){
   return 0;
 }
 
+int opposite_side(int side){
+  if(check_side(side) < 0)
+    return -1;
+  return 3-side;
+}
 
 char board_get_pos(Board board, Pos pos){
   assert(board != NULL);
@@ -365,3 +370,19 @@ int adj_given_pos(Board board, Pos pos, Pos *store, char val){
   return count;
 }
 
+int count_pieces(Board board, int val){
+  assert(board != NULL);
+  assert(check_val(val) == 0);
+
+  int r, c;
+  int count = 0;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(board_get_pos(board, (Pos) {r,c}) == val)
+	count++;
+    }
+  }
+
+  
+  return count;
+}

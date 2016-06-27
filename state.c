@@ -20,12 +20,7 @@ int cpy_state(State dest, State src){
     return -1;
   if(src == NULL)
     return -2;
-  /*
-  memcpy((void *)dest->board, (void *)src->board, BOARD_SIZE_SQR * sizeof(char));
-  dest->turn = src->turn;
-  dest->control = src->control;
-  dest->movec = src->movec;
-  */
+  
   memcpy((void *)dest, (void *)src, sizeof(State_store));
   
   return 0;
@@ -51,189 +46,67 @@ int init_state(State state){
 }
 
 
-int state_get_pos(State state, Pos pos){
-  if(state == NULL)
-    return -1;
-  if(check_pos(pos) < 0)
-    return -2;
-  return board_get_pos(state->board, pos);
-}
-
-int state_get_turn(State state){
-  if(state == NULL)
-    return -1;
-  return state->turn;
-}
-
-int opposite_side(int side){
-  if(check_side(side) < 0)
-    return -1;
-  return 3-side;
-}
-
-int can_place_at(State state, Pos pos, int side){
-  
-  Board board = state->board;
-  int opp_side = opposite_side(side);
-  Pos adjs[ADJ_SIZE];
-  int adjc = adj_given_pos(board, pos, adjs, opp_side);
-  int i;
-  for(i=0;i<adjc;i++){
-
-    Pos head = adjs[i];
-    int direc_h = adjs[i].r - pos.r;
-    int direc_v = adjs[i].c - pos.c;
-    head.r += direc_h;
-    head.c += direc_v;
-    while((check_pos(head) == 0) && (board_get_pos(board, head) == opp_side)){
-      head.r += direc_h;
-      head.c += direc_v;
-    }
-
-    if(check_pos(head) < 0)
-      continue;
-
-    if(board_get_pos(board, head) == side)
-      return 1;
-  }
-  return 0;
-}
-
-
 int allowed_moves(State state, Pos *store){
   assert(state != NULL);
 
-  if(state->control.trans_filled == false){
-    fill_trans(state);
+  if(state->control.moves_filled == false){
+    fill_moves(state);
   }
   if(store != NULL){
     memcpy(store, state->moves, state->movec * sizeof(Pos));
   }
   return state->movec;
   
-
-  int side = state->turn;
-  int need_to_store = 0;
-  if(state == NULL){
-    printf("state == NULL\n");
-    return -1;
-  }
-  if(store != NULL){
-    //printf("store == NULL\n");
-    need_to_store = 1;
-  }
-  
-  Board board = state->board;
-  int count = 0;
-  int r,c;
-  if(need_to_store){
-    for(r=0;r<BOARD_SIZE;r++){
-      for(c=0;c<BOARD_SIZE;c++){
-	if(board_get_pos(board, (Pos) {r,c}) != X)
-	  continue;
-	if(can_place_at(state, (Pos) {r,c}, side)){
-	  store[count] = (Pos) {r,c};
-	  count++;
-	}
-      }
-    }
-  } else {
-    for(r=0;r<BOARD_SIZE;r++){
-      for(c=0;c<BOARD_SIZE;c++){
-	if(board_get_pos(board, (Pos) {r,c}) != X)
-	  continue;
-	if(can_place_at(state, (Pos) {r,c}, side)){
-	  count++;
-	}
-      }
-    }
-  }
-  
-  return count;
-  
 }
 
 
-int place_piece(State state, Pos pos, int side){
+int place_piece(State state, Pos pos){
   assert(state != NULL);
   assert(check_pos(pos) == 0);
-  assert(check_side(side) == 0);
 
-  if(state->control.trans_filled && (side == state->turn)){
-    int i;
-    for(i=0;i<state->movec;i++){
-      if(pos.r == state->moves[i].r && pos.c == state->moves[i].c){
-	memcpy(state->board, state->positions[i], BOARD_SIZE_SQR * sizeof(char));
-	state->control.trans_filled = false;
-	record_seq(state, pos);
-	return 0;
-      }
-    }
+  if(state->control.moves_filled == false){
+    fill_moves(state);
   }
   
-  Board board = state->board;
-  int opp_side = opposite_side(side);
-  Pos adjs[ADJ_SIZE];
-  int adjc = adj_pos(pos, adjs);
-
-  board_set_pos(board, pos, side);
-  
-  int i, count = 0;
-  for(i=0;i<adjc;i++){
-    if(board_get_pos(board, adjs[i]) != opp_side)
-      continue;
-
-    Pos head = adjs[i];
-    int direc_h = adjs[i].r - pos.r;
-    int direc_v = adjs[i].c - pos.c;
-    while((check_pos(head) == 0) && (board_get_pos(board, head) == opp_side)){
-      head.r += direc_h;
-      head.c += direc_v;
-    }
-
-    if(check_pos(head) < 0)
-      continue;
-    
-    if(board_get_pos(board, head) == side){
-      head.r -= direc_h;
-      head.c -= direc_v;
-      while(board_get_pos(board, head) == opp_side){
-	board_set_pos(board, head, side);
-	count++;
-	head.r -= direc_h;
-	head.c -= direc_v;
-      }
+  int i;
+  for(i=0;i<state->movec;i++){
+    if(pos.r == state->moves[i].r && pos.c == state->moves[i].c){
+      memcpy(state->board, state->positions[i], BOARD_SIZE_SQR * sizeof(char));
+      state->turn = opposite_side(state->turn);
+      state->control.moves_filled = false;
+      record_seq(state, pos);
+      return 0;
     }
   }
-  record_seq(state, pos);
-  return count;
+
+  return -1;
 }
 
-
-int state_switch_turn(State state){
+int place_piece_indexed(State state, int move_num){
   assert(state != NULL);
-  state->turn = opposite_side(state->turn);
+  assert(state->control.moves_filled);
+  assert(move_num < state->movec);
+
+  memcpy(state->board, state->positions[move_num], BOARD_SIZE_SQR * sizeof(char));
+  record_seq(state, state->moves[move_num]);
+  state->control.moves_filled = false;
+      
   return 0;
 }
 
 
-int count_pieces(State state, int val){
+int skip_turn(State state){
   assert(state != NULL);
-  assert(check_val(val) == 0);
-
-  Board board = state->board;
-  int r, c;
-  int count = 0;
-  for(r=0;r<BOARD_SIZE;r++){
-    for(c=0;c<BOARD_SIZE;c++){
-      if(board_get_pos(board, (Pos) {r,c}) == val)
-	count++;
-    }
-  }
-
+  assert(state->control.moves_filled);
+  assert(state->moves == 0);
   
-  return count;
+  state->turn = opposite_side(state->turn);
+  state->control.moves_filled = false;
+  
+  return 0;
 }
+
+
 
 int state_final(State state){
   assert(state != NULL);
@@ -246,10 +119,10 @@ int state_final(State state){
 
 /* below are internal function: no error checking */
 
-void fill_trans(State state){
+void fill_moves(State state){
   assert(state != NULL);
   
-  if(state->control.trans_filled == false){
+  if(state->control.moves_filled == false){
     Board board = state->board;
     int movec = 0;
     int r,c;

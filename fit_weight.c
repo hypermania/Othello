@@ -13,13 +13,13 @@ int example_from_seq(State state, Pos *seq, Example *example){
     
     movec = allowed_moves(state, moves);
     if(movec == 0){
-      state_switch_turn(state);
+      skip_turn(state);
     } else {
       int i; int moved = 0;
       for(i=0;i<movec;i++){
 	if(moves[i].r == seq[count].r && moves[i].c == seq[count].c){
-	  place_piece(state, seq[count], state->turn);
-	  state_switch_turn(state);
+	  place_piece(state, seq[count]);
+	  //state_switch_turn(state);
 	  moved = 1;
 	  break;
 	}
@@ -33,7 +33,7 @@ int example_from_seq(State state, Pos *seq, Example *example){
     }
   }
   int i;
-  int score = count_pieces(state, W) - count_pieces(state, B);
+  int score = count_pieces(state->board, W) - count_pieces(state->board, B);
   for(i=0;i<count;i++){
     example[i].score = score;
   }

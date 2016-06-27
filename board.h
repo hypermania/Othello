@@ -34,6 +34,9 @@ int check_val(char val);
 // 0 otherwise
 int check_side(char side);
 
+// get opposite side; return -1 if side is not a side
+int opposite_side(int side);
+
 
 /* return negative values below changed to assertions */
 
@@ -48,7 +51,7 @@ int adj_empty_pos(Board board, Pos pos, Pos *store);
 // store == NULL is NOT an error
 int adj_given_pos(Board board, Pos pos, Pos *store, char side);
 
-
-
+// return number of pieces given side (including empty spot)
+int count_pieces(Board board, int val);
 
 #endif
