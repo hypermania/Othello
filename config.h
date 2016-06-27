@@ -1,10 +1,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+
+#include "board.h"
 
 #include "const.h"
 #include "macro.h"
@@ -29,7 +30,11 @@ Config create_and_init_config_list(int length);
 int init_config(Config config);
 int free_config(Config config);
 
+
 int check_board_as_config(Config_store conf);
+int board_to_conf(Board board, Config config);
+Config_store board_to_conf_nocreate(Board board);
+
 
 
 // match a maximum of n (converted) boards to a given config

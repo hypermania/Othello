@@ -56,34 +56,6 @@ int heuristic_score_1(State state, int side, int is_at_final){
   return result;
 }
 
-/*
-Weight *global_weights;
-
-double heuristic_score_2(State state){
-
-  Weight *weights = global_weights;
-  assert(state != NULL);
-  assert(weights != NULL);
-  double score = 0;
-
-  int pieces = BOARD_SIZE_SQR - count_pieces(state, X);
-  int cat = CAT(pieces);
-  Config board = create_and_init_config();
-  
-  board_to_conf(state->board, board);
-
-  char **hik = compute_symmetric_hik(weights[cat], (Example *)board, 1);
-  double *sc= compute_sum_wi_hik(weights[cat], hik, 1);
-
-  score = *sc;
-  free_config(board);
-  free(hik);
-  free(sc);
-  
-  //printf("score = %lf\n", score);
-  return score;
-}
-*/
 
 
 double state_score(State state, int my_side, int param){

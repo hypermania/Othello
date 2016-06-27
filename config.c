@@ -291,3 +291,46 @@ Config_store reflect_bdiag(Config_store config){
   
 }
 
+int board_to_conf(Board board, Config config){
+  assert(board != NULL);
+  assert(config != NULL);
+
+  init_config(config);
+  
+  int r, c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(board_get_pos(board, (Pos) {r,c}) == X){
+	config->x |= ATOM(r,c);
+      } else if(board_get_pos(board, (Pos) {r,c}) == W){
+	config->w |= ATOM(r,c);
+      } else {
+	config->b |= ATOM(r,c);
+      }
+    }
+  }
+  return 0;
+  
+}
+
+
+Config_store board_to_conf_nocreate(Board board){
+  assert(board != NULL);
+
+  Config_store config;
+  
+  int r, c;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      if(board_get_pos(board, (Pos) {r,c}) == X){
+	config.x |= ATOM(r,c);
+      } else if(board_get_pos(board, (Pos) {r,c}) == W){
+	config.w |= ATOM(r,c);
+      } else {
+	config.b |= ATOM(r,c);
+      }
+    }
+  }
+  return config;
+}
+

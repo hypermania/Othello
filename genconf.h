@@ -13,7 +13,6 @@
 #include "macro.h"
 #include "util.h"
 
-#include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
@@ -49,8 +48,6 @@ typedef struct {
   int *matches;
 } GeneratedConf;
 
-int board_to_conf(Board board, Config config);
-Config_store board_to_conf_nocreate(Board board);
 
 
 /* pattern related utilities */

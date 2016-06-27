@@ -1064,20 +1064,7 @@ return index_for_config_49(config);
 }
 
 unsigned long int index_for_config(Pattern pattern, Config_store config){
-  /*
-  if(pattern == ROW(0)){
-    unsigned long int index = 0;
-    int i;
-    for(i=0;i<8;i++){
-      if(config.w & row_0_squares[i]){
-	index += pow3[i];
-      } else if(config.b & row_0_squares[i]){
-	index += 2 * pow3[i];
-      }
-    }
-    return index;
-  }
-  */
+
   return index_for_config_fast(pattern, config);
   
   unsigned long int fast_result = index_for_config_fast(pattern, config);
