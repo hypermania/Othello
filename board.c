@@ -34,6 +34,13 @@ int init_board(Board board){
   return 0;
 }
 
+int cpy_board(Board dest, Board src){
+  assert(dest != NULL);
+  assert(src != NULL);
+  memcpy(dest, src, BOARD_SIZE_SQR * sizeof(char));
+  return 0;
+}
+
 int check_pos(Pos pos){
   if(pos.r<0 || pos.c< 0 || pos.r>=BOARD_SIZE || pos.c>=BOARD_SIZE)
     return -1;

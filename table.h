@@ -18,7 +18,7 @@ typedef struct {
   void *next;
 } *Node, Node_store;
 
-// bucket and record here are indexed by the board of the state only
+// indexed by state->board and state->turn
 typedef struct {
   //  int max; // maximum number of states storable
   int size; // total number of buckets

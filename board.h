@@ -21,6 +21,7 @@ Board create_board(void);
 // return 0 at success
 int free_board(Board board);
 int init_board(Board board);
+int cpy_board(Board dest, Board src);
 
 // return 0 if pos is a position on the board
 // -1 otherwise

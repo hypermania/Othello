@@ -3,23 +3,19 @@
 State create_state(void){
 
   State state = malloc(sizeof(State_store));
-  //state->board = create_board();
+
   return state;
 }
 
 int free_state(State state){
-  if(state == NULL)
-    return -1;
-  //free_board(state->board);
+  assert(state != NULL);
   free(state);
   return 0;
 }
 
 int cpy_state(State dest, State src){
-  if(dest == NULL)
-    return -1;
-  if(src == NULL)
-    return -2;
+  assert(dest != NULL);
+  assert(src != NULL);
   
   memcpy((void *)dest, (void *)src, sizeof(State_store));
   
@@ -52,11 +48,24 @@ int allowed_moves(State state, Pos *store){
   if(state->control.moves_filled == false){
     fill_moves(state);
   }
+  
   if(store != NULL){
     memcpy(store, state->moves, state->movec * sizeof(Pos));
   }
   return state->movec;
   
+}
+
+Pos *allowed_moves_inplace(State state, int *movec){
+  assert(state != NULL);
+
+  if(state->control.moves_filled == false){
+    fill_moves(state);
+  }
+
+  *movec = state->movec;
+ 
+  return state->moves;
 }
 
 
@@ -71,7 +80,7 @@ int place_piece(State state, Pos pos){
   int i;
   for(i=0;i<state->movec;i++){
     if(pos.r == state->moves[i].r && pos.c == state->moves[i].c){
-      memcpy(state->board, state->positions[i], BOARD_SIZE_SQR * sizeof(char));
+      cpy_board(state->board, state->positions[i]);
       state->turn = opposite_side(state->turn);
       state->control.moves_filled = false;
       record_seq(state, pos);
@@ -87,18 +96,17 @@ int place_piece_indexed(State state, int move_num){
   assert(state->control.moves_filled);
   assert(move_num < state->movec);
 
-  memcpy(state->board, state->positions[move_num], BOARD_SIZE_SQR * sizeof(char));
+  cpy_board(state->board, state->positions[move_num]);
   record_seq(state, state->moves[move_num]);
   state->control.moves_filled = false;
       
   return 0;
 }
 
-
 int skip_turn(State state){
   assert(state != NULL);
   assert(state->control.moves_filled);
-  assert(state->moves == 0);
+  assert(state->movec == 0);
   
   state->turn = opposite_side(state->turn);
   state->control.moves_filled = false;
@@ -107,13 +115,23 @@ int skip_turn(State state){
 }
 
 
-
 int state_final(State state){
   assert(state != NULL);
 
-  if((allowed_moves(state, NULL) == 0) && (allowed_moves(state, NULL) == 0))
-    return 1;
-  return 0;
+  if(allowed_moves(state, NULL) > 0){
+    return 0;
+  } 
+
+  State temp = create_state();
+  cpy_state(temp, state);
+  skip_turn(temp);
+  int movec = allowed_moves(temp, NULL);
+  free_state(temp);
+  if(movec > 0){
+    return 0;
+  }
+  
+  return 1;
 }
 
 
@@ -136,7 +154,10 @@ void fill_moves(State state){
       }
     }
     state->movec = movec;
+    
+    state->control.moves_filled = true;
   }
+
 }
 
 
@@ -146,7 +167,7 @@ int try_to_place(Board board, Board dest, Pos pos, int side){
   assert(check_pos(pos) == 0);
   assert(check_side(side) == 0);
   
-  memcpy(dest, board, BOARD_SIZE_SQR * sizeof(char));
+  cpy_board(dest, board);
 
   int opp_side = opposite_side(side);
   Pos adjs[ADJ_SIZE];
@@ -193,3 +214,12 @@ void record_seq(State state, Pos pos){
   state->seq[state->seq_num++] = pos;
 }
 
+double state_compute_score(State state, double (*score_func)(State state)){
+  assert(state != NULL);
+  if(state->control.score_valid){
+    return state->score;
+  }
+
+  state->score = score_func(state);
+  return state->score;
+}

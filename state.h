@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
 #include "board.h"
@@ -48,6 +49,7 @@ int init_state(State state);
 // return number of allowed moves at success
 // is not considered an error if store == NULL
 int allowed_moves(State state, Pos *store);
+Pos *allowed_moves_inplace(State state, int *movec);
 
 // put a piece for side at pos, flipping other pieces accordingly
 // no error check for whether piece is allowed to place there
@@ -77,6 +79,7 @@ int try_to_place(Board board, Board dest, Pos pos, int side);
 void record_seq(State state, Pos pos);
 
 
+double state_compute_score(State state, double (*score_func)(State state));
 
 #endif
 
