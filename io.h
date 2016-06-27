@@ -9,7 +9,8 @@
 
 #include "board.h"
 #include "state.h"
-#include "genconf.h"
+#include "pattern.h"
+#include "config.h"
 #include "fit_weight.h"
 
 

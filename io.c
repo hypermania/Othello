@@ -205,12 +205,14 @@ Example *read_examples_from_file(const char *filename, int *count_examples){
   fseek(fp, 0L , SEEK_END);
   long int lSize = ftell(fp);
   rewind(fp);
-  *count_examples = lSize/sizeof(Example);
+  if(count_examples != NULL){
+    *count_examples = lSize/sizeof(Example);
+  }
   
   Example *examples = malloc(lSize);
   fread(examples, lSize, 1, fp);
   
-  printf("read %d examples.\n", *count_examples);
+  printf("read %ld examples.\n", lSize/sizeof(Example));
 
   fclose(fp);
 
@@ -229,12 +231,14 @@ Config read_configs_from_file(const char *filename, int *count_configs){
   fseek(fp, 0L , SEEK_END);
   long int lSize = ftell(fp);
   rewind(fp);
-  *count_configs = lSize/sizeof(Config_store);
+  if(count_configs != NULL){
+    *count_configs = lSize/sizeof(Config_store);
+  }
   
   Config configs = malloc(lSize);
   fread(configs, lSize, 1, fp);
-  
-  printf("read %d configs.\n", *count_configs);
+
+  printf("read %ld configs.\n", lSize/sizeof(Config_store));
   
   fclose(fp);
 
@@ -254,12 +258,14 @@ void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   fseek(fp, 0L , SEEK_END);
   long int lSize = ftell(fp);
   rewind(fp);
-  *count_obj = lSize/obj_size;
+  if(count_obj != NULL){
+    *count_obj = lSize/obj_size;
+  }
   
   Config data = malloc(lSize);
   fread(data, lSize, 1, fp);
-  
-  printf("read %d items.\n", *count_obj);
+
+  printf("read %ld items.\n", lSize/obj_size);
   
   fclose(fp);
 

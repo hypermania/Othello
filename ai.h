@@ -13,10 +13,6 @@
 
 
 
-#define MAXIMIZE 1
-#define MINIMIZE 0 
-
-
 // does not provide error handling
 
 // heuristic scoring functions

@@ -1,5 +1,6 @@
 #include "game.h"
 
+
 int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_flag, int depthw, int depthb){
 
   State state = create_state();
@@ -10,7 +11,16 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
     if(print_midgame_flag){
       printf("(Turn %d)\n", turn);
       print_state(state);
+
+      /*
+      Config_store board = board_to_conf_nocreate(state->board);
+      int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
+      int n_f = 50;
+      double score = get_score_from_fct_list(global_fcts[cat], n_f, board);
+      printf("score = %30.20lf\n", score);
+      */
     }
+    
     movec = allowed_moves(state, moves, state->turn);
     if(movec == 0){
       if(print_midgame_flag)

@@ -6,15 +6,7 @@
 #include <string.h>
 #include <assert.h>
 
-
-
-#define BOARD_SIZE 8
-#define BOARD_SIZE_SQR (BOARD_SIZE * BOARD_SIZE)
-#define POS_STORE_SIZE (BOARD_SIZE * BOARD_SIZE / 2)
-#define ADJ_SIZE 8
-#define X 0
-#define W 1
-#define B 2
+#include "macro.h"
 
 typedef char *Board;//typedef int** Board;
 

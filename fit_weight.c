@@ -498,33 +498,43 @@ double get_weight_from_fct(FlatConfTable fct, Config_store board){
 }
 
 int **global_sum_hik_fct;
+int **global_indices;
 
 double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk){
-
-  double deriv = DBL_MAX;
-  double last_deriv = DBL_MAX;
-  double last_total_error = DBL_MAX;
-  int iter = 0;
-
+  // temporary variables, denoting index for fct_list and examples
+  int f, e;
+  // pre-computing indexes for each example for each FlatConfTable
+  int **indices = malloc(n_e * sizeof(int *));
+  global_indices = indices;
+  for(e=0;e<n_e;e++){
+    indices[e] = malloc(n_f * sizeof(int));
+    for(f=0;f<n_f;f++){
+      indices[e][f] =
+	index_for_config(fct_list[f].pattern, examples[e].board);
+    }
+  }
+  // pre-computing, for each FlatConfTable, the number of active occurences
+  // in the examples
   int **sum_hik_fct = malloc(n_f * sizeof(int *));
   global_sum_hik_fct = sum_hik_fct;
-  
-  int f, e;
   for(f=0;f<n_f;f++){
     sum_hik_fct[f] = malloc(fct_list[f].n * sizeof(int));
     memset(sum_hik_fct[f], 0, fct_list[f].n * sizeof(int));
   }
-
   for(e=0;e<n_e;e++){
     for(f=0;f<n_f;f++){
-      unsigned long int index =
-	index_for_config(fct_list[f].pattern, examples[e].board);
+      unsigned long int index = indices[e][f];
       if(fct_list[f].valid[index]){
 	sum_hik_fct[f][index]++;
       }
     }
   }
 
+  double deriv = DBL_MAX;
+  double last_deriv = DBL_MAX;
+  double last_total_error = DBL_MAX;
+  int iter = 0;
+  
   printf("starting condition:\n");
   printf("total error = %20.15lf\n",
 	 total_error_fct_list(fct_list, examples, n_f, n_e));
@@ -538,21 +548,25 @@ double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e
       double change = (total_error - last_total_error)/last_total_error;
       printf("total error = %20.15lf, change = %20.15lf\n", total_error, change);
       last_total_error = total_error;
+      if(change < 0 && fabs(change) < precision)
+	break;
     }
-
-    if(fabs(deriv) < precision)
-      break;
     
     if(change_deriv < 0 && fabs(change_deriv) < 0.01){
-      alpha *= 1.1;
+      alpha *= 1.01;
     }
     if(change_deriv > 0){
-      alpha /= 10;
+      alpha /= 1.5;
     }
     last_deriv = deriv;
       
   }
 
+  for(e=0;e<n_e;e++){
+    free(indices[e]);
+  }
+  free(indices);
+  
   for(f=0;f<n_f;f++){
     free(sum_hik_fct[f]);
   }
@@ -561,7 +575,7 @@ double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e
   return 0;
 }
 
-#define TH_NUM 4
+
 FlatConfTable *global_fct_list;
 Example *global_examples;
 void *global_bounds;
@@ -587,14 +601,11 @@ void *iterate_descent_fct_thread(void *bounds){
     deriv_fct_list[f] = malloc(global_fct_list[f].n * sizeof(double));
     memset(deriv_fct_list[f], 0, global_fct_list[f].n * sizeof(double));
   }
-  unsigned long int *indices = malloc(n_f * sizeof(unsigned long int));
   
   for(e = start; e < end; e++){
     double x_score = 0;
     for(f=0;f<n_f;f++){
-      unsigned long int index =
-	index_for_config(global_fct_list[f].pattern, global_examples[e].board);
-      indices[f] = index;
+      unsigned long int index = global_indices[e][f];
       
       if(global_fct_list[f].valid[index]){
 	x_score += global_fct_list[f].weights[index];
@@ -604,7 +615,7 @@ void *iterate_descent_fct_thread(void *bounds){
     double g_score = link_function(x_score);
     double g_deriv = link_function_deriv_relation(g_score);
     for(f=0;f<n_f;f++){
-      unsigned long int index = indices[f];
+      unsigned long int index = global_indices[e][f];
       if(global_fct_list[f].valid[index]){
 	double tot_chi_deriv =
 	  2 * g_deriv * (global_examples[e].score - g_score);
@@ -616,7 +627,7 @@ void *iterate_descent_fct_thread(void *bounds){
   int th = (bounds - global_bounds)/sizeof(int);
   th_results[th].deriv_fct_list = deriv_fct_list;
 
-  free(indices);
+  return NULL;
 }
 
 
@@ -755,3 +766,16 @@ double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f,
   return total_error/n_e;
 }
 
+double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store board){
+  double score = 0;
+  
+  int f;
+  for(f=0;f<n_f;f++){
+    unsigned long int index = index_for_config(fct_list[f].pattern, board);
+    if(fct_list[f].valid[index]){
+      score += fct_list[f].weights[index];
+    }
+  }
+  
+  return score;
+}

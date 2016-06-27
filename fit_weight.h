@@ -2,24 +2,20 @@
 #define FIT_WEIGHT_H
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
-#include <stdbool.h>
 #include <float.h>
-#include <semaphore.h>
+#include <pthread.h>
 
+#include "state.h"
+#include "example.h"
+#include "pattern.h"
+#include "config.h"
+#include "fct.h"
+
+#include "macro.h"
 
 #include "index_computation.h"
-#include "genconf.h"
-
-
-#define CATEGORY_SIZE 4
-#define INIT_PIECE_NUM 4
-#define CAT_NUM ((BOARD_SIZE_SQR - INIT_PIECE_NUM)/CATEGORY_SIZE)
-#define CAT(pieces) (((pieces) - 1 - INIT_PIECE_NUM) / CATEGORY_SIZE)
-
-
-#define TOTAL_GAMES 117752
-
 
 typedef struct {
   int n;
@@ -28,11 +24,6 @@ typedef struct {
 } Weight;
 
 typedef Weight EvalFunc[CAT_NUM];
-
-typedef struct{
-  Config_store board;
-  short score;
-} Example;
 
 
 /* weight fitting utility functions */
@@ -75,6 +66,8 @@ void free_weight(Weight weight);
    If the pattern is not active for this board: return 0.
  */
 double get_weight_from_fct(FlatConfTable fct, Config_store board);
+double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store board);
+
 double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e);
 
 double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk);

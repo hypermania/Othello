@@ -1,7 +1,5 @@
 #include "ai.h"
 
-#define ROUNDS 50
-
 // heuristic scoring functions
 int total_pieces(State state, int side){
   return count_pieces(state, side) - count_pieces(state, opposite_side(side));
