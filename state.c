@@ -41,6 +41,25 @@ int init_state(State state){
   return 0;
 }
 
+State create_state_from_pivot(Board board, short turn){
+  State state = malloc(sizeof(State_store));
+  memset(state, 0, sizeof(State_store));
+  memcpy(state->board, board, BOARD_SIZE_SQR * sizeof(char));
+  state->turn = turn;
+  return state;
+}
+
+
+int state_eq_seq(State head, State state){
+  assert(head != NULL);
+  assert(state != NULL);
+
+  if(head->seq_num > state->seq_num){
+    return 1;
+  }
+  
+  return memcmp(head->seq, state->seq, head->seq_num * sizeof(Pos));
+}
 
 int allowed_moves(State state, Pos *store){
   assert(state != NULL);
@@ -82,8 +101,8 @@ int place_piece(State state, Pos pos){
     if(pos.r == state->moves[i].r && pos.c == state->moves[i].c){
       cpy_board(state->board, state->positions[i]);
       state->turn = opposite_side(state->turn);
-      state->control.moves_filled = false;
       record_seq(state, pos);
+      state->control.moves_filled = false;
       return 0;
     }
   }
@@ -97,9 +116,10 @@ int place_piece_indexed(State state, int move_num){
   assert(move_num < state->movec);
 
   cpy_board(state->board, state->positions[move_num]);
+  state->turn = opposite_side(state->turn);
   record_seq(state, state->moves[move_num]);
   state->control.moves_filled = false;
-      
+	
   return 0;
 }
 

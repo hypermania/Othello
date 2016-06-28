@@ -44,7 +44,9 @@ State create_state(void);
 int free_state(State state);
 int cpy_state(State dest, State src);
 int init_state(State state);
+State create_state_from_pivot(Board board, short turn);
 
+int state_eq_seq(State head, State state);
 
 // return number of allowed moves at success
 // is not considered an error if store == NULL
@@ -77,7 +79,6 @@ int try_to_place(Board board, Board dest, Pos pos, int side);
 
 /* private functions for managing past move data */
 void record_seq(State state, Pos pos);
-
 
 double state_compute_score(State state, double (*score_func)(State state));
 

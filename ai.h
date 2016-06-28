@@ -17,7 +17,7 @@
 
 // heuristic scoring functions
 int total_pieces(State state, int side);
-int heuristic_score_1(State state, int side, int is_at_final);
+double heuristic_score_1(State state, int side, int is_at_final);
 double heuristic_score_2(State state);
 
 double get_score_for_move(State state, Pos move,  int param);

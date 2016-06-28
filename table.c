@@ -4,7 +4,6 @@ Node create_node_from_state(State state){
   Node node = malloc(sizeof(Node_store));
   node->state = create_state();
   cpy_state(node->state, state);
-  //node->prev = node;
   node->next = NULL;
   return node;
 }
@@ -19,9 +18,9 @@ Node create_head_node(void){
 
 
 int append_node_from_state(Node node, State state){
-  if(node == NULL)
-    return -1;
-
+  assert(node != NULL);
+  assert(state != NULL);
+  
   while(node->next != NULL){
     node = node->next;
   }
@@ -32,9 +31,8 @@ int append_node_from_state(Node node, State state){
 }
 
 int delete_node(Node node){
-  if(node == NULL)
-    return -1;
-  
+  assert(node != NULL);
+
   free_state(node->state);
 
   Node prev, next;
@@ -67,12 +65,16 @@ Table create_and_init_table(int table_size){
   }
   table->record = (char *) malloc(table_size * sizeof(char));
   memset(table->record, 0, table_size * sizeof(char));
+
+  sem_t P;
+  sem_init(&P, 0, 1);
+  mutex = &P;
+  
   return table;
 }
 
 int free_table(Table table){
-  if(table == NULL)
-    return -1;
+  assert(table != NULL);
 
   // iterate over table
   int i;
@@ -82,7 +84,8 @@ int free_table(Table table){
     while((number_of_state--) > 0){
       delete_node(table->buckets[i]->next);
     }
-    delete_node(table->buckets[i]);
+    //delete_node(table->buckets[i]);
+    free(table->buckets[i]);
   }
   free(table->buckets);
   free(table->record);
@@ -91,33 +94,16 @@ int free_table(Table table){
 }
 
 int table_state_bucket_number(Table table, State state){
-  if(table == NULL)
-    return -1;
-  if(state == NULL)
-    return -2;
+  assert(table != NULL);
+  assert(state != NULL);
 
-  return hash_board(state->board) % table->size;
+  return hash_state(state) % table->size;
 }
 
 Node table_contains_state(Table table, State state){
-  if(table == NULL || state == NULL)
-    return NULL;
-  /*
-  if(state == NULL)
-  return NULL; */
-  //printf("table contains state error message:\n");
-  /*
-  int i;
-  for(i=0;i<4;i++){
-    //printf("i=%d:\n", i);
-    Node ptr = table->buckets[i];
-    while(ptr != NULL){
-      //printf("(ptr,state,prev,next)=(%lx,%lx,%lx,%lx)   ", (long int) ptr, (long int) ptr->state, (long int) ptr->prev, (long int) ptr->next);
-      ptr = ptr->next;
-    }
-    // printf("\n");
-  }
-  */
+  assert(table != NULL);
+  assert(state != NULL);
+
   int bucket_num = table_state_bucket_number(table, state);
 
   if(table->record[bucket_num] == 0){
@@ -125,10 +111,9 @@ Node table_contains_state(Table table, State state){
   } else {
     Node ptr = table->buckets[bucket_num]->next;
     while(1){
-      //printf("ptr = %016lx\n", (long int) ptr);
-      //printf("memcmp = %d\n", memcmp(state->board, ptr->state->board, BOARD_SIZE_SQR * sizeof(char)));
-      //printf("Point 1\n");
-      if(memcmp(state->board, ptr->state->board, BOARD_SIZE_SQR * sizeof(char))){
+      int diff =
+	memcmp(state, ptr->state, BOARD_SIZE_SQR * sizeof(char) + sizeof(short));
+      if(diff){
 	ptr = (Node) (ptr->next);
 	if(ptr == NULL)
 	  break;
@@ -141,10 +126,9 @@ Node table_contains_state(Table table, State state){
 }
 
 int table_insert_state(Table table, State state){
-  if(table == NULL)
-    return -1;
-  if(state == NULL)
-    return -2;
+  assert(table != NULL);
+  assert(state != NULL);
+
 
   int bucket_num;
   if(table_contains_state(table, state)){
@@ -155,16 +139,15 @@ int table_insert_state(Table table, State state){
     (table->record[bucket_num])++;
     table->total++;	    
   }
-  //printf("table->record[%d] = %d\n", bucket_num,(int) table->record[bucket_num]);  
+
+  
   return 0;
 }
 
 
 int table_delete_state(Table table, State state){
-  if(table == NULL)
-    return -1;
-  if(state == NULL)
-    return -2;
+  assert(table != NULL);
+  assert(state != NULL);
 
   Node ptr;
   if((ptr = table_contains_state(table, state))){
@@ -173,7 +156,49 @@ int table_delete_state(Table table, State state){
     delete_node(ptr);
     table->record[bucket_num]--;
     table->total--;
-  } 
+  }
+
   return 0;
 }
 
+
+State table_get_state(Table table, State pivot){
+  
+  sem_wait(mutex);
+  
+  Node node = table_contains_state(table, pivot);
+  if(node != NULL){
+    return node->state;
+  }
+  State state = create_state();
+  cpy_state(state, pivot);
+  table_insert_state(table, state);
+  
+  sem_post(mutex);  
+  return state;
+}
+
+
+int table_free_nonreachable_state(Table table, State head){
+  int i;
+
+  sem_wait(mutex);
+  for(i=0;i<table->size;i++){
+    if(table->record[i] == 0)
+      continue;
+
+    Node node = table->buckets[i];
+    while(node->next != NULL){
+      State state = ((Node)node->next)->state;
+      if(state_eq_seq(head, state)){
+	table_delete_state(table, state);
+	continue;
+      } else {
+	node = (Node)node->next;
+      }
+    }
+  }
+
+  sem_post(mutex);
+  return 0;
+}

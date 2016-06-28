@@ -1,17 +1,33 @@
 #include "hash.h"
 
-unsigned int hash_board(char *board){
+unsigned int hash_board(Board board){
   unsigned int result = 0;
   unsigned char ch;
 
-  int i;
-  for(i=0;i<64;i++){
+  int i; int length = BOARD_SIZE_SQR * sizeof(char);
+  for(i=0;i<length;i++){
     ch = *board++;
     result = ((result & 0x00ffffff) << 8) ^ hash_consts[result >> 24 ^ ch];
   }
   
   return result;
 }
+
+unsigned int hash_state(State state){
+  unsigned int result = 0;
+  unsigned char ch;
+
+  char *ptr = (char *)state;
+  
+  int i; int length = (sizeof state->board) + (sizeof state->turn);
+  for(i=0;i<length;i++){
+    ch = *ptr++;
+    result = ((result & 0x00ffffff) << 8) ^ hash_consts[result >> 24 ^ ch];
+  }
+  
+  return result;
+}
+
 
 unsigned int hash_mem(char *board, size_t size){
   unsigned int result = 0;

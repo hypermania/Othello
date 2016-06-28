@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <semaphore.h>
 #include "hash.h"
 #include "state.h"
 
@@ -28,13 +29,19 @@ typedef struct {
   char *record; // each char records the number of states at that bucket
 } *Table, Table_store;
 
+sem_t *mutex;
 
 /* public interface */
-Table create_and_init_table(int table_size);//, int max_states); 
-int free_table(Table table);  // free the table and its associated states
-int table_get_state(Table table, State state, State addr); 
-int table_store_state_info(Table table, State state, int *movec, Pos *moves, double *scores);
-int table_free_useless_state(Table table, State state);
+Table create_and_init_table(int table_size);//, int max_states);
+
+// free the table and its associated states
+int free_table(Table table);
+
+// Return the address of the state stored in the table.
+// If the state is not in the table, it will be created and stored in the table.
+// The pivotal information from the returned state should not be modified
+State table_get_state(Table table, State state);
+int table_free_nonreachable_state(Table table, State state);
 
 
 /* The following should be private */
@@ -50,6 +57,7 @@ int delete_node(Node node);
 // returns the bucket number for state
 int table_state_bucket_number(Table table, State state);
 // returns Node of the stored state if it does exist
+// otherwise return NULL
 Node table_contains_state(Table table, State state);
 
 // returns 1 if state already exists
@@ -59,19 +67,6 @@ int table_delete_state(Table table, State state);
 
 
 
-/* the hash function */
-/*
-extern unsigned int hash_consts[];
-
-// hash 64 chars pointed by bytes
-unsigned int hash_board(char *bytes);
-*/
-
-//int table_insert_node(Table table, State state);
-
-
-//int table_search_(Table table, State state, State addr);
-//int table_delete_state(Table table, State state);
 
 
 #endif

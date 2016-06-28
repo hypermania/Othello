@@ -130,9 +130,15 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  srand((long int) t.tv_usec);
-  //srand((long int) 100);
-
+  //srand((long int) t.tv_usec);
+  srand((long int) 100);
+  
+  run_game(1,1,1,3,10);
+  
+  //printf("test_table = %d\n", test_table());
+  //printf("test_state = %d\n", test_state());
+  exit(0);
+  
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
   
@@ -212,7 +218,7 @@ int main(int argc, char **argv){
   */
   global_fcts = fcts;
   
-  run_game(1,1,1,6,10);
+
   
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
@@ -419,16 +425,16 @@ int main(int argc, char **argv){
     sprintf(filename, "./dat/examples/cat_%02d.dat", i);
     categories[i] = read_examples_from_file(filename, &cat_sizes[i]);
   }
-  
+  */    
   
   // run tests
 
   //printf("test_board = %d\n", test_board());
-  //printf("test_state = %d\n", test_state());
+
   //printf("test_table = %d\n", test_table());
   //printf("test_genconf = %d\n", test_genconf());
 
-
+  /*
   EvalFunc weights;
   for(i=0;i<CAT_NUM;i++){
     char filename[100];
@@ -438,12 +444,12 @@ int main(int argc, char **argv){
     weights[i].w = read_dat_from_file(filename, sizeof(double), &count);
   }
   global_weights = weights;
-
+  */
   
   // run the game
 
 
-  */  
+
   exit(0);  
 }
 

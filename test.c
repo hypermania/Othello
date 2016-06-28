@@ -157,7 +157,7 @@ int test_board(void){
 
 int test_state(void){
 
-  /*
+
   //printf("create state\n");
   State state = create_state();
   //printf("\n");
@@ -172,15 +172,19 @@ int test_state(void){
   printf("control:%ld\n", (long int) ((void *)&(state->control) - (void *)(state)));
   printf("movec:%ld\n", (long int) ((void *)&(state->movec) - (void *)(state)));
   printf("moves:%ld\n", (long int) ((void *)(state->moves) - (void *)(state)));
-  //printf("scores:%ld\n", (long int) ((void *)(state->scores) - (void *)(state)));
+
   printf("positions:%ld\n", (long int) ((void *)(state->positions) - (void *)(state)));
   printf("seq:%ld\n", (long int) ((void *)(state->seq) - (void *)(state)));
 
   printf("seq_num:%ld\n", (long int) ((void *)&(state->seq_num) - (void *)(state)));
-  printf("total size:%d\n", (int)sizeof(State_store));
+  printf("score:%ld\n", (long int) ((void *)&(state->score) - (void *)(state)));
+  
+  printf("total size:%ld\n", sizeof(State_store));
   printf("\n");
 
-
+  printf("pivot size:%ld\n", (sizeof state->board) + (sizeof state->turn));
+  
+  /*
   printf("test fill_trans:\n");
   fill_trans(state);
   printf("movec = %d\n", state->movec);
@@ -189,10 +193,9 @@ int test_state(void){
     printf("moves[%d] = (%d,%d)\n", i, state->moves[i].r, state->moves[i].c);
     print_board(state->positions[i]);
   }
-
-  
-  free_state(state);
   */
+  free_state(state);
+
 
   
   /*
@@ -232,8 +235,8 @@ int test_state(void){
 }
 
 int test_table(void){
-  int times = 1 << 18;
-  int size = 1 << 22;
+  const int times = 1 << 10;
+  const int size = 1 << 14;
   
   printf("create and init table\n");
   Table table = create_and_init_table(size);
@@ -258,33 +261,33 @@ int test_table(void){
       } else {
 	skip_turn(naive_table[i]);
       }
+
+      if(rand() % 15 == 0){
+	break;
+      }
     }
   }
-  /*
-  for(i=0;i<times;i++){
-    print_state(naive_table[i]);
-  }
-  */
   printf("\n");
   
   printf("test hash function given the states\n");
   for(i=0;i<times;i++){
-    //printf("table state bucket number = %d\n",
     table_state_bucket_number(table, naive_table[i]);
   }
   printf("\n");
 
   printf("inserting the random states\n");
   for(i=0;i<times;i++){
-    //printf("table insert state = %d\n",
     table_insert_state(table, naive_table[i]);
   }
   printf("\n");
   
   printf("check containment of inserted states\n");  
   for(i=0;i<times;i++){
-    //printf("table contains state = %lx\n", (long int)
-    table_contains_state(table, naive_table[i]);
+    void * result = table_contains_state(table, naive_table[i]);
+    if(result == NULL){
+      printf("case %d error\n", i);
+      exit(0);
+    }
   }
   printf("\n");
 
@@ -302,13 +305,86 @@ int test_table(void){
   printf("total = %d\n", total);
   printf("count = %d\n", count);
   printf("avg = %lf\n", ((double)total)/count);
-  
+
+  printf("table->total = %d\n", table->total);
+  printf("\n");
+
+
+  printf("deleting states\n\n");
+  for(i=0;i<table->size;i++){
+    if(table->record[i]){
+      Node node = table->buckets[i];
+      while(node->next != NULL){
+	table_delete_state(table, ((Node)node->next)->state);
+      }
+    }
+  }
+
+  printf("deleted state from table, table->total = %d\n", table->total);
+
   
   for(i=0;i<times;i++){
     free_state(naive_table[i]);
   }
 
   free_table(table);
+
+
+
+  table = create_and_init_table(size);
+
+  State state = create_state();
+  init_state(state);
+  
+  while(!state_final(state)){
+    table_get_state(table, state);
+    int movec;
+    allowed_moves_inplace(state, &movec);
+    if(movec == 0){
+      skip_turn(state);
+    } else {
+      place_piece_indexed(state, rand() % movec);
+    }
+    if(state->seq_num == 20)
+      break;
+  }
+
+  State head;
+  
+  printf("print states\n\n");
+  for(i=0;i<table->size;i++){
+    if(table->record[i]){
+      Node node = table->buckets[i];
+      while(node->next != NULL){
+	print_state(((Node)node->next)->state);
+	head = ((Node)node->next)->state;
+	node = node->next;
+      }
+    }
+  }
+
+  printf("head:\n");
+  print_state(head);
+  
+  printf("delete everything before head:\n");
+  table_free_nonreachable_state(table, head);
+
+  printf("print states\n\n");
+  for(i=0;i<table->size;i++){
+    if(table->record[i]){
+      printf("record[%d] = %d\n", i, table->record[i]);
+      Node node = table->buckets[i];
+      while(node->next != NULL){
+	print_state(((Node)node->next)->state);
+	head = ((Node)node->next)->state;
+	node = node->next;
+      }
+    }
+  }
+    
+  free_state(state);
+  free_table(table);
+
   return 0;
 }
 

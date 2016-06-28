@@ -1,11 +1,17 @@
 #include "game.h"
 
+Table global_table;
 
 int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_flag, int depthw, int depthb){
 
   State state = create_state();
-  Pos moves[POS_STORE_SIZE]; int movec;
   init_state(state);
+  Pos moves[POS_STORE_SIZE]; int movec;
+  const int size = 1 << 16;
+  //Table table = create_and_init_table(size);
+  //global_table = table;
+
+  
   int turn = 0;
   while(!state_final(state)){
     if(print_midgame_flag){
@@ -38,6 +44,7 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
       } else {
 	if(state->turn == B){
 	  r = best_next_state(state, moves, movec, depthb);
+
 	} else {
 	  r = best_next_state(state, moves, movec, depthw);
 	}
@@ -57,7 +64,6 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
     print_state(state);
   }
 
-  
   if(print_endgame_flag){
     
     int wp = count_pieces(state->board, W);
@@ -71,6 +77,8 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
     }
   }
 
+  //free_table(table);
+  
   return 0;
 
 }

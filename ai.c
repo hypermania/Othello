@@ -6,12 +6,12 @@ int total_pieces(State state, int side){
     - count_pieces(state->board, opposite_side(side));
 }
 
-int heuristic_score_1(State state, int side, int is_at_final){
+double heuristic_score_1(State state, int side, int is_at_final){
   //printf("heuristic_score_1\n");
-  int result;
+  double result;
   int mypieces = count_pieces(state->board, side);
   int opp_side = opposite_side(side);
-  result = mypieces;
+  result = (double)mypieces;
   int opppieces = count_pieces(state->board, opp_side);
 
   /*
@@ -42,7 +42,7 @@ int heuristic_score_1(State state, int side, int is_at_final){
       result += 10;
     if(corner_val == opp_side)
       result -= 10;
-    //dangerous optimization using board interface
+
 
     int mycount = adj_given_pos(state->board, corners[i], NULL, side);
     if(corner_val == side) {
@@ -53,7 +53,7 @@ int heuristic_score_1(State state, int side, int is_at_final){
       result -= 8*mycount;
     }
   }  
-    
+
   return result;
 }
 
@@ -61,7 +61,8 @@ int heuristic_score_1(State state, int side, int is_at_final){
 
 double state_score(State state, int my_side, int param){
   //int result = abpruning(state, param, -ROUNDS, ROUNDS, my_side);
-  double result = abpruning(state, param, DBL_MIN, DBL_MAX, my_side);
+  double result = abpruning(state, param, -DBL_MAX, DBL_MAX, my_side);
+
   return result;
 }
 
@@ -86,9 +87,13 @@ double *global_scores;
 int global_param;
 
 static void *store_score(void *vargp){
+
   global_scores[(long int)vargp] = get_score_for_move(global_state, global_moves[(long int)vargp], global_param);
+
   return NULL;
 }
+
+Table global_table;
 
 int best_next_state(State state, Pos *moves, int movec, int param){
   if(state == NULL)
@@ -114,13 +119,14 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       pthread_join(tids[i], NULL);
   }
 
+  /*
   for(i=0;i<movec;i++){
     printf("move (%d,%d): %lf\n", moves[i].r, moves[i].c, scores[i]);
   }
-  
+  */
   int max_moves[POS_STORE_SIZE];
   int num_max_moves = 0;
-  double max_score = DBL_MIN;
+  double max_score = -DBL_MAX;
   for(i=0;i<movec;i++){
     if(scores[i] > max_score){
       num_max_moves = 0;
@@ -132,9 +138,15 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       num_max_moves++;
     }
   }
+  
 
+  
   int r = rand() % num_max_moves;
-  return max_moves[r];
+
+  int result = max_moves[r];
+
+  return result;
+  //return max_moves[r];
   
   //return 0;
 }
@@ -148,13 +160,16 @@ double abpruning(State state, int depth, double a, double b, int side){
     return heuristic_score_1(state, side, is_at_final);
     //return heuristic_score_2(state) * ((side == W) ? 1 : (-1) );
   }
-  
+
+
   Pos moves[POS_STORE_SIZE];
   int movec = allowed_moves(state, moves);
   State next = create_state();
+
   double v;
   if(side == state->turn){
-    v = DBL_MIN;
+
+    v = -DBL_MAX;
     int i;
     
     for(i=0;i<movec;i++){
@@ -170,8 +185,8 @@ double abpruning(State state, int depth, double a, double b, int side){
 
     }
   } else {
+
     v = DBL_MAX;
-    
     int i;
     for(i=0;i<movec;i++){
       cpy_state(next, state);
@@ -184,6 +199,7 @@ double abpruning(State state, int depth, double a, double b, int side){
 	break;
     }
   }
+
   free_state(next);
   return v;
 }
