@@ -1,22 +1,23 @@
 #include "game.h"
 
 Table global_table;
+FlatConfTable **global_fcts;
 
-int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_flag, int depthw, int depthb){
 
+int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Player black){
   State state = create_state();
   init_state(state);
-  Pos moves[POS_STORE_SIZE]; int movec;
+
   const int size = 1 << 16;
   //Table table = create_and_init_table(size);
   //global_table = table;
-
-  
   int turn = 0;
+  if(print_midgame_flag){
+    printf("(Turn %d)\n", turn);
+    print_state(state);
+  }
+
   while(!state_final(state)){
-    if(print_midgame_flag){
-      printf("(Turn %d)\n", turn);
-      print_state(state);
 
       /*
       Config_store board = board_to_conf_nocreate(state->board);
@@ -25,43 +26,36 @@ int run_game(int print_endgame_flag, int print_midgame_flag, int human_player_fl
       double score = get_score_from_fct_list(global_fcts[cat], n_f, board);
       printf("score = %30.20lf\n", score);
       */
-    }
+    int movec;    
+    Pos *moves = allowed_moves_inplace(state, &movec);
     
-    movec = allowed_moves(state, moves);
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
       skip_turn(state);
     } else {
-      int r;
-      if(human_player_flag){
-	if(state->turn == B){
-	  print_options(moves, movec);
-	  r = get_human_response(movec);
-	} else {
-	  r = best_next_state(state, moves, movec, depthw);
-	}
+      
+      int move_num;
+      if(state->turn == B){
+	move_num = get_move(state, black);
       } else {
-	if(state->turn == B){
-	  r = best_next_state(state, moves, movec, depthb);
-
-	} else {
-	  r = best_next_state(state, moves, movec, depthw);
-	}
+	move_num = get_move(state, white);
       }
+      
+      place_piece_indexed(state, move_num);
 
-      place_piece(state, moves[r]);
-      //state_switch_turn(state);
-      
       if(print_midgame_flag)
-	printf("(makes move at (%d,%d))\n", moves[r].r, moves[r].c);
-      
+	printf("(makes move at (%d,%d))\n", moves[move_num].r, moves[move_num].c);
     }
     turn++;
+    if(print_midgame_flag){
+      printf("\n(Turn %d)\n", turn);
+      print_state(state);
+    }
   }
+  
   if(print_midgame_flag){
     printf("(end of game)\n");
-    print_state(state);
   }
 
   if(print_endgame_flag){
@@ -90,11 +84,13 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
   //State state = create_state();
   Pos moves[POS_STORE_SIZE]; int movec; 
   //init_state(state);
+
+  if(print_midgame_flag){
+    printf("(Turn %d)\n", turn);
+    print_state(state);
+  }
+
   while(!state_final(state)){
-    if(print_midgame_flag){
-      printf("(Turn %d)\n", turn);
-      print_state(state);
-    }
     movec = allowed_moves(state, moves);
     if(movec == 0){
       if(print_midgame_flag)
@@ -119,11 +115,15 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
       turn++;
     }
 
+    if(print_midgame_flag){
+      printf("\n(Turn %d)\n", turn);
+      print_state(state);
+    }
+
   }
   
   if(print_midgame_flag){
     printf("(end of game)\n");
-    print_state(state);
   }
   
   if(print_endgame_flag){
@@ -141,4 +141,25 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
 
   return 0;
 
+}
+
+int get_move(State state, Player player){
+
+  int move_num;
+  int movec;
+  Pos *moves = allowed_moves_inplace(state, &movec);
+  switch(player.type){
+  case HUMAN:
+    print_options(moves, movec);
+    move_num = get_human_response(movec);
+    break;
+  case RANDOM:
+    move_num = rand() % movec;
+    break;
+  default:
+    move_num = 0;
+    break;
+  }
+
+  return move_num;
 }

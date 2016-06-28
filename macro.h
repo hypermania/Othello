@@ -39,4 +39,11 @@
 
 #define BUFF_SIZE 256
 
+/* Game control macros */
+
+//#define HUMAN 0
+//#define RANDOM 1
+//#define AB_PRUNING 2
+//#define NEGAMAX 3
+
 #endif

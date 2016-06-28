@@ -133,11 +133,11 @@ int main(int argc, char **argv){
   //srand((long int) t.tv_usec);
   srand((long int) 100);
   
-  run_game(1,1,1,3,10);
+
   
   //printf("test_table = %d\n", test_table());
   //printf("test_state = %d\n", test_state());
-  exit(0);
+  
   
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
@@ -217,8 +217,13 @@ int main(int argc, char **argv){
   }
   */
   global_fcts = fcts;
-  
 
+  Player white, black;
+  white.type = HUMAN;
+  black.type = RANDOM;
+
+  
+  run_game(1, 1, white, black);
   
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
