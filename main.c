@@ -218,10 +218,8 @@ int main(int argc, char **argv){
   */
   global_fcts = fcts;
 
-  Player white, black;
-  white.type = HUMAN;
-  black.type = RANDOM;
-
+  Player white = ab_pruning_player(7);
+  Player black = human_player();
   
   run_game(1, 1, white, black);
   

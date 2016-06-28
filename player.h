@@ -8,5 +8,8 @@ typedef struct {
   void *param;
 } Player;
 
+Player human_player(void);
+Player random_player(void);
+Player ab_pruning_player(int depth);
 
 #endif

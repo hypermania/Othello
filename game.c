@@ -156,6 +156,9 @@ int get_move(State state, Player player){
   case RANDOM:
     move_num = rand() % movec;
     break;
+  case AB_PRUNING:
+    move_num = best_next_state(state, moves, movec, (int)(long int) player.param);
+    break;
   default:
     move_num = 0;
     break;
