@@ -25,11 +25,12 @@ int print_board(Board board){
   if(board == NULL)
     return -1;
   //write(1, "\e[1m", 4);
-  writecolor("  0 1 2 3 4 5 6 7 ", "52", "46");
+  //writecolor("  0 1 2 3 4 5 6 7 ", "52", "46");
+  writecolor("  A B C D E F G H ", "52", "46");
   write(1, "\n", 1);
   int r,c = 0;
   for(r=0;r<BOARD_SIZE;r++){
-    char rownum[3] = {'0'+r, ' '};
+    char rownum[3] = {'1'+r, ' '};
     writecolor(rownum, "52", "46");
     for(c=0;c<BOARD_SIZE;c++){
       switch(board_get_pos(board, (Pos) {r,c})){
@@ -70,7 +71,7 @@ void print_options(Pos *moves, int movec){
   for(i=0;i<(movec+7-1)/7;i++){
     int j = 7*i;
     while(j<movec && j<7*(i+1)){
-      printf("%2d:(%d,%d)  ", j, moves[j].r, moves[j].c);
+      printf("%2d:%c%c (%d,%d)  ", j, moves[j].c+'A', moves[j].r+'1', moves[j].r, moves[j].c);
       j++;
     }
     printf("\n");
@@ -134,8 +135,8 @@ Pos *randomized_file_to_seq(char *buff, int n){
   // flip along reverse diagonal at random
   if(rand() % 2){
     for(i=0;i<n/2;i++){
-      buff[2*i+0] = BOARD_SIZE - 1 - buff[2*i+0];
-      buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+1];
+      buff[2*i+0] = BOARD_SIZE - 1 - buff[2*i+1];
+      buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+0];
     }
   }
   return (Pos *)buff;

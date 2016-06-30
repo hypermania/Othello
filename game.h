@@ -15,7 +15,7 @@
 #include "table.h"
 #include "genconf.h"
 #include "fit_weight.h"
-
+#include "player.h"
 
 FlatConfTable **global_fcts;
 

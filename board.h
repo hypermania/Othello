@@ -36,7 +36,7 @@ int check_val(char val);
 int check_side(char side);
 
 // get opposite side; return -1 if side is not a side
-int opposite_side(int side);
+int opposite_side(char side);
 
 
 /* return negative values below changed to assertions */
@@ -53,6 +53,8 @@ int adj_empty_pos(Board board, Pos pos, Pos *store);
 int adj_given_pos(Board board, Pos pos, Pos *store, char side);
 
 // return number of pieces given side (including empty spot)
-int count_pieces(Board board, int val);
+int count_pieces(Board board, char val);
+// return the (number of squares of val1) - (number of squares of val2)
+int piece_diff(Board board, char val1, char val2);
 
 #endif

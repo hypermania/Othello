@@ -2,15 +2,15 @@
 
 Table global_table;
 FlatConfTable **global_fcts;
-
+int global_n_f;
 
 int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Player black){
   State state = create_state();
   init_state(state);
 
-  const int size = 1 << 16;
-  //Table table = create_and_init_table(size);
-  //global_table = table;
+  const int size = 1 << 2;
+  Table table = create_and_init_table(size);
+  global_table = table;
   int turn = 0;
   if(print_midgame_flag){
     printf("(Turn %d)\n", turn);
@@ -19,13 +19,6 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
 
   while(!state_final(state)){
 
-      /*
-      Config_store board = board_to_conf_nocreate(state->board);
-      int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
-      int n_f = 50;
-      double score = get_score_from_fct_list(global_fcts[cat], n_f, board);
-      printf("score = %30.20lf\n", score);
-      */
     int movec;    
     Pos *moves = allowed_moves_inplace(state, &movec);
     
@@ -45,12 +38,27 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
       place_piece_indexed(state, move_num);
 
       if(print_midgame_flag)
-	printf("(makes move at (%d,%d))\n", moves[move_num].r, moves[move_num].c);
+	printf("(makes move at %c%c (%d,%d))\n", moves[move_num].c+'A', moves[move_num].r+'1', moves[move_num].r, moves[move_num].c);
     }
+    
     turn++;
+
+    table_free_nonreachable_state(table, state);
+
+
+    //printf("table->total = %d\n", table->total);
+    
     if(print_midgame_flag){
       printf("\n(Turn %d)\n", turn);
       print_state(state);
+
+      /*
+      Config_store board = board_to_conf_nocreate(state->board);
+      int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
+      int n_f = global_n_f;
+      double score = get_score_from_fct_list(global_fcts[cat], n_f, board);
+      printf("score = %30.20lf\n", score);
+      */
     }
   }
   
@@ -71,8 +79,8 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
     }
   }
 
-  //free_table(table);
-  
+  free_table(table);
+  free_state(state);
   return 0;
 
 }
@@ -156,8 +164,24 @@ int get_move(State state, Player player){
   case RANDOM:
     move_num = rand() % movec;
     break;
-  case AB_PRUNING:
-    move_num = best_next_state(state, moves, movec, (int)(long int) player.param);
+  case IMMEDIATE:
+    move_num = optimizing_move(state, player.param);
+    break;
+  case NEGAMAX:
+    //NegamaxConf conf = *player.param;
+    move_num =
+      negamaxing_move(state,
+		      ((NegamaxConf *)(player.param))->depth,
+		      ((NegamaxConf *)(player.param))->score_func);
+    break;
+  case NEGAMAX_DNSTORE:
+    move_num =
+      negamaxing_move_dnstore(state,
+			      ((NegamaxConf *)(player.param))->depth,
+			      ((NegamaxConf *)(player.param))->score_func);
+    break;
+  case MIXED_DNSTORE:
+    move_num = mixed_move_dnstore(state, ((MixedConf *)(player.param))->depth_middle, ((MixedConf *)(player.param))->score_func, ((MixedConf *)(player.param))->depth_end);
     break;
   default:
     move_num = 0;

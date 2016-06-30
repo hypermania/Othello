@@ -103,6 +103,7 @@ int place_piece(State state, Pos pos){
       state->turn = opposite_side(state->turn);
       record_seq(state, pos);
       state->control.moves_filled = false;
+      state->control.score_valid = false;
       return 0;
     }
   }
@@ -119,6 +120,7 @@ int place_piece_indexed(State state, int move_num){
   state->turn = opposite_side(state->turn);
   record_seq(state, state->moves[move_num]);
   state->control.moves_filled = false;
+  state->control.score_valid = false;
 	
   return 0;
 }
@@ -130,6 +132,7 @@ int skip_turn(State state){
   
   state->turn = opposite_side(state->turn);
   state->control.moves_filled = false;
+  state->control.score_valid = false;
   
   return 0;
 }
@@ -163,7 +166,7 @@ void fill_moves(State state){
   if(state->control.moves_filled == false){
     Board board = state->board;
     int movec = 0;
-    int r,c;
+    char r,c;
     for(r=0;r<BOARD_SIZE;r++){
       for(c=0;c<BOARD_SIZE;c++){
 	if(board_get_pos(board, (Pos) {r,c}) != X)
@@ -241,5 +244,6 @@ double state_compute_score(State state, double (*score_func)(State state)){
   }
 
   state->score = score_func(state);
+  state->control.score_valid = true;
   return state->score;
 }

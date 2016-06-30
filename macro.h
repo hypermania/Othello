@@ -41,9 +41,9 @@
 
 /* Game control macros */
 
-//#define HUMAN 0
-//#define RANDOM 1
-//#define AB_PRUNING 2
-//#define NEGAMAX 3
+
+/* Miscellaneous */
+
+#define MAX(a,b) (((a)>(b)) ? (b) : (a))
 
 #endif

@@ -349,7 +349,7 @@ int test_table(void){
       break;
   }
 
-  State head;
+  State head = 0;
   
   printf("print states\n\n");
   for(i=0;i<table->size;i++){

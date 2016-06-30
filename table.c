@@ -2,8 +2,8 @@
 
 Node create_node_from_state(State state){
   Node node = malloc(sizeof(Node_store));
-  node->state = create_state();
-  cpy_state(node->state, state);
+  node->state = state;//create_state();
+  //cpy_state(node->state, state);
   node->next = NULL;
   return node;
 }
@@ -66,9 +66,11 @@ Table create_and_init_table(int table_size){
   table->record = (char *) malloc(table_size * sizeof(char));
   memset(table->record, 0, table_size * sizeof(char));
 
+  /*
   sem_t P;
   sem_init(&P, 0, 1);
   mutex = &P;
+  */
   
   return table;
 }
@@ -164,7 +166,7 @@ int table_delete_state(Table table, State state){
 
 State table_get_state(Table table, State pivot){
   
-  sem_wait(mutex);
+  //sem_wait(mutex);
   
   Node node = table_contains_state(table, pivot);
   if(node != NULL){
@@ -174,7 +176,7 @@ State table_get_state(Table table, State pivot){
   cpy_state(state, pivot);
   table_insert_state(table, state);
   
-  sem_post(mutex);  
+  //sem_post(mutex);  
   return state;
 }
 
@@ -182,7 +184,7 @@ State table_get_state(Table table, State pivot){
 int table_free_nonreachable_state(Table table, State head){
   int i;
 
-  sem_wait(mutex);
+  //sem_wait(mutex);
   for(i=0;i<table->size;i++){
     if(table->record[i] == 0)
       continue;
@@ -199,6 +201,6 @@ int table_free_nonreachable_state(Table table, State head){
     }
   }
 
-  sem_post(mutex);
+  //sem_post(mutex);
   return 0;
 }

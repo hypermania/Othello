@@ -61,9 +61,8 @@ int check_side(char side){
   return 0;
 }
 
-int opposite_side(int side){
-  if(check_side(side) < 0)
-    return -1;
+int opposite_side(char side){
+  assert(check_side(side) >= 0);
   return 3-side;
 }
 
@@ -377,7 +376,7 @@ int adj_given_pos(Board board, Pos pos, Pos *store, char val){
   return count;
 }
 
-int count_pieces(Board board, int val){
+int count_pieces(Board board, char val){
   assert(board != NULL);
   assert(check_val(val) == 0);
 
@@ -392,4 +391,28 @@ int count_pieces(Board board, int val){
 
   
   return count;
+}
+
+int piece_diff(Board board, char val1, char val2){
+  assert(board != NULL);
+  assert(check_val(val1) == 0);
+  assert(check_val(val2) == 0);
+
+  int r, c;
+  int count = 0;
+  for(r=0;r<BOARD_SIZE;r++){
+    for(c=0;c<BOARD_SIZE;c++){
+      char val = board_get_pos(board, (Pos) {r,c});
+      if(val == val1){
+	count++;
+      } else if(val == val2){
+	count--;
+      }
+    }
+  }
+
+  
+  return count;
+
+
 }

@@ -1,30 +1,37 @@
 #include "ai.h"
 
+Table global_table;
+FlatConfTable **global_fcts;
+int global_n_f;
+
 // heuristic scoring functions
 int total_pieces(State state, int side){
   return count_pieces(state->board, side)
     - count_pieces(state->board, opposite_side(side));
 }
 
-double heuristic_score_1(State state, int side, int is_at_final){
+double heuristic_score_0(State state){
+  //return (double) (count_pieces(state->board, W) - count_pieces(state->board, B));
+  return (double) piece_diff(state->board, W, B);
+  //Config_store board = board_to_conf_nocreate(state->board);
+  
+  //return __builtin_popcountl(board.w) - __builtin_popcountl(board.b);
+}
+
+
+double heuristic_score_1(State state){
   //printf("heuristic_score_1\n");
+
+  int side = W;
+  int is_at_final = state_final(state);
+  
   double result;
   int mypieces = count_pieces(state->board, side);
   int opp_side = opposite_side(side);
-  result = (double)mypieces;
   int opppieces = count_pieces(state->board, opp_side);
-
-  /*
-  if(mypieces + opppieces == BOARD_SIZE * BOARD_SIZE){
-    if(mypieces <= opppieces){
-      return INT_MIN + 16384 + (mypieces - opppieces);
-    }
-    if(mypieces > opppieces){
-      return INT_MAX - 16384 + (mypieces - opppieces);
-    }
-  }
-  */
-
+  
+  result = (double)mypieces;
+  
   if(is_at_final){
     if(mypieces <= opppieces){
       return INT_MIN + 16384 + (mypieces - opppieces);
@@ -58,7 +65,26 @@ double heuristic_score_1(State state, int side, int is_at_final){
 }
 
 
+double heuristic_score_2(State state){
+  Config_store board = board_to_conf_nocreate(state->board);
+  int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
+  /*
+  if(board.w == 0){
+    return -DBL_MAX;
+  }
+  if(board.b == 0){
+    return DBL_MAX;
+  }
+  */
+  if(state_final(state)){
+    return heuristic_score_0(state);
+  }
+  
+  return get_score_from_fct_list(global_fcts[cat], global_n_f, board);
+}
 
+
+/*
 double state_score(State state, int my_side, int param){
   //int result = abpruning(state, param, -ROUNDS, ROUNDS, my_side);
   double result = abpruning(state, param, -DBL_MAX, DBL_MAX, my_side);
@@ -74,7 +100,6 @@ double get_score_for_move(State state, Pos move,  int param){
   int my_side = hold->turn;
 
   place_piece(hold, move);
-  //state_switch_turn(hold);
   double score = state_score(hold, my_side, param);
   
   free_state(hold);
@@ -93,7 +118,7 @@ static void *store_score(void *vargp){
   return NULL;
 }
 
-Table global_table;
+
 
 int best_next_state(State state, Pos *moves, int movec, int param){
   if(state == NULL)
@@ -119,11 +144,6 @@ int best_next_state(State state, Pos *moves, int movec, int param){
       pthread_join(tids[i], NULL);
   }
 
-  /*
-  for(i=0;i<movec;i++){
-    printf("move (%d,%d): %lf\n", moves[i].r, moves[i].c, scores[i]);
-  }
-  */
   int max_moves[POS_STORE_SIZE];
   int num_max_moves = 0;
   double max_score = -DBL_MAX;
@@ -139,8 +159,6 @@ int best_next_state(State state, Pos *moves, int movec, int param){
     }
   }
   
-
-  
   int r = rand() % num_max_moves;
 
   int result = max_moves[r];
@@ -150,7 +168,86 @@ int best_next_state(State state, Pos *moves, int movec, int param){
   
   //return 0;
 }
+*/
 
+
+int optimizing_move(State state, double (*score_func)(State)){
+  int side = state->turn;
+  
+  int movec;
+  allowed_moves_inplace(state, &movec);
+  State pivot = create_state();
+
+  double max_score = -DBL_MAX;
+  int max_move = 0;
+  
+  int i;
+  for(i=0;i<movec;i++){
+    cpy_state(pivot, state);
+    place_piece_indexed(pivot, i);
+    State info = table_get_state(global_table, pivot);
+    double score = ((side == W) ? 1 : (-1)) * 
+      state_compute_score(info, score_func); // min(a,b) = -max(-a,-b)
+    if(score > max_score){
+      max_move = i;
+      max_score = score;
+    }
+
+  }
+  free_state(pivot);
+  return max_move;
+}
+
+int count_node = 0;
+
+int negamaxing_move(State state, int depth, double (*score_func)(State)){
+  assert(state != NULL);
+
+  int move_num = 0;
+  negamax(state, depth, -DBL_MAX, DBL_MAX, &move_num, score_func);
+  
+  return move_num;
+}
+
+int negamaxing_move_dnstore(State state, int depth, double (*score_func)(State)){
+  assert(state != NULL);
+
+  //count_node = 0;
+  
+  int move_num = 0;
+  negamax_dnstore(state, depth, -DBL_MAX, DBL_MAX, &move_num, score_func);
+
+  //printf("count_node = %d\n", count_node);
+  
+  return move_num;
+}
+
+int mixed_move_dnstore(State state, int depth_middle, double (*score_func)(State), int depth_end){
+  assert(state != NULL);
+
+  //count_node = 0;
+  Config_store board = board_to_conf_nocreate(state->board);
+  int empty_spot = __builtin_popcountl(board.x);
+  
+  int move_num = 0;
+
+  double node_val;
+  
+  if(empty_spot > depth_end){
+    node_val = negamax_dnstore(state, depth_middle, -DBL_MAX, DBL_MAX, &move_num, score_func);
+    printf("score = %lf\n", link_function(node_val));
+  } else {
+    node_val = negamax_dnstore(state, INT_MAX, -DBL_MAX, DBL_MAX, &move_num, heuristic_score_0);
+    printf("score = %lf\n", node_val);
+  }
+
+  //
+  
+  return move_num;
+}
+
+
+/*
 double abpruning(State state, int depth, double a, double b, int side){
   
   if(state == NULL)
@@ -203,3 +300,94 @@ double abpruning(State state, int depth, double a, double b, int side){
   free_state(next);
   return v;
 }
+*/
+
+double negamax(State state, int depth, double alpha, double beta, int *max_move, double (*score_func)(State)){
+  assert(state != NULL);
+
+  State root = table_get_state(global_table, state);
+  
+  int side = root->turn;
+  if(depth == 0 || state_final(root)){
+    return ((side == W) ? 1 : (-1)) * state_compute_score(root, score_func);
+  }
+
+  double best_score = -DBL_MAX;
+  int best_move_num = 0;
+  
+  int movec;
+  allowed_moves_inplace(root, &movec);
+
+  State pivot = create_state();
+  
+  int i;
+  for(i=0;i<movec;i++){
+    cpy_state(pivot, root);
+    place_piece_indexed(pivot, i);
+    double score = (-1) * negamax(pivot, depth-1, -beta, -alpha, NULL, score_func);
+    if(score > best_score){
+      best_score = score;
+      best_move_num = i;
+    }
+    alpha = MAX(alpha, score);
+    if(alpha >= beta)
+      break;
+    
+  }
+
+  if(max_move != NULL){
+    *max_move = best_move_num;
+  }
+
+  free(pivot);
+  return best_score;
+}
+
+double negamax_dnstore(State state, int depth, double alpha, double beta, int *max_move, double (*score_func)(State)){
+  assert(state != NULL);
+
+  count_node++;
+  
+  State root = state;
+  
+  int side = root->turn;
+  if(depth == 0 || state_final(root)){
+    return ((side == W) ? 1 : (-1)) * state_compute_score(root, score_func);
+  }
+
+  double best_score = -DBL_MAX;
+  int best_move_num = 0;
+  
+  int movec;
+  allowed_moves_inplace(root, &movec);
+
+  if(movec == 0){
+    skip_turn(state);
+    return (-1) * negamax_dnstore(state, depth-1, -beta, -alpha, NULL, score_func);
+  }
+  
+  State pivot = create_state();
+  
+  int i;
+  for(i=0;i<movec;i++){
+    cpy_state(pivot, root);
+    place_piece_indexed(pivot, i);
+    double score = (-1) * negamax_dnstore(pivot, depth-1, -beta, -alpha, NULL, score_func);
+    if(score > best_score){
+      best_score = score;
+      best_move_num = i;
+    }
+    alpha = MAX(alpha, score);
+    if(alpha >= beta){
+      break;
+    }
+  }
+
+  if(max_move != NULL){
+    *max_move = best_move_num;
+  }
+
+  free(pivot);
+  return best_score;
+}
+

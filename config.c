@@ -319,6 +319,10 @@ Config_store board_to_conf_nocreate(Board board){
 
   Config_store config;
   
+  config.x = 0;
+  config.w = 0;
+  config.b = 0;
+  
   int r, c;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){

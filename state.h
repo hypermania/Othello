@@ -82,5 +82,6 @@ void record_seq(State state, Pos pos);
 
 double state_compute_score(State state, double (*score_func)(State state));
 
+
 #endif
 

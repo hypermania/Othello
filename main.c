@@ -15,6 +15,8 @@
 #include "test.h"
 
 FlatConfTable **global_fcts;
+int global_n_f;
+
 
 int process_games_into_examples(Example *examples);
 void fit_fct_for_categories(void);
@@ -62,7 +64,7 @@ void fit_fct_for_categories(void){
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
 
-  const int threshold = 10;
+  const int threshold = 100;
   
   char filename[120];
   
@@ -130,18 +132,18 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  //srand((long int) t.tv_usec);
-  srand((long int) 100);
+  srand((long int) t.tv_usec);
+  //srand((long int) 100);
   
-
-  
+  //fit_fct_for_categories();
+  //exit(0);
   //printf("test_table = %d\n", test_table());
   //printf("test_state = %d\n", test_state());
   
-  
+
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
-  
+  free(boards);
   // temporary variable
   int i, j;
   int cat;  int f;
@@ -179,7 +181,7 @@ int main(int argc, char **argv){
       free(fct);
     }
   }
-
+  /*
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
       FlatConfTable fct = fcts[cat][f];
@@ -192,6 +194,7 @@ int main(int argc, char **argv){
       }
     }
   }
+  */
   /*
   for(i=0;i<10000;i++){
     cat = rand() % CAT_NUM;
@@ -216,13 +219,29 @@ int main(int argc, char **argv){
     }
   }
   */
+  global_n_f = n_f;
   global_fcts = fcts;
 
-  Player white = ab_pruning_player(7);
+
   Player black = human_player();
-  
+  //Player black = random_player();
+  //Player white = negamaxing_dnstore_player(5, heuristic_score_0);
+  Player white = mixed_dnstore_player(5, heuristic_score_2, 6);
+  //Player black = negamaxing_dnstore_player(6, heuristic_score_1);
+  //Player white = optimizing_player(heuristic_score_2);
+  //Player black = optimizing_player(heuristic_score_0);
+  //Player white = negamaxing_player(5, heuristic_score_1);
+  //Player black = negamaxing_player(5, heuristic_score_1);
+
+
+  //for(i=0;i<1000;i++){
   run_game(1, 1, white, black);
+  //}
+
+  //free(white.param);
+  //free(black.param);
   
+
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
       free_fct_contents(fcts[cat][f]);
