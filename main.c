@@ -226,7 +226,7 @@ int main(int argc, char **argv){
   Player black = human_player();
   //Player black = random_player();
   //Player white = negamaxing_dnstore_player(5, heuristic_score_0);
-  Player white = mixed_dnstore_player(5, heuristic_score_2, 6);
+  Player white = mixed_dnstore_player(5, heuristic_score_2, 12);
   //Player black = negamaxing_dnstore_player(6, heuristic_score_1);
   //Player white = optimizing_player(heuristic_score_2);
   //Player black = optimizing_player(heuristic_score_0);

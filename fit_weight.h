@@ -46,6 +46,7 @@ double total_error(Weight weight, Example *examples, int N);
 
 double link_function(double x);
 double link_function_deriv_relation(double link_function_val);
+double link_function_inverse(double g);
 double link_function_2nd_deriv_relation(double g_score, double g_deriv);
 
 /* preprocessors */

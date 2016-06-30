@@ -335,6 +335,11 @@ double link_function_deriv_relation(double link_function_val){
   return  (link_function_val + BOARD_SIZE_SQR) * (BOARD_SIZE_SQR - link_function_val) / (2*BOARD_SIZE_SQR);
 }
 
+double link_function_inverse(double g){
+  return (-1) * log((2 * BOARD_SIZE_SQR)/(BOARD_SIZE_SQR + g) - 1);
+}
+
+
 double link_function_2nd_deriv_relation(double g_score, double g_deriv){
   return 2 * g_deriv * g_deriv / (g_score + BOARD_SIZE) - g_deriv;
 }

@@ -77,7 +77,7 @@ double heuristic_score_2(State state){
   }
   */
   if(state_final(state)){
-    return heuristic_score_0(state);
+    return link_function_inverse(heuristic_score_0(state));
   }
   
   return get_score_from_fct_list(global_fcts[cat], global_n_f, board);
@@ -240,8 +240,8 @@ int mixed_move_dnstore(State state, int depth_middle, double (*score_func)(State
     node_val = negamax_dnstore(state, INT_MAX, -DBL_MAX, DBL_MAX, &move_num, heuristic_score_0);
     printf("score = %lf\n", node_val);
   }
+  
 
-  //
   
   return move_num;
 }
