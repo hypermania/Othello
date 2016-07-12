@@ -135,10 +135,21 @@ Pos *randomized_file_to_seq(char *buff, int n){
   // flip along reverse diagonal at random
   if(rand() % 2){
     for(i=0;i<n/2;i++){
-      buff[2*i+0] = BOARD_SIZE - 1 - buff[2*i+1];
+      char temp = BOARD_SIZE - 1 - buff[2*i+1];
       buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+0];
+      buff[2*i+0] = temp;
     }
   }
+
+
+  if(rand() % 2){
+    for(i=0;i<n/2;i++){
+      buff[2*i+0] = BOARD_SIZE - 1 - buff[2*i+0];
+      buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+1];
+    }
+  }
+
+
   return (Pos *)buff;
 }
 
@@ -249,7 +260,7 @@ Config read_configs_from_file(const char *filename, int *count_configs){
 
 void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   
-  printf("reading data from file %s .....\n", filename);
+  //printf("reading data from file %s .....\n", filename);
   FILE *fp;
   if((fp = fopen(filename, "r")) == NULL){
     printf("failed: file access error\n");
@@ -266,7 +277,7 @@ void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   Config data = malloc(lSize);
   fread(data, lSize, 1, fp);
 
-  printf("read %ld items.\n", lSize/obj_size);
+  //printf("read %ld items.\n", lSize/obj_size);
   
   fclose(fp);
 

@@ -1,44 +1,5 @@
 #include "fit_weight.h"
 
-int example_from_seq(State state, Pos *seq, Example *example){
-  assert(state != NULL);
-  assert(seq != NULL);
-  assert(example != NULL);
-  
-  int count = 0;
-  Pos moves[POS_STORE_SIZE]; int movec;
-  
-  init_state(state);
-  while(!state_final(state)){
-    
-    movec = allowed_moves(state, moves);
-    if(movec == 0){
-      skip_turn(state);
-    } else {
-      int i; int moved = 0;
-      for(i=0;i<movec;i++){
-	if(moves[i].r == seq[count].r && moves[i].c == seq[count].c){
-	  place_piece(state, seq[count]);
-	  //state_switch_turn(state);
-	  moved = 1;
-	  break;
-	}
-      }
-      if(moved == 0){
-	count = 0;
-	break;
-      }
-      board_to_conf(state->board, &(example[count].board));
-      count++;
-    }
-  }
-  int i;
-  int score = count_pieces(state->board, W) - count_pieces(state->board, B);
-  for(i=0;i<count;i++){
-    example[i].score = score;
-  }
-  return count;
-}
 
 char **compute_hik(Weight weight, Example *examples, int N){
   assert(examples != NULL);
@@ -440,39 +401,6 @@ Weight symmetrize_weight(Weight *weight){
 */
 
 
-int sort_examples_into_categories(Example *examples, Example **categories, int *cat_sizes, int example_size){
-
-  const int chunk = 10;
-  
-  int allocated[CAT_NUM];
-  int i;
-  for(i=0;i<CAT_NUM;i++){
-    allocated[i] = chunk;
-    categories[i] = malloc(allocated[i] * sizeof(Example));
-    cat_sizes[i] = 0;
-  }
-
-  for(i=0;i<example_size;i++){
-    int pieces = BOARD_SIZE_SQR - __builtin_popcountl(examples[i].board.x);
-    int cat = ((pieces - INIT_PIECE_NUM) - 1) / CATEGORY_SIZE;
-
-    if(cat_sizes[cat] == allocated[cat]){
-      allocated[cat] += chunk;
-      categories[cat] = realloc(categories[cat], allocated[cat] * sizeof(Example));
-    }
-    
-    categories[cat][cat_sizes[cat]] = examples[i];
-    cat_sizes[cat]++;
-  }
-  // the following were added without testing
-  int cat;
-  for(cat=0;cat<CAT_NUM;cat++){
-    categories[cat] = realloc(categories[cat], cat_sizes[cat] * sizeof(Example));
-  }
-  
-  return 0;
-
-}
 
 Weight init_weight_from_configs(Config configs, int n){
   Weight weight;
@@ -783,4 +711,119 @@ double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store bo
   }
   
   return score;
+}
+
+//void fit_fct_for_categories(void){
+
+FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
+  int i, j;
+  const int pattern_set_size = 12; // max 12
+  Pattern patterns[20] =
+    {
+      DIAG(0),
+      
+      ATOM(0,1)|ATOM(1,2)|ATOM(2,3)|ATOM(3,4)|ATOM(4,5)|ATOM(5,6)|ATOM(6,7),
+      
+      ATOM(0,2)|ATOM(1,3)|ATOM(2,4)|ATOM(3,5)|ATOM(4,6)|ATOM(5,7),
+      
+      ATOM(0,3)|ATOM(1,4)|ATOM(2,5)|ATOM(3,6)|ATOM(4,7),
+      
+      ATOM(0,4)|ATOM(1,5)|ATOM(2,6)|ATOM(3,7),
+      
+      ROW(0),
+      
+      ROW(1),
+      
+      ROW(2),
+      
+      ROW(3),
+
+      ROW(0)|ATOM(1,1)|ATOM(1,6),
+      
+      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|
+      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|
+      ATOM(2,0)|ATOM(2,1)|ATOM(2,2),
+
+      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|ATOM(0,3)|ATOM(0,4)|
+      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|ATOM(1,3)|ATOM(1,4)  
+    };
+
+
+  int n_f;
+  Pattern *completion = complete_pattern_set(patterns, pattern_set_size, &n_f);
+  printf("n_f = %d\n", n_f);
+
+  Example *categories[CAT_NUM];
+  int cat_sizes[CAT_NUM];
+
+  sort_examples_into_categories(examples, categories, cat_sizes, n_e);
+  
+  int n_b;
+  Config boards = malloc(n_e * sizeof(Config_store));
+  //read_configs_from_file("./dat/boards/boards_random.dat", &n_b);
+
+  const int threshold = 50;
+  
+  char filename[120];
+  
+  int cat;
+
+  for(cat=0;cat<CAT_NUM;cat++){
+  
+    sprintf(filename, "./dat/examples/cat_%02d.dat", cat);
+    int n_e;
+    Example *examples = read_examples_from_file(filename, &n_e);
+    
+    int count_weights = 0; int count_valid = 0;
+    FlatConfTable *fct_list = malloc(n_f * sizeof(FlatConfTable));
+    for(i=0;i<n_f;i++){
+      fct_list[i] = genconf_single_pattern(completion[i], boards, n_b, threshold);
+      init_weights_for_fct(&fct_list[i]);
+      //print_pattern(fct_list[i].pattern);
+      printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
+      count_weights += fct_list[i].n;
+      for(j=0;j<fct_list[i].n;j++){
+	if(fct_list[i].valid[j]){
+	  count_valid++;
+	}
+      }
+    }
+    
+    printf("count_weights = %d\n", count_weights);
+    printf("count_valid = %d\n", count_valid);
+    
+    fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.001, 100);
+    
+    
+    sprintf(filename, "./dat/fcts/rand_cat_%02d", cat);
+    mkdir(filename, 0700);
+    for(i=0;i<n_f;i++){
+      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d", cat, i);
+      mkdir(filename, 0700);
+      
+      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/fct.dat", cat, i);
+      save_dat_to_file(filename, &fct_list[i], sizeof(FlatConfTable));
+      
+      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/valid.dat", cat, i);
+      save_dat_to_file(filename, fct_list[i].valid, fct_list[i].n * sizeof(char));
+      
+      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/variations.dat", cat, i);
+      save_dat_to_file(filename, fct_list[i].variations, fct_list[i].n * sizeof(Config_store));
+      
+      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/matches.dat", cat, i);
+      save_dat_to_file(filename, fct_list[i].matches, fct_list[i].n * sizeof(int));
+      
+      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/weights.dat", cat, i);
+      save_dat_to_file(filename, fct_list[i].weights, fct_list[i].n * sizeof(double));
+    }
+
+    
+    for(i=0;i<n_f;i++){
+      free_fct_contents(fct_list[i]);
+    }
+    free(fct_list);
+    free(examples);
+  }
+
+  //  return 
 }

@@ -32,6 +32,7 @@ Player negamaxing_player(int depth, double (*score_func)(State)){
   return player;
 }
 
+/*
 Player negamaxing_dnstore_player(int depth, double (*score_func)(State)){
   Player player;
   player.type = NEGAMAX_DNSTORE;
@@ -44,11 +45,12 @@ Player negamaxing_dnstore_player(int depth, double (*score_func)(State)){
   
   return player;
 }
+*/
 
 
-Player mixed_dnstore_player(int depth_middle, double (*score_func)(State), int depth_end){
+Player mixed_player(int depth_middle, double (*score_func)(State), int depth_end){
   Player player;
-  player.type = MIXED_DNSTORE;
+  player.type = MIXED;
 
   MixedConf *conf = malloc(sizeof(MixedConf));
   player.param = conf;

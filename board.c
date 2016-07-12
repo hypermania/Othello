@@ -67,8 +67,8 @@ int opposite_side(char side){
 }
 
 char board_get_pos(Board board, Pos pos){
-  assert(board != NULL);
-  assert(check_pos(pos) == 0);
+  //assert(board != NULL);
+  //assert(check_pos(pos) == 0);
 
   return board[BOARD_SIZE * pos.r + pos.c];
 }

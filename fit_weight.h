@@ -6,12 +6,17 @@
 #include <math.h>
 #include <float.h>
 #include <pthread.h>
+#include <sys/stat.h>
+
 
 #include "state.h"
 #include "example.h"
 #include "pattern.h"
 #include "config.h"
 #include "fct.h"
+#include "preprocess.h"
+#include "genconf.h"
+
 
 #include "macro.h"
 
@@ -49,14 +54,6 @@ double link_function_deriv_relation(double link_function_val);
 double link_function_inverse(double g);
 double link_function_2nd_deriv_relation(double g_score, double g_deriv);
 
-/* preprocessors */
-
-// given "examples" and "example_size":
-// stores the categorized examples into "categories"
-//  stores the number of examples in each cateogry into "category_sizes"
-int sort_examples_into_categories(Example *examples, Example **categories, int *cat_sizes, int example_size);
-// write to the example ptr all (board,score) pair in the game
-int example_from_seq(State state, Pos *seq, Example *example);
 
 Weight init_weight_from_configs(Config configs, int n);
 void free_weight(Weight weight);
@@ -82,7 +79,7 @@ void *iterate_descent_fct_thread(void *index);
 double iterate_descent_for_fct_list_mt(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha);
 
 
-
+FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e);
 
 
 #endif

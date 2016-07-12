@@ -13,127 +13,23 @@
 #include "game.h"
 #include "fit_weight.h"
 #include "test.h"
+#include "preprocess.h"
 
 FlatConfTable **global_fcts;
 int global_n_f;
 
-
-int process_games_into_examples(Example *examples);
-void fit_fct_for_categories(void);
+//void fit_fct_for_categories(Example **categories, int *cat_sizes){
 
 
-void fit_fct_for_categories(void){
-  int i, j;
-  const int pattern_set_size = 12; // max 12
-  Pattern patterns[20] =
-    {
-      DIAG(0),
-      
-      ATOM(0,1)|ATOM(1,2)|ATOM(2,3)|ATOM(3,4)|ATOM(4,5)|ATOM(5,6)|ATOM(6,7),
-      
-      ATOM(0,2)|ATOM(1,3)|ATOM(2,4)|ATOM(3,5)|ATOM(4,6)|ATOM(5,7),
-      
-      ATOM(0,3)|ATOM(1,4)|ATOM(2,5)|ATOM(3,6)|ATOM(4,7),
-      
-      ATOM(0,4)|ATOM(1,5)|ATOM(2,6)|ATOM(3,7),
-      
-      ROW(0),
-      
-      ROW(1),
-      
-      ROW(2),
-      
-      ROW(3),
-
-      ROW(0)|ATOM(1,1)|ATOM(1,6),
-      
-      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|
-      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|
-      ATOM(2,0)|ATOM(2,1)|ATOM(2,2),
-
-      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|ATOM(0,3)|ATOM(0,4)|
-      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|ATOM(1,3)|ATOM(1,4)  
-    };
-
-
-  int n_f;
-  Pattern *completion = complete_pattern_set(patterns, pattern_set_size, &n_f);
-  printf("n_f = %d\n", n_f);
-
-  
-  int n_b;
-  Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
-
-  const int threshold = 100;
-  
-  char filename[120];
-  
-  int cat;
-
-  for(cat=0;cat<CAT_NUM;cat++){
-  
-  sprintf(filename, "./dat/examples/cat_%02d.dat", cat);
-  int n_e;
-  Example *examples = read_examples_from_file(filename, &n_e);
-
-  int count_weights = 0; int count_valid = 0;
-  FlatConfTable *fct_list = malloc(n_f * sizeof(FlatConfTable));
-  for(i=0;i<n_f;i++){
-    fct_list[i] = genconf_single_pattern(completion[i], boards, n_b, threshold);
-    init_weights_for_fct(&fct_list[i]);
-    //print_pattern(fct_list[i].pattern);
-    printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
-    count_weights += fct_list[i].n;
-    for(j=0;j<fct_list[i].n;j++){
-      if(fct_list[i].valid[j]){
-	count_valid++;
-      }
-    }
-  }
-  
-  printf("count_weights = %d\n", count_weights);
-  printf("count_valid = %d\n", count_valid);
-
-  fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.001, 100);
-
-
-  sprintf(filename, "./dat/fcts/raw_cat_%02d", cat);
-  mkdir(filename, 0700);
-  for(i=0;i<n_f;i++){
-    sprintf(filename, "./dat/fcts/raw_cat_%02d/%02d", cat, i);
-    mkdir(filename, 0700);
-    
-    sprintf(filename, "./dat/fcts/raw_cat_%02d/%02d/fct.dat", cat, i);
-    save_dat_to_file(filename, &fct_list[i], sizeof(FlatConfTable));
-
-    sprintf(filename, "./dat/fcts/raw_cat_%02d/%02d/valid.dat", cat, i);
-    save_dat_to_file(filename, fct_list[i].valid, fct_list[i].n * sizeof(char));
-
-    sprintf(filename, "./dat/fcts/raw_cat_%02d/%02d/variations.dat", cat, i);
-    save_dat_to_file(filename, fct_list[i].variations, fct_list[i].n * sizeof(Config_store));
-
-    sprintf(filename, "./dat/fcts/raw_cat_%02d/%02d/matches.dat", cat, i);
-    save_dat_to_file(filename, fct_list[i].matches, fct_list[i].n * sizeof(int));
-
-    sprintf(filename, "./dat/fcts/raw_cat_%02d/%02d/weights.dat", cat, i);
-    save_dat_to_file(filename, fct_list[i].weights, fct_list[i].n * sizeof(double));
-  }
-  
-  for(i=0;i<n_f;i++){
-    free_fct_contents(fct_list[i]);
-  }
-  free(fct_list);
-  free(examples);
-
-  }
-}
 
 int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  srand((long int) t.tv_usec);
-  //srand((long int) 100);
+  //srand((long int) t.tv_usec);
+  srand((long int) 100);
+
+  int i, j;
   
   //fit_fct_for_categories();
   //exit(0);
@@ -141,11 +37,45 @@ int main(int argc, char **argv){
   //printf("test_state = %d\n", test_state());
   
 
+  /*
+  int n_e = 0;
+  Example *examples = malloc(0);
+  //examples = append_filed_games_to_examples(examples, &n_e, "./game_base/all_games.txt");
+  examples = append_random_games_to_examples(examples, &n_e, 50000);
+  Config boards_random = create_and_init_config_list(n_e);
+  for(i=0;i<n_e;i++){
+    boards_random[i] = examples[i].board;
+  }
+  
+  save_dat_to_file("./dat/boards/boards_random.dat", boards_random, n_e * sizeof(Config_store));
+  
+
+  Example *categories[CAT_NUM];
+  int cat_sizes[CAT_NUM];
+
+  sort_examples_into_categories(examples, categories, cat_sizes, n_e);
+  
+
+  for(i=0;i<10;i++){
+    int cat = rand() % CAT_NUM;
+    int r = rand() % cat_sizes[cat];
+    print_config(&categories[cat][r].board);
+    printf("cat = %d, score = %d\n", cat, categories[cat][r].score);
+  }
+
+
+  //fit_fct_for_categories(categories, cat_sizes);
+
+  free(examples);
+  
+  exit(0);
+
+  */  
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
   free(boards);
   // temporary variable
-  int i, j;
+
   int cat;  int f;
   int n_f = 50;
   FlatConfTable **fcts = malloc(CAT_NUM * sizeof(FlatConfTable *));
@@ -223,15 +153,17 @@ int main(int argc, char **argv){
   global_fcts = fcts;
 
 
-  Player black = human_player();
+  //Player black = human_player();
   //Player black = random_player();
-  //Player white = negamaxing_dnstore_player(5, heuristic_score_0);
-  Player white = mixed_dnstore_player(5, heuristic_score_2, 12);
+  //Player black = mixed_player(8, heuristic_score_0, 0);
+  //Player white = mixed_dnstore_player(2, heuristic_score_2, 19);
+  Player black = mixed_player(6, heuristic_score_2, 10);
+  Player white = mixed_player(6, heuristic_score_2, 10);
   //Player black = negamaxing_dnstore_player(6, heuristic_score_1);
   //Player white = optimizing_player(heuristic_score_2);
   //Player black = optimizing_player(heuristic_score_0);
   //Player white = negamaxing_player(5, heuristic_score_1);
-  //Player black = negamaxing_player(5, heuristic_score_1);
+  //Player black = negamaxing_player(7, heuristic_score_0);
 
 
   //for(i=0;i<1000;i++){
@@ -274,85 +206,6 @@ int main(int argc, char **argv){
   */
   
   
-  //Pattern patterns[64] = {ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3), ATOM(0,4)};
-  /*
-  Pattern patterns[64] = {
-    ATOM(0,0), ATOM(0,1), ATOM(0,2), ATOM(0,3),
-    ATOM(0,4), ATOM(0,5), ATOM(0,6), ATOM(0,7),
-    ATOM(1,0), ATOM(2,0), ATOM(3,0), ATOM(4,0),
-    ATOM(5,0), ATOM(6,0), ATOM(7,0), ATOM(7,1),
-    ATOM(7,2), ATOM(7,3), ATOM(7,4), ATOM(7,5),
-    ATOM(7,6), ATOM(7,7), ATOM(6,7), ATOM(5,7),
-    ATOM(4,7), ATOM(3,7), ATOM(2,7), ATOM(1,7),
-    ATOM(1,1), ATOM(1,6), ATOM(6,6), ATOM(6,1)
-  };
-  GeneratedConf gc = genconf_for_patterns(patterns, boards, 32, n_b, 0.000001, 0);
-
-  printf("gc.n = %d\n", gc.n);
-
-  if(true){
-  for(i=0;i<200;i++){
-    int r = rand() % gc.n;
-    print_config(&gc.variations[r]);
-    printf("matches = %d, freq = %12.10lf\n", gc.matches[r], (double)gc.matches[r]/n_b);
-  }
-  }
-  */
-  
-  /*
-  int n_v1, n_v2;
-  Config variations_1 =
-    list_variations(
-		    ATOM(0,0),  ATOM(1,0) //| ATOM(1,1) | ATOM(1,2) |
-		    //ATOM(2,0) | ATOM(2,1) | ATOM(2,2)
-		    , &n_v1);
-  Config variations_2 =
-    list_variations(
-		    ROW(0)
-		    , &n_v2);
-
-  */
-  
-  //int *matches_1 = match_variations(variations_1, boards, n_v1, n_b, 1);
-  //printf("match 1 complete\n");
-  //int *matches_2 = match_variations(variations_2, boards, n_v2, n_b, 1);
-  //printf("match 2 complete\n");
-  
-  /*
-  int *matches_1 = read_dat_from_file("./genconf_dat/corner_variation_matches.dat", sizeof(int), &n_v1);
-
-  int *matches_2 = read_dat_from_file("./genconf_dat/edge_variation_matches.dat", sizeof(int), &n_v2);
-
-  const double threshold = 0.0027; // 3 sigmas
-  int count_filtered_1, count_filtered_2;
-  Config filtered_1 = filter_variations(variations_1, matches_1, n_v1, n_b, &count_filtered_1, threshold);
-  Config filtered_2 = filter_variations(variations_2, matches_2, n_v2, n_b, &count_filtered_2, threshold);
-  printf("count_filtered_1 = %d\n", count_filtered_1);
-  printf("count_filtered_2 = %d\n", count_filtered_2);
-  
-  int total;
-  Config crossover =
-    cross_match(filtered_1, filtered_2,
-		count_filtered_1, count_filtered_2,
-		&total);
-  
-  printf("n_v1 = %d\n", n_v1);
-  printf("n_v2 = %d\n", n_v2);
-  printf("total = %d\n", total);
-
-  n_v = total; int count;
-
-
-  
-  //int *matches = match_variations(crossover, boards, n_v, n_b);
-  int *matches = read_dat_from_file("./genconf_dat/corner_row_variation_matches_0.0027.dat", sizeof(int), &n_v);
-  
-  //save_dat_to_file("./genconf_dat/corner_row_variation_matches_0.0027.dat", matches, n_v * sizeof(int));
-  
-  Config filtered = filter_variations(crossover, matches, n_v, n_b, &count, threshold);
-  
-  printf("count = %d\n", count);
-  */
   
   // read examples from file
 
@@ -384,38 +237,6 @@ int main(int argc, char **argv){
     }
   */
   
-  /*  
-  int count = 0;
-  for(i=0;i<20;i++){
-    if(true){
-      print_config(&filtered[i]);
-      //printf("freqs[%d] = %12.10lf\n", i, freqs[i]);
-      //printf("matches[%d] = %d\n", i, matches[i]);
-    }
-    count++;
-    if(count < 0)
-      break;
-  }
-  */
-
-  
-  /*
-  double *freqs = malloc(n_v * sizeof(double));
-  for(i=0;i<k;i++){
-    freqs[i] = (double)matches[i]/n_b;
-  }
-  */
-
-  /*
-  int n_v1, n_v2;
-  Config variations_1 =
-    list_variations(
-		    ATOM(0,0) | ATOM(0,1), &n_v1);
-  Config variations_2 =
-    list_variations(
-		    ATOM(0,0) | ATOM(0,1) | ATOM(0,2), &n_v2);
-
-  */
   
   // categorizing examples by number of pieces
   /*
@@ -437,17 +258,6 @@ int main(int argc, char **argv){
   }
   */
 
-  // read categorized examples from file
-  /*
-  Example *categories[CAT_NUM];
-  int cat_sizes[CAT_NUM];
-
-  for(i=0;i<CAT_NUM;i++){
-    char filename[100];
-    sprintf(filename, "./dat/examples/cat_%02d.dat", i);
-    categories[i] = read_examples_from_file(filename, &cat_sizes[i]);
-  }
-  */    
   
   // run tests
 
@@ -456,69 +266,9 @@ int main(int argc, char **argv){
   //printf("test_table = %d\n", test_table());
   //printf("test_genconf = %d\n", test_genconf());
 
-  /*
-  EvalFunc weights;
-  for(i=0;i<CAT_NUM;i++){
-    char filename[100];
-    sprintf(filename, "./weight_dat/weight_%02d.dat", i);
-    weights[i].n = count;
-    weights[i].c = filtered;
-    weights[i].w = read_dat_from_file(filename, sizeof(double), &count);
-  }
-  global_weights = weights;
-  */
-  
-  // run the game
-
-
 
   exit(0);  
 }
 
 
-
-int process_games_into_examples(Example *examples){
-
-  FILE *fp;
-  fp = fopen("./game_base/all_games.txt", "r");
-  // temporary storage
-  State state = create_state();
-  char buff[BUFF_SIZE];
-  memset(buff, 0, BUFF_SIZE);
-
-  // examples to be loaded
-  Example *current = examples;
-  int count_games = 0; int count_examples = 0;
-  while(!feof(fp)){
-
-    fgets(buff, BUFF_SIZE, fp);
-    
-    Pos *seq = randomized_file_to_seq(buff, BUFF_SIZE);
-
-    int turns = example_from_seq(state, seq, current);
-    if(turns > 0){
-      current += turns; 
-      count_examples += turns;
-      count_games++;
-    }
-    
-    if(count_games % 5000 == 0){
-      printf("count_games = %d\n", count_games);
-    }
-    
-    break;
-  }
-
-  printf("count_games = %d\n", count_games);
-  printf("count_examples = %d\n", count_examples);
-  printf("example size = %ld\n",  sizeof(Example));
-  
-  int fd = open("examples.dat", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-  write(fd, examples, count_examples * sizeof(Example));
-  close(fd);
-  
-  fclose(fp);
-  
-  return count_examples;
-}
 

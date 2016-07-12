@@ -38,7 +38,7 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
       place_piece_indexed(state, move_num);
 
       if(print_midgame_flag)
-	printf("(makes move at %c%c (%d,%d))\n", moves[move_num].c+'A', moves[move_num].r+'1', moves[move_num].r, moves[move_num].c);
+	printf("(makes move at %c%c (%d,%d) (move index %d))\n", moves[move_num].c+'A', moves[move_num].r+'1', moves[move_num].r, moves[move_num].c, move_num);
     }
     
     turn++;
@@ -168,20 +168,17 @@ int get_move(State state, Player player){
     move_num = optimizing_move(state, player.param);
     break;
   case NEGAMAX:
-    //NegamaxConf conf = *player.param;
     move_num =
       negamaxing_move(state,
 		      ((NegamaxConf *)(player.param))->depth,
 		      ((NegamaxConf *)(player.param))->score_func);
     break;
-  case NEGAMAX_DNSTORE:
+  case MIXED:
     move_num =
-      negamaxing_move_dnstore(state,
-			      ((NegamaxConf *)(player.param))->depth,
-			      ((NegamaxConf *)(player.param))->score_func);
-    break;
-  case MIXED_DNSTORE:
-    move_num = mixed_move_dnstore(state, ((MixedConf *)(player.param))->depth_middle, ((MixedConf *)(player.param))->score_func, ((MixedConf *)(player.param))->depth_end);
+      mixed_move(state,
+		 ((MixedConf *)(player.param))->depth_middle,
+		 ((MixedConf *)(player.param))->score_func,
+		 ((MixedConf *)(player.param))->depth_end);
     break;
   default:
     move_num = 0;

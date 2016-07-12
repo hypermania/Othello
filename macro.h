@@ -44,6 +44,7 @@
 
 /* Miscellaneous */
 
-#define MAX(a,b) (((a)>(b)) ? (b) : (a))
-
+#define MAX(a,b) (((a)>(b)) ? (a) : (b))
+//#define SWAP(a,b) {a ^= b; b ^= a; a ^= b;}
+  
 #endif
