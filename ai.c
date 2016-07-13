@@ -216,9 +216,6 @@ int mixed_move(State state, int depth_middle, double (*score_func)(State), int d
 }
 
 
-
-
-
 double negamax(State state, int depth, double alpha, double beta, int *max_move, double (*score_func)(State)){
   assert(state != NULL);
 
@@ -256,16 +253,23 @@ double negamax(State state, int depth, double alpha, double beta, int *max_move,
   State pivot = create_state();
   
   double best_score = -DBL_MAX;
-  int best_move_num = 0;
+  char best_movec = 0;
+  char best_moves[POS_STORE_SIZE];
+
+  //int best_move_num = 0;
   
   int i;
   for(i=0;i<movec;i++){
     cpy_state(pivot, state);
     place_piece_indexed(pivot, order[i]);
     double score = (-1) * negamax(pivot, depth-1, -beta, -alpha, NULL, score_func);
-    if(score >= best_score){
+    
+    if(score > best_score){
       best_score = score;
-      best_move_num = order[i];
+      best_movec = 0;
+      best_moves[best_movec++] = order[i];
+    } else if(score == best_score){
+      best_moves[best_movec++] = order[i];
     }
     alpha = MAX(alpha, score);
     if(alpha >= beta){
@@ -273,8 +277,9 @@ double negamax(State state, int depth, double alpha, double beta, int *max_move,
     }
   }
 
+  int r = rand() % best_movec;
   if(max_move != NULL){
-    *max_move = best_move_num;
+    *max_move = best_moves[r];//best_move_num;
   }
 
   free(pivot);
@@ -385,49 +390,79 @@ double negamax_end(State state, double alpha, double beta, int *max_move, double
   return best_score;
 }
 
-/*
+
+
 double negamax_dep_lim(State state, int depth, double alpha, double beta, double *move_scores, int *id_node_count, double (*score_func)(State)){
   assert(state != NULL);
-  assert(id_node_count != NULL);
 
   (*id_node_count)++;
 
+  /* check if this is a leaf */
   int side = state->turn;
   if(depth == 0 || state_final(state)){
     return ((side == W) ? 1 : (-1)) * state_compute_score(state, score_func);
   }
 
+  /* get basic state info */
   int movec;
   allowed_moves_inplace(state, &movec);
 
+
+  /* logic for turn skipping */
   if(movec == 0){
     skip_turn(state);
-    return (-1) * negamax_dep_lim(state, depth-1, -beta, -alpha, NULL, );
+    return (-1) * negamax_dep_lim(state, depth-1, -beta, -alpha, NULL, id_node_count, score_func);
   }
 
+  /* move ordering */
   char order[POS_STORE_SIZE]; int m;
   for(m=0;m<movec;m++){
     order[m] = m;
   }
 
-  State pivot = create_state();
+  if(depth >= 4){
+    order_moves(state, order, movec, 1, heuristic_score_2);
+  }
+  
+  /* logic for move making */
 
+  State pivot = create_state();
+  
+  double best_score = -DBL_MAX;
+  char best_movec = 0;
+  char best_moves[POS_STORE_SIZE];
+
+  //int best_move_num = 0;
+  
   int i;
   for(i=0;i<movec;i++){
     cpy_state(pivot, state);
     place_piece_indexed(pivot, order[i]);
-    double score = (-1) * negamax_dep_lim(pivot, depth-1, -beta, -alpha, NULL, score_func, remaining-1);
+    double score = (-1) * negamax_dep_lim(pivot, depth-1, -beta, -alpha, NULL, id_node_count, score_func);
+    
     if(score > best_score){
       best_score = score;
-      best_move_num = order[i];
+      best_movec = 0;
+      best_moves[best_movec++] = order[i];
+    } else if(score == best_score){
+      best_moves[best_movec++] = order[i];
     }
     alpha = MAX(alpha, score);
     if(alpha >= beta){
       break;
     }
   }
+
+  int r = rand() % best_movec;
+  /*
+  if(max_move != NULL){
+    *max_move = best_moves[r];//best_move_num;
+  }
+  */
+  free(pivot);
+  return best_score;
 }
-*/
+
 
 /*
 double iterative_deepening(State state, int node_limit, double (*score_func)(State)){

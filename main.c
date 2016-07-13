@@ -157,8 +157,8 @@ int main(int argc, char **argv){
   //Player black = random_player();
   //Player black = mixed_player(8, heuristic_score_0, 0);
   //Player white = mixed_dnstore_player(2, heuristic_score_2, 19);
-  Player black = mixed_player(6, heuristic_score_2, 10);
-  Player white = mixed_player(6, heuristic_score_2, 10);
+  Player black = mixed_player(6, heuristic_score_2, 15);
+  Player white = mixed_player(6, heuristic_score_2, 15);
   //Player black = negamaxing_dnstore_player(6, heuristic_score_1);
   //Player white = optimizing_player(heuristic_score_2);
   //Player black = optimizing_player(heuristic_score_0);
