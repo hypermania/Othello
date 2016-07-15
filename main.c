@@ -15,12 +15,10 @@
 #include "test.h"
 #include "preprocess.h"
 
+#include "bitboard.h"
+
 FlatConfTable **global_fcts;
 int global_n_f;
-
-//void fit_fct_for_categories(Example **categories, int *cat_sizes){
-
-
 
 int main(int argc, char **argv){
   // set up random number generator
@@ -30,6 +28,67 @@ int main(int argc, char **argv){
   srand((long int) 100);
 
   int i, j;
+
+  /*
+  BitBoard bitboard = new_initial_bitboard();
+  Board board = create_board();
+  BitBoard temp;
+  
+  long int k;
+  volatile char n;
+  //for(k=0;k<10000000000;k++){
+  for(k=0;k<1000000000;k++){
+    //bitboard_set_pos(&bitboard, pos_mask[1][k%8], W);
+    //n = bitboard_get_pos(&bitboard, pos_mask[1][k%8]);
+    
+    //board_set_pos(board, (Pos){1, k%8}, W);
+    //n = board_get_pos(board, (Pos) {1, k%8});
+
+    //bitboard_set_pos(&bitboard, ATOM(1, k%8), W);
+    //temp = bitboard_set_pos_nonref(bitboard, pos_mask[1][k%8], W);
+    //n = bitboard_get_pos_nonref(bitboard, pos_mask[1][k%8]);
+    //board_set_pos(board, (Pos){1, k%8}, W);
+  }
+  print_board(board);
+  print_bitboard(bitboard);
+  print_bitboard(temp);
+  printf("%d\n",n);
+  
+  exit(0);
+  */
+
+  /*
+  for(i=0;i<3000000;i++){
+  //for(i=0;i<10000000;i++){
+    if(test_bitboard()){
+      printf("failed\n");
+    }
+  }
+  exit(0);
+  */
+
+
+
+  
+  /*
+  printf("const uint64_t pos_mask[BOARD_SIZE][BOARD_SIZE] = {\n");
+  for(i=0;i<8;i++){
+    printf("{");
+    for(j=0;j<8;j++){
+      printf("0x%016lx", ATOM(i,j));
+      if(j<7){
+	printf(", ");
+      }
+    }
+    printf("}");
+    if(i<7){
+      printf(", ");
+    }
+  }
+  printf("};\n");
+  */
+  //exit(0);
+
   
   //fit_fct_for_categories();
   //exit(0);
@@ -69,8 +128,8 @@ int main(int argc, char **argv){
   free(examples);
   
   exit(0);
-
-  */  
+  */
+  
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
   free(boards);
@@ -153,18 +212,12 @@ int main(int argc, char **argv){
   global_fcts = fcts;
 
 
-  //Player black = human_player();
+  //Player white = human_player();
   //Player black = random_player();
-  //Player black = mixed_player(8, heuristic_score_0, 0);
   //Player white = mixed_dnstore_player(2, heuristic_score_2, 19);
-  Player black = mixed_player(6, heuristic_score_2, 15);
-  Player white = mixed_player(6, heuristic_score_2, 15);
+  Player black = mixed_player(1, heuristic_score_2, 18);
+  Player white = mixed_player(1, heuristic_score_2, 18);
   //Player black = negamaxing_dnstore_player(6, heuristic_score_1);
-  //Player white = optimizing_player(heuristic_score_2);
-  //Player black = optimizing_player(heuristic_score_0);
-  //Player white = negamaxing_player(5, heuristic_score_1);
-  //Player black = negamaxing_player(7, heuristic_score_0);
-
 
   //for(i=0;i<1000;i++){
   run_game(1, 1, white, black);

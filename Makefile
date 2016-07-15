@@ -9,10 +9,13 @@ program_LIBRARY_DIRS :=
 program_LIBRARIES :=
 
 CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir))  -pthread -Wall
-LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir)) -pg
-LDFLAGS += $(foreach library,$(program_LIBRARIES),-l$(library)) -pg
+LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir)) 
+LDFLAGS += $(foreach library,$(program_LIBRARIES),-l$(library)) 
 
 CFLAGS += -pthread -Wall
+
+CFLAGS += -msse4.2 -mpopcnt
+CPPFLAGS += -msse4.2 -mpopcnt
 
 #CFLAGS += -O0
 #CPPFLAGS += -O0
@@ -20,8 +23,8 @@ CFLAGS += -pthread -Wall
 CFLAGS += -Ofast
 CPPFLAGS += -Ofast
 
-#CPPFLAGS += -pg
-#CFLAGS += -pg
+CPPFLAGS += -pg
+CFLAGS += -pg
 
 CFLAGS += -DNDEBUG
 

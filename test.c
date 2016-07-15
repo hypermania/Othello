@@ -112,36 +112,37 @@ int test_genconf(void){
 
 int test_board(void){
   Board board = create_board();
-
+  init_board(board);
+  
   int naive_board[BOARD_SIZE][BOARD_SIZE];
+  char vals[3] = {X, W, B};
   int i, j;
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
-      naive_board[i][j] = rand() % 3;
+      int r = rand() % 3;
+      naive_board[i][j] = vals[r];
     }
   }
-  
+
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
       if(board_get_pos(board, (Pos) {i,j}) != X)
 	return -1;
-      if(board_set_pos(board, (Pos) {i,j}, naive_board[i][j]))
-	return -1;
+      board_set_pos(board, (Pos) {i,j}, naive_board[i][j]);
     }
   }
-
+  
   int ret1;
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
-      if((ret1 = board_get_pos(board, (Pos) {i,j})) < 0)
-	 return -1;
+      ret1 = board_get_pos(board, (Pos) {i,j});
       if(ret1 != naive_board[i][j])
 	return -1;
     }
   }
 
-  printf("%08x\n" ,hash_board(board));
-  print_board(board);
+  //printf("%08x\n" ,hash_board(board));
+  //print_board(board);
   /*
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
@@ -154,6 +155,44 @@ int test_board(void){
   free_board(board);
   return 0;
 }
+
+
+int test_bitboard(void){
+  BitBoard board = new_empty_bitboard();
+
+  int naive_board[BOARD_SIZE][BOARD_SIZE];
+  char vals[3] = {X, W, B};
+  int i, j;
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      int r = rand() % 3;
+      naive_board[i][j] = vals[r];
+    }
+  }
+
+
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      if(bitboard_get_pos_nonref(board, pos_mask[i][j]) != X)
+	return -1;
+      bitboard_set_pos(&board, pos_mask[i][j], naive_board[i][j]);
+    }
+  }
+
+  int ret1;
+  for(i=0;i<BOARD_SIZE;i++){
+    for(j=0;j<BOARD_SIZE;j++){
+      ret1 = bitboard_get_pos_nonref(board, pos_mask[i][j]);
+      if(ret1 != naive_board[i][j])
+	return -1;
+    }
+  }
+
+  //print_bitboard(board);
+  
+  return 0;
+}
+
 
 int test_state(void){
 

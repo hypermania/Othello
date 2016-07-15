@@ -10,7 +10,6 @@ void writecolor(const char *str, const char *back, const char *color){
   write(1, "m", 1);
 
   write(1, str, strlen(str));
-  
 
   write(1, "\e[48;5;", 7);
   write(1, "00", 2);
@@ -24,8 +23,7 @@ void writecolor(const char *str, const char *back, const char *color){
 int print_board(Board board){
   if(board == NULL)
     return -1;
-  //write(1, "\e[1m", 4);
-  //writecolor("  0 1 2 3 4 5 6 7 ", "52", "46");
+
   writecolor("  A B C D E F G H ", "52", "46");
   write(1, "\n", 1);
   int r,c = 0;
@@ -34,13 +32,13 @@ int print_board(Board board){
     writecolor(rownum, "52", "46");
     for(c=0;c<BOARD_SIZE;c++){
       switch(board_get_pos(board, (Pos) {r,c})){
-      case 0:
+      case X:
 	writecolor("* ", "94", "08");
 	break;
-      case 1:
+      case W:
 	writecolor("W ", "94", "15");
 	break;
-      case 2:
+      case B:
 	writecolor("B ", "94", "00");
 	break;
       }
@@ -49,6 +47,33 @@ int print_board(Board board){
   }
   return 0;
 }
+
+int print_bitboard(BitBoard board){
+
+  writecolor("  A B C D E F G H ", "52", "46");
+  write(1, "\n", 1);
+  int r,c = 0;
+  for(r=0;r<BOARD_SIZE;r++){
+    char rownum[3] = {'1'+r, ' '};
+    writecolor(rownum, "52", "46");
+    for(c=0;c<BOARD_SIZE;c++){
+      switch(bitboard_get_pos(&board, pos_mask[r][c])){
+      case X:
+	writecolor("* ", "94", "08");
+	break;
+      case W:
+	writecolor("W ", "94", "15");
+	break;
+      case B:
+	writecolor("B ", "94", "00");
+	break;
+      }
+    }
+    write(1, "\n", 1);
+  }
+  return 0;
+}
+
 
 int print_state(State state){
   if(state == NULL)

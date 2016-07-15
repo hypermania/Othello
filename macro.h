@@ -1,6 +1,7 @@
 #ifndef MACRO_H
 #define MACRO_H
 
+
 /* Board macros */
 
 #define BOARD_SIZE 8
@@ -9,8 +10,8 @@
 #define ADJ_SIZE 8
 #define X 0
 #define W 1
-#define B 2
-
+#define B (-1)
+#define OPPOSITE_SIDE(val) (-(val))
 
 /* Pattern/Config macros */
 
@@ -22,6 +23,9 @@
 #define COL(c) (0x8080808080808080 >> (c))  // 0 <= c < 8
 #define DIAG(d) (0x8040201008040201 >> (d)) // 0 <= d < 7
 #define RDIAG(d) ((0x0102040810204080 >> (d))  &  (~(COL(0) >> (d))) ) // 0 <= d < 7
+
+/* Bit board macros */
+#define BITPOS(r,c) ((r)*8 + (c))
 
 /* Weight fitting macros */
 
@@ -45,6 +49,23 @@
 /* Miscellaneous */
 
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
-//#define SWAP(a,b) {a ^= b; b ^= a; a ^= b;}
+
+
+/* Define inline directive when available */
+#if defined( __GNUC__ )&& !defined( __cplusplus )
+#define INLINE inline
+#else
+#define INLINE
+#endif
+
+#if __GNUC__ >= 3
+#define REGPARM(num) __attribute__((regparm(num)))
+#else
+#define REGPARM(num)
+#endif
+  
+
+
+
   
 #endif

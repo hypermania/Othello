@@ -1,4 +1,5 @@
 #include "fit_weight.h"
+/*
 Pattern patterns[20] = {
   DIAG(0),
   
@@ -27,3 +28,4 @@ Pattern patterns[20] = {
   ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|ATOM(0,3)|ATOM(0,4)|
   ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|ATOM(1,3)|ATOM(1,4)  
 };
+*/

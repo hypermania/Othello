@@ -714,6 +714,7 @@ unsigned long int index_for_config_fast(Pattern pattern, Config_store config){
   }
   */
 
+  /*
 if(pattern & 0x0400042000085000){
   if(pattern & 0x8842000200020000){
     if(pattern & 0x00442040c2008000){
@@ -857,9 +858,218 @@ if(pattern & 0x0400042000085000){
     }
   }
 }
+  */
 
 
+ switch(pattern){
+
+case 0x8040201008040201:
+return index_for_config_00(config);
+break;
   
+case 0x0102040810204080:
+return index_for_config_01(config);
+break;
+
+case 0x4020100804020100:
+return index_for_config_02(config);
+break;
+
+case 0x0204081020408000:
+return index_for_config_03(config);
+break;
+
+case 0x0080402010080402:
+return index_for_config_04(config);
+break;
+
+case 0x0001020408102040:
+return index_for_config_05(config);
+break;
+
+case 0x2010080402010000:
+return index_for_config_06(config);
+break;
+
+case 0x0408102040800000:
+return index_for_config_07(config);
+break;
+
+case 0x0000804020100804:
+return index_for_config_08(config);
+break;
+
+case 0x0000010204081020:
+return index_for_config_09(config);
+break;
+
+case 0x1008040201000000:
+return index_for_config_10(config);
+break;
+
+case 0x0810204080000000:
+return index_for_config_11(config);
+break;
+
+case 0x0000008040201008:
+return index_for_config_12(config);
+break;
+
+case 0x0000000102040810:
+return index_for_config_13(config);
+break;
+
+case 0x0804020100000000:
+return index_for_config_14(config);
+break;
+
+case 0x1020408000000000:
+return index_for_config_15(config);
+break;
+
+case 0x0000000080402010:
+return index_for_config_16(config);
+break;
+
+case 0x0000000001020408:
+return index_for_config_17(config);
+break;
+
+case 0xff00000000000000:
+return index_for_config_18(config);
+break;
+
+case 0x8080808080808080:
+return index_for_config_19(config);
+break;
+
+case 0x00000000000000ff:
+return index_for_config_20(config);
+break;
+
+case 0x0101010101010101:
+return index_for_config_21(config);
+break;
+
+case 0x00ff000000000000:
+return index_for_config_22(config);
+break;
+
+case 0x4040404040404040:
+return index_for_config_23(config);
+break;
+
+case 0x000000000000ff00:
+return index_for_config_24(config);
+break;
+
+case 0x0202020202020202:
+return index_for_config_25(config);
+break;
+
+case 0x0000ff0000000000:
+return index_for_config_26(config);
+break;
+
+case 0x2020202020202020:
+return index_for_config_27(config);
+break;
+
+case 0x0000000000ff0000:
+return index_for_config_28(config);
+break;
+
+case 0x0404040404040404:
+return index_for_config_29(config);
+break;
+
+case 0x000000ff00000000:
+return index_for_config_30(config);
+break;
+
+case 0x1010101010101010:
+return index_for_config_31(config);
+break;
+
+case 0x00000000ff000000:
+return index_for_config_32(config);
+break;
+
+case 0x0808080808080808:
+return index_for_config_33(config);
+break;
+
+case 0xff42000000000000:
+return index_for_config_34(config);
+break;
+
+case 0x80c080808080c080:
+return index_for_config_35(config);
+break;
+
+case 0x00000000000042ff:
+return index_for_config_36(config);
+break;
+
+case 0x0103010101010301:
+return index_for_config_37(config);
+break;
+
+case 0xe0e0e00000000000:
+return index_for_config_38(config);
+break;
+
+case 0x0000000000e0e0e0:
+return index_for_config_39(config);
+break;
+
+case 0x0000000000070707:
+return index_for_config_40(config);
+break;
+
+case 0x0707070000000000:
+return index_for_config_41(config);
+break;
+
+case 0xf8f8000000000000:
+return index_for_config_42(config);
+break;
+
+case 0x000000c0c0c0c0c0:
+return index_for_config_43(config);
+break;
+
+case 0x0000000000001f1f:
+return index_for_config_44(config);
+break;
+
+case 0x0303030303000000:
+return index_for_config_45(config);
+break;
+
+case 0xc0c0c0c0c0000000:
+return index_for_config_46(config);
+break;
+
+case 0x1f1f000000000000:
+return index_for_config_47(config);
+break;
+
+case 0x0000000303030303:
+return index_for_config_48(config);
+break;
+
+case 0x000000000000f8f8:
+return index_for_config_49(config);
+break;
+
+ default:
+   break;
+}
+
+
+
+ /*
 if(pattern == 0x8040201008040201){
 return index_for_config_00(config);
 }
@@ -1059,7 +1269,7 @@ return index_for_config_48(config);
 if(pattern == 0x000000000000f8f8){
 return index_for_config_49(config);
 }
-
+ */
  return ULLONG_MAX;
 }
 
@@ -1087,3 +1297,5 @@ unsigned long int index_for_config(Pattern pattern, Config_store config){
   }
   return result;
 }
+
+

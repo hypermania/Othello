@@ -13,8 +13,7 @@
 #include "config.h"
 #include "fit_weight.h"
 
-
-
+#include "bitboard.h"
 
 static const char white_str[] = "white";
 static const char black_str[] = "black";
@@ -22,6 +21,7 @@ static const char black_str[] = "black";
 // return 0 at success
 // return -1 if ptr == NULL
 int print_board(Board board);
+int print_bitboard(BitBoard board);
 int print_state(State state);
 int print_config(Config config);
 int print_pattern(Pattern pattern);

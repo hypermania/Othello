@@ -267,9 +267,9 @@ double negamax(State state, int depth, double alpha, double beta, int *max_move,
     if(score > best_score){
       best_score = score;
       best_movec = 0;
-      best_moves[best_movec++] = order[i];
+      best_moves[(int)(best_movec++)] = order[i];
     } else if(score == best_score){
-      best_moves[best_movec++] = order[i];
+      best_moves[(int)(best_movec++)] = order[i];
     }
     alpha = MAX(alpha, score);
     if(alpha >= beta){
@@ -304,7 +304,7 @@ double negamax_dnorder(State state, int depth, double alpha, double beta, int *m
 
   if(movec == 0){
     skip_turn(state);
-    return (-1) * negamax(state, depth-1, -beta, -alpha, NULL, score_func);
+    return (-1) * negamax_dnorder(state, depth-1, -beta, -alpha, NULL, score_func);
   }
   
   State pivot = create_state();
@@ -313,7 +313,7 @@ double negamax_dnorder(State state, int depth, double alpha, double beta, int *m
   for(i=0;i<movec;i++){
     cpy_state(pivot, state);
     place_piece_indexed(pivot, i);
-    double score = (-1) * negamax(pivot, depth-1, -beta, -alpha, NULL, score_func);
+    double score = (-1) * negamax_dnorder(pivot, depth-1, -beta, -alpha, NULL, score_func);
     if(score >= best_score){
       best_score = score;
       best_move_num = i;
@@ -359,11 +359,9 @@ double negamax_end(State state, double alpha, double beta, int *max_move, double
     order[m] = m;
   }
 
-
   if(remaining > 9){
     order_moves(state, order, movec, 1, heuristic_score_2);
   }
-
   
   State pivot = create_state();
   
@@ -391,7 +389,7 @@ double negamax_end(State state, double alpha, double beta, int *max_move, double
 }
 
 
-
+// TODO
 double negamax_dep_lim(State state, int depth, double alpha, double beta, double *move_scores, int *id_node_count, double (*score_func)(State)){
   assert(state != NULL);
 
@@ -443,9 +441,9 @@ double negamax_dep_lim(State state, int depth, double alpha, double beta, double
     if(score > best_score){
       best_score = score;
       best_movec = 0;
-      best_moves[best_movec++] = order[i];
+      best_moves[(int)(best_movec++)] = order[i];
     } else if(score == best_score){
-      best_moves[best_movec++] = order[i];
+      best_moves[(int)(best_movec++)] = order[i];
     }
     alpha = MAX(alpha, score);
     if(alpha >= beta){

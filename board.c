@@ -63,7 +63,8 @@ int check_side(char side){
 
 int opposite_side(char side){
   assert(check_side(side) >= 0);
-  return 3-side;
+  //return 3-side;
+  return OPPOSITE_SIDE(side);
 }
 
 char board_get_pos(Board board, Pos pos){
@@ -73,13 +74,12 @@ char board_get_pos(Board board, Pos pos){
   return board[BOARD_SIZE * pos.r + pos.c];
 }
 
-int board_set_pos(Board board, Pos pos, char val){
+void board_set_pos(Board board, Pos pos, char val){
   assert(board != NULL);
   assert(check_pos(pos) == 0);
   assert(check_val(val) == 0);
 
   board[BOARD_SIZE * pos.r + pos.c] =  (char) val;
-  return 0;
 }
 
 int adj_pos(Pos pos, Pos *store){
