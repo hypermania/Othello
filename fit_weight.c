@@ -705,15 +705,13 @@ double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store bo
   int f;
   for(f=0;f<n_f;f++){
     unsigned long int index = index_for_config(fct_list[f].pattern, board);
-    if(fct_list[f].valid[index]){
+    //if(fct_list[f].valid[index]){
       score += fct_list[f].weights[index];
-    }
+      //}
   }
   
   return score;
 }
-
-//void fit_fct_for_categories(void){
 
 FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
   int i, j;

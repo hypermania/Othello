@@ -137,6 +137,7 @@ int skip_turn(State state){
   return 0;
 }
 
+State_store temp_state_store;
 
 int state_final(State state){
   assert(state != NULL);
@@ -145,14 +146,32 @@ int state_final(State state){
     return 0;
   } 
 
+
+  /* no available move: 
+     skip the turn and check for opponent's moves
+  */
+  cpy_board((&temp_state_store)->board, state->board);
+  (&temp_state_store)->turn = opposite_side(state->turn);
+  temp_state_store.control.moves_filled = false;
+  
+  int movec = allowed_moves((&temp_state_store), NULL);
+  if(movec > 0){
+    return 0;
+  }
+
+  /*
   State temp = create_state();
-  cpy_state(temp, state);
-  skip_turn(temp);
+
+  cpy_board(temp->board, state->board);
+  temp->turn = opposite_side(state->turn);
+  temp->control.moves_filled = false;
+  
   int movec = allowed_moves(temp, NULL);
   free_state(temp);
   if(movec > 0){
     return 0;
   }
+  */
   
   return 1;
 }

@@ -23,8 +23,8 @@ CPPFLAGS += -msse4.2 -mpopcnt
 CFLAGS += -Ofast
 CPPFLAGS += -Ofast
 
-CPPFLAGS += -pg
-CFLAGS += -pg
+#CPPFLAGS += -pg
+#CFLAGS += -pg
 
 CFLAGS += -DNDEBUG
 

@@ -25,7 +25,14 @@ inline int cpy_board(Board dest, Board src);
 
 // return 0 if pos is a position on the board
 // -1 otherwise
-inline int check_pos(Pos pos);
+#ifndef CHECK_POS
+#define CHECK_POS
+extern inline int check_pos(Pos pos){
+  if(pos.r<0 || pos.c< 0 || pos.r>=BOARD_SIZE || pos.c>=BOARD_SIZE)
+    return -1;
+  return 0;
+}
+#endif
 
 // return -1 if val is not valid (not X/W/B)
 // 0 otherwise
@@ -36,7 +43,12 @@ inline int check_val(char val);
 inline int check_side(char side);
 
 // get opposite side; return -1 if side is not a side
-inline int opposite_side(char side);
+#ifndef OPPOSITE_SIDE_FUNC
+#define OPPOSITE_SIDE_FUNC
+extern inline int opposite_side(char side){
+  return OPPOSITE_SIDE(side);
+}
+#endif
 
 
 /* return negative values below changed to assertions */
