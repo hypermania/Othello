@@ -193,14 +193,58 @@ int test_bitboard(void){
   return 0;
 }
 
+int test_bitstate(void){
+  BitState *state = create_initial_bitstate();
+
+  int times = 1 << 20;
+  int i;
+  for(i=0;i<times;i++){
+    init_bitstate(state);
+
+    int count = 0;
+
+    while(!bitstate_final(state)){
+
+      int movec;
+      bitstate_allowed_moves(state, &movec);
+      
+      if(movec > 0){
+	bitstate_place_piece(state, 0);
+      } else {
+	bitstate_skip_turn(state);
+      }
+      count++;
+    }
+    //print_bitboard(state->board);
+  }
+  
+  return 0;
+}
 
 int test_state(void){
-
-
-  //printf("create state\n");
   State state = create_state();
-  //printf("\n");
-  
+
+  int times = 1 << 20;
+  int i;
+  for(i=0;i<times;i++){
+    init_state(state);
+
+    int count = 0;
+    
+    while(!state_final(state)){
+      int movec;
+      allowed_moves_inplace(state, &movec);
+      if(movec > 0){
+	place_piece_indexed(state, 0);
+      } else {
+	skip_turn(state);
+      }
+      count++;
+    }
+    //print_state(state);
+  }
+
+  /*
   printf("init state\n");
   init_state(state);
   printf("\n");
@@ -222,53 +266,10 @@ int test_state(void){
   printf("\n");
 
   printf("pivot size:%ld\n", (sizeof state->board) + (sizeof state->turn));
-  
-  /*
-  printf("test fill_trans:\n");
-  fill_trans(state);
-  printf("movec = %d\n", state->movec);
-  int i;
-  for(i=0;i<state->movec;i++){
-    printf("moves[%d] = (%d,%d)\n", i, state->moves[i].r, state->moves[i].c);
-    print_board(state->positions[i]);
-  }
   */
+  
+
   free_state(state);
-
-
-  
-  /*
-  int times = 1 << 0;
-  int i;
-  printf("randomly generating states\n");
-  State naive_table[times];
-  for(i=0;i<times;i++){
-    naive_table[i] = create_state();
-    init_state(naive_table[i]);
-    Pos alm[32]; int movec;
-    //movec = allowed_moves(naive_table[i], alm, naive_table[i]->turn);
-    //place_piece(naive_table[i], alm[rand() % movec], naive_table[i]->turn);    
-
-    while(!state_final(naive_table[i])){
-      if((movec = allowed_moves(naive_table[i], alm, naive_table[i]->turn)) > 0){
-	place_piece(naive_table[i], alm[rand() % movec], naive_table[i]->turn);
-      } else {
-	skipturn(naive_table[i]);
-      }
-    }
-
-    print_state(naive_table[i]);
-  }
-
-  
-  for(i=0;i<times;i++){
-    free_state(naive_table[i]);
-  }
-  */  
-
-
-  
-
 
   return 0;
 }

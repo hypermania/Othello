@@ -25,7 +25,9 @@ int print_board(Board board){
     return -1;
 
   writecolor("  A B C D E F G H ", "52", "46");
+  write(1, "\e[0m", 5);
   write(1, "\n", 1);
+  write(1, "\e[0m", 5);
   int r,c = 0;
   for(r=0;r<BOARD_SIZE;r++){
     char rownum[3] = {'1'+r, ' '};
@@ -42,8 +44,10 @@ int print_board(Board board){
 	writecolor("B ", "94", "00");
 	break;
       }
+      write(1, "\e[0m", 5);
     }
     write(1, "\n", 1);
+    write(1, "\e[0m", 5);
   }
   return 0;
 }

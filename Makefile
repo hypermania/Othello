@@ -12,9 +12,12 @@ CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir))  -pthr
 LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir)) 
 LDFLAGS += $(foreach library,$(program_LIBRARIES),-l$(library)) 
 
+CFLAGS += -std=gnu90
+CPPFLAGS += -std=gnu90
+
 CFLAGS += -pthread -Wall
 
-CFLAGS += -msse4.2 -mpopcnt
+CFLAGS += -msse4.2 -mpopcnt 
 CPPFLAGS += -msse4.2 -mpopcnt
 
 #CFLAGS += -O0

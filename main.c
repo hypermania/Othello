@@ -24,8 +24,8 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  //srand((long int) t.tv_usec);
-  srand((long int) 100);
+  srand((long int) t.tv_usec);
+  //srand((long int) 100);
 
   int i, j;
 
@@ -66,29 +66,126 @@ int main(int argc, char **argv){
   }
   exit(0);
   */
+  
+  /*
+  BitBoard board = new_initial_bitboard();
+  int r,c;
+  for(r=0;r<8;r++){
+    for(c=0;c<8;c++){
+  
+
+  BitMask bitmask = pos_mask[r][c];
+  BitMask store[8];
+  int count = bitboard_adj_given_pos(&board, bitmask, store, B);
+
+  printf("(%d,%d), count = %d\n", r, c, count);
+
+    }}
+  print_bitboard(board);
+  exit(0);
+  */
+
+  /*
+  BitState *state = create_initial_bitstate();
+
+  int movec;
+  BitMask *moves;
+  
+  print_bitboard(state->board);
+  
+  //moves = bitstate_allowed_moves(state, &movec); 
+  //bitstate_place_piece(state, 0);
+  //print_bitboard(state->board);
+
+  BitMask move_mask = find_moves_bitmask(state->board, state->turn);
+
+  print_bitboard((BitBoard) {move_mask, 0});
+
+  exit(0);
+  */
+  
+
+  struct timeval start;
+  struct timeval end;
+  
+  gettimeofday(&start, NULL);
+  
+  test_bitstate();
+  
+  gettimeofday(&end, NULL);
+
+  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
+
+  printf("game/s = %lf\n", (double)(1 << 20)/elapsed);
+
+  exit(0);
 
 
 
   
   /*
-  printf("const uint64_t pos_mask[BOARD_SIZE][BOARD_SIZE] = {\n");
-  for(i=0;i<8;i++){
-    printf("{");
-    for(j=0;j<8;j++){
-      printf("0x%016lx", ATOM(i,j));
-      if(j<7){
-	printf(", ");
+  int r,c;
+  printf("const char squares_in_dir[BOARD_SIZE_SQR][ADJ_SIZE] = {\n");
+  for(r=0;r<8;r++){
+    for(c=0;c<8;c++){
+      Pos pos = (Pos) {r,c};
+      
+      printf("{");
+      int i, j;
+      for(i=-1;i<=1;i++){
+	for(j=-1;j<=1;j++){
+	  if(i==0 && j==0){
+	    continue;
+	  }
+	  int count = 0;
+	  Pos head = (Pos) {r+i, c+j};
+	  int direc_h = head.r - pos.r;
+	  int direc_v = head.c - pos.c;
+	  while(check_pos(head)==0){
+	    head.r += direc_h;
+	    head.c += direc_v;
+	    count++;
+	  }
+	  printf("%d", count);
+	  if(i!=1 || j!= 1){
+	    printf(", ");
+	  }
+	}
       }
-    }
-    printf("}");
-    if(i<7){
-      printf(", ");
+      printf("}");
+      if(r!=7 || c!=7){
+	printf(", \n");
+      }
     }
   }
   printf("};\n");
+  exit(0);
   */
-  //exit(0);
-
+  /*
+  printf("const uint64_t adj_pos_mask[BOARD_SIZE_SQR][ADJ_SIZE] = {\n");
+  int r, c;
+  for(r=0;r<8;r++){
+    for(c=0;c<8;c++){
+      printf("{");
+      for(i=0;i<ADJ_SIZE;i++){
+	uint64_t mask = offset_bitmask(pos_mask[r][c], dir_offset[i]);
+	if(squares_in_dir[8*r+c][i] == 0){
+	  mask = 0;
+	}
+	printf("0x%016lx", mask);
+	if(i<7){
+	  printf(", ");
+	}
+      }
+      printf("}");
+      if(r<7 || c<7){
+	printf(", \n");
+      }
+    }
+  }
+  printf("};\n");
+  exit(0);
+  */
   
   //fit_fct_for_categories();
   //exit(0);
@@ -212,19 +309,17 @@ int main(int argc, char **argv){
   global_fcts = fcts;
 
 
-  //Player white = human_player();
+  //Player black = human_player();
   //Player black = random_player();
-  //Player white = mixed_dnstore_player(2, heuristic_score_2, 19);
-  Player black = mixed_player(7, heuristic_score_2, 15);
-  Player white = mixed_player(7, heuristic_score_2, 15);
-  //Player black = negamaxing_dnstore_player(6, heuristic_score_1);
+  Player black = mixed_player(10, heuristic_score_2, 21);
+  Player white = mixed_player(10, heuristic_score_2, 21);
 
   //for(i=0;i<1000;i++){
   run_game(1, 1, white, black);
   //}
 
-  //free(white.param);
-  //free(black.param);
+  free(white.param);
+  free(black.param);
   
 
   for(cat=0;cat<CAT_NUM;cat++){

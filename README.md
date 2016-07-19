@@ -5,11 +5,11 @@ simple command-line reversi game
 
 
 
-reference:
+Reference:
 
 https://skatgame.net/mburo/ps/pattern.pdf
 
-acknowledgement:
+Acknowledgement:
 
 used ruby script from:
 
@@ -19,3 +19,8 @@ for preprocessing games from:
 
 http://www.ffothello.org/informatique/la-base-wthor/
 
+Studied and adapted code by Gunnar Andersson under GPL license:
+
+http://www.radagast.se/othello/zebra.html
+
+(Specifically, I adapted the function "generated_all_c" to 64-bit systems in the function "find_moves_bitmask".)

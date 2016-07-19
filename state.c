@@ -1,19 +1,19 @@
 #include "state.h"
 
-State create_state(void){
+inline State create_state(void){
 
   State state = malloc(sizeof(State_store));
 
   return state;
 }
 
-int free_state(State state){
+inline int free_state(State state){
   assert(state != NULL);
   free(state);
   return 0;
 }
 
-int cpy_state(State dest, State src){
+inline int cpy_state(State dest, State src){
   assert(dest != NULL);
   assert(src != NULL);
   
@@ -22,7 +22,7 @@ int cpy_state(State dest, State src){
   return 0;
 }
 
-int init_state(State state){
+inline int init_state(State state){
   if(state == NULL)
     return -1;
 
@@ -41,7 +41,7 @@ int init_state(State state){
   return 0;
 }
 
-State create_state_from_pivot(Board board, short turn){
+inline State create_state_from_pivot(Board board, short turn){
   State state = malloc(sizeof(State_store));
   memset(state, 0, sizeof(State_store));
   memcpy(state->board, board, BOARD_SIZE_SQR * sizeof(char));
@@ -50,7 +50,7 @@ State create_state_from_pivot(Board board, short turn){
 }
 
 
-int state_eq_seq(State head, State state){
+inline int state_eq_seq(State head, State state){
   assert(head != NULL);
   assert(state != NULL);
 
@@ -61,7 +61,7 @@ int state_eq_seq(State head, State state){
   return memcmp(head->seq, state->seq, head->seq_num * sizeof(Pos));
 }
 
-int allowed_moves(State state, Pos *store){
+inline int allowed_moves(State state, Pos *store){
   assert(state != NULL);
 
   if(state->control.moves_filled == false){
@@ -75,7 +75,7 @@ int allowed_moves(State state, Pos *store){
   
 }
 
-Pos *allowed_moves_inplace(State state, int *movec){
+inline Pos *allowed_moves_inplace(State state, int *movec){
   assert(state != NULL);
 
   if(state->control.moves_filled == false){
@@ -88,7 +88,7 @@ Pos *allowed_moves_inplace(State state, int *movec){
 }
 
 
-int place_piece(State state, Pos pos){
+inline int place_piece(State state, Pos pos){
   assert(state != NULL);
   assert(check_pos(pos) == 0);
 
@@ -111,7 +111,7 @@ int place_piece(State state, Pos pos){
   return -1;
 }
 
-int place_piece_indexed(State state, int move_num){
+inline int place_piece_indexed(State state, int move_num){
   assert(state != NULL);
   assert(state->control.moves_filled);
   assert(move_num < state->movec);
@@ -125,7 +125,7 @@ int place_piece_indexed(State state, int move_num){
   return 0;
 }
 
-int skip_turn(State state){
+inline int skip_turn(State state){
   assert(state != NULL);
   assert(state->control.moves_filled);
   assert(state->movec == 0);
@@ -139,7 +139,7 @@ int skip_turn(State state){
 
 State_store temp_state_store;
 
-int state_final(State state){
+inline int state_final(State state){
   assert(state != NULL);
 
   if(allowed_moves(state, NULL) > 0){
@@ -151,7 +151,7 @@ int state_final(State state){
      skip the turn and check for opponent's moves
   */
   cpy_board((&temp_state_store)->board, state->board);
-  (&temp_state_store)->turn = opposite_side(state->turn);
+  temp_state_store.turn = opposite_side(state->turn);
   temp_state_store.control.moves_filled = false;
   
   int movec = allowed_moves((&temp_state_store), NULL);
@@ -179,7 +179,7 @@ int state_final(State state){
 
 /* below are internal function: no error checking */
 
-void fill_moves(State state){
+inline void fill_moves(State state){
   assert(state != NULL);
   
   if(state->control.moves_filled == false){
@@ -203,7 +203,7 @@ void fill_moves(State state){
 }
 
 
-int try_to_place(Board board, Board dest, Pos pos, int side){
+inline int try_to_place(Board board, Board dest, Pos pos, int side){
   assert(board != NULL);
   assert(dest != NULL);
   assert(check_pos(pos) == 0);
@@ -249,14 +249,14 @@ int try_to_place(Board board, Board dest, Pos pos, int side){
   return 0;
 }
 
-void record_seq(State state, Pos pos){
+inline void record_seq(State state, Pos pos){
   assert(state != NULL);
   assert(check_pos(pos) == 0);
   
   state->seq[state->seq_num++] = pos;
 }
 
-double state_compute_score(State state, double (*score_func)(State state)){
+inline double state_compute_score(State state, double (*score_func)(State state)){
   assert(state != NULL);
   if(state->control.score_valid){
     return state->score;

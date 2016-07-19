@@ -8,10 +8,10 @@ State temp_state;
 
 // heuristic scoring functions
 
-int count_0 = 0;
-int count_1 = 0;
-int count_2 = 0;
-int count_3 = 0;
+long int count_0 = 0;
+long int count_1 = 0;
+long int count_2 = 0;
+long int count_3 = 0;
 
 double heuristic_score_0(State state){
   //return (double) (count_pieces(state->board, W) - count_pieces(state->board, B));
@@ -71,7 +71,7 @@ double heuristic_score_1(State state){
 
 
 double heuristic_score_2(State state){
-  count_2++;
+  //count_2++;
   
   Config_store board = board_to_conf_nocreate(state->board);
   int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
@@ -119,8 +119,8 @@ int optimizing_move(State state, double (*score_func)(State)){
   return max_move;
 }
 
-int count_node = 0;
-int max_count_node = 0;
+long int count_node = 0;
+long int max_count_node = 0;
 double max_t = 0;
 
 #define SHOW_STAT
@@ -150,8 +150,8 @@ int negamaxing_move(State state, int depth, double (*score_func)(State)){
   printf("time = %lfs\n", elapsed);
   printf("max_t = %lfs\n", max_t);
   
-  printf("count_node = %d\n", count_node);
-  printf("max_count_node = %d\n", max_count_node);
+  printf("count_node = %ld\n", count_node);
+  printf("max_count_node = %ld\n", max_count_node);
   
   printf("node/s = %lf\n", (double)count_node/elapsed);
 #endif
@@ -202,13 +202,14 @@ int mixed_move(State state, int depth_middle, double (*score_func)(State), int d
   printf("time = %lfs\n", elapsed);
   printf("max_t = %lfs\n", max_t);
   
-  printf("count_node = %d\n", count_node);
-  printf("max_count_node = %d\n", max_count_node);
+  printf("count_node = %ld\n", count_node);
+  printf("max_count_node = %ld\n", max_count_node);
 
   printf("node/s = %lf\n", (double)count_node/elapsed);
 
-  printf("count_0 = %d, count_2 = %d\n", count_0, count_2);
-  
+  printf("count_0 = %ld, count_2 = %ld\n", count_0, count_2);
+  printf("count_0/count_node = %lf\n", (double)count_0/(double)count_node);  
+  printf("count_2/count_node = %lf\n", (double)count_2/(double)count_node);  
 #endif
 
   
@@ -224,7 +225,8 @@ double negamax(State state, int depth, double alpha, double beta, int *max_move,
   /* check if this is a leaf */
   int side = state->turn;
   if(depth == 0 || state_final(state)){
-    return ((side == W) ? 1 : (-1)) * state_compute_score(state, score_func);
+    count_2++;
+    return ((side == W) ? 1 : (-1)) * score_func(state);//state_compute_score(state, score_func);
   }
 
   /* get basic state info */
@@ -293,7 +295,7 @@ double negamax_dnorder(State state, int depth, double alpha, double beta, int *m
   
   int side = state->turn;
   if(depth == 0 || state_final(state)){
-    return ((side == W) ? 1 : (-1)) * state_compute_score(state, score_func);
+    return ((side == W) ? 1 : (-1)) * score_func(state);//state_compute_score(state, score_func);
   }
 
   double best_score = -DBL_MAX;
@@ -340,7 +342,7 @@ double negamax_end(State state, double alpha, double beta, int *max_move, double
   
   int side = state->turn;
   if(state_final(state)){
-    return ((side == W) ? 1 : (-1)) * state_compute_score(state, score_func);
+    return ((side == W) ? 1 : (-1)) * score_func(state);//state_compute_score(state, score_func);
   }
 
   double best_score = -DBL_MAX;
