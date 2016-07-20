@@ -11,6 +11,8 @@
 #include "board.h"
 #include "bitboard.h"
 
+#include "flip_computation.h"
+
 typedef struct {
   // info that determines the state
   BitBoard board;
@@ -43,10 +45,7 @@ int bitstate_final(BitState *state);
 // fill all transposition data
 void bitstate_fill_moves(BitState *state);
 // copies board to dest and attempts to place for side at pos
-// returns 1 when that positions is placeable
-// returns 0 otherwise
-// if 0 is returned, there is no guranteed behavior on dest
-int bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, char side); 
+void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, char side); 
 
 BitMask find_moves_bitmask(const BitBoard board, char side);
 

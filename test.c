@@ -196,27 +196,45 @@ int test_bitboard(void){
 int test_bitstate(void){
   BitState *state = create_initial_bitstate();
 
+  /*
+  long int stage_count[60];
+  long int stage_movec[60];
+
+  int stage;
+  for(stage=0;stage<60;stage++){
+    stage_count[stage] = 0;
+    stage_movec[stage] = 0;
+  }
+  */
+  
   int times = 1 << 20;
   int i;
   for(i=0;i<times;i++){
     init_bitstate(state);
-
-    int count = 0;
-
+    
     while(!bitstate_final(state)){
-
       int movec;
       bitstate_allowed_moves(state, &movec);
+
+      //stage = __builtin_popcountll(state->board.w) + __builtin_popcountll(state->board.b) - 4;
+      //stage_count[stage]++;
+      //stage_movec[stage] += movec;
       
       if(movec > 0){
 	bitstate_place_piece(state, 0);
       } else {
 	bitstate_skip_turn(state);
       }
-      count++;
+
     }
     //print_bitboard(state->board);
   }
+
+  /*
+  for(stage=0;stage<60;stage++){
+    printf("%d pieces: avg_movec = %lf\n", stage+4, (double)stage_movec[stage]/(double)stage_count[stage]);
+  }
+  */
   
   return 0;
 }
@@ -229,8 +247,6 @@ int test_state(void){
   for(i=0;i<times;i++){
     init_state(state);
 
-    int count = 0;
-    
     while(!state_final(state)){
       int movec;
       allowed_moves_inplace(state, &movec);
@@ -239,7 +255,6 @@ int test_state(void){
       } else {
 	skip_turn(state);
       }
-      count++;
     }
     //print_state(state);
   }

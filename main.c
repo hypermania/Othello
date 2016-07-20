@@ -24,8 +24,8 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  srand((long int) t.tv_usec);
-  //srand((long int) 100);
+  //srand((long int) t.tv_usec);
+  srand((long int) 100);
 
   int i, j;
 
@@ -117,10 +117,8 @@ int main(int argc, char **argv){
   double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
 
   printf("game/s = %lf\n", (double)(1 << 20)/elapsed);
-
+  
   exit(0);
-
-
 
   
   /*
@@ -175,6 +173,43 @@ int main(int argc, char **argv){
 	printf("0x%016lx", mask);
 	if(i<7){
 	  printf(", ");
+	}
+      }
+      printf("}");
+      if(r<7 || c<7){
+	printf(", \n");
+      }
+    }
+  }
+  printf("};\n");
+  exit(0);
+  */
+  /*
+  printf("const uint64_t rays_to_flip[BOARD_SIZE_SQR][ADJ_SIZE][6] = {\n");
+  int r, c;
+  for(r=0;r<8;r++){
+    for(c=0;c<8;c++){
+      printf("{// square (%d,%d), %d\n", r, c, r*8+c);
+      for(i=0;i<ADJ_SIZE;i++){
+	printf("{");
+	uint64_t mask = offset_bitmask(pos_mask[r][c], dir_offset[i]);
+	for(j=0;j<6;j++){
+	  if(squares_in_dir[8*r+c][i] == 0){
+	    mask = 0;
+	  }
+	  if(squares_in_dir[8*r+c][i] <= j){
+	    mask = 0;
+	  }
+
+	  printf("0x%016lx", mask);
+	  if(j<5){
+	    printf(", ");
+	  }
+	  mask |= offset_bitmask(mask, dir_offset[i]);
+	}
+	printf("}");
+	if(i<7){
+	  printf(", \n");
 	}
       }
       printf("}");

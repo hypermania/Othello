@@ -79,10 +79,11 @@ inline void bitstate_fill_moves(BitState *state){
   for(; moves != 0; moves = my_blsr_u64(moves)){
     pos = my_blsi_u64(moves);
     
-    if(bitstate_try_to_place(&state->board, &state->positions[state->movec], pos, state->turn)){
-      state->moves[state->movec] = pos;
-      state->movec++;
-    }
+    //if(bitstate_try_to_place(&state->board, &state->positions[state->movec], pos, state->turn)){
+    bitstate_try_to_place(&state->board, &state->positions[state->movec], pos, state->turn);
+    state->moves[state->movec] = pos;
+    state->movec++;
+      //}
   }
   state->control.moves_filled = true;
 
@@ -104,10 +105,10 @@ inline void bitstate_fill_moves(BitState *state){
 }
 
 
-inline int bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, char side){
+inline void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, char side){
   cpy_bitboard(dest, board);
 
-  int placeable = 0;
+  int pos_index = __builtin_clzll(pos);
   
   if(side == W){
 
@@ -119,7 +120,6 @@ inline int bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, c
     int dir;
     for(dir=0;dir<ADJ_SIZE;dir++){
       if((1 << dir) & dir_list){
-
 	BitMask head = offset_bitmask(pos, dir_offset[dir]);
 	char distance = 1;
 	while((head & dest->b) && (distance < squares_in_dir[bitpos][dir])){
@@ -128,12 +128,8 @@ inline int bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, c
 	}
 
 	if(head & dest->w){
-	  placeable = 1;
-	  head = offset_bitmask(head, -dir_offset[dir]);
-	  while(head & dest->b){
-	    bitboard_set_pos(dest, head, W);
-	    head = offset_bitmask(head, -dir_offset[dir]);
-	  }
+	  dest->b ^= rays_to_flip[pos_index][dir][distance-2];
+	  dest->w ^= rays_to_flip[pos_index][dir][distance-2];
 	}
       }
     }
@@ -148,7 +144,6 @@ inline int bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, c
     int dir;
     for(dir=0;dir<ADJ_SIZE;dir++){
       if((1 << dir) & dir_list){
-	//printf("pos = %016lx, dir = %d\n", pos, dir);	
 	BitMask head = offset_bitmask(pos, dir_offset[dir]);
 	char distance = 1;
 	while((head & dest->w) && (distance < squares_in_dir[bitpos][dir])){
@@ -157,18 +152,16 @@ inline int bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, c
 	}
 
 	if(head & dest->b){
-	  placeable = 1;
-	  head = offset_bitmask(head, -dir_offset[dir]);
-	  while(head & dest->w){
-	    bitboard_set_pos(dest, head, B);
-	    head = offset_bitmask(head, -dir_offset[dir]);
-	  }
+	  dest->w ^= rays_to_flip[pos_index][dir][distance-2];
+	  dest->b ^= rays_to_flip[pos_index][dir][distance-2];
+
 	}
       }
     }
     
   }
-  return placeable;
+
+  return;
 }
 
 inline BitMask find_moves_bitmask(const BitBoard board, char side){

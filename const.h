@@ -68,10 +68,12 @@ extern const char pos_movec[BOARD_SIZE][BOARD_SIZE];
 
 extern const char bitpos_movec[BOARD_SIZE_SQR];
 
-extern const uint64_t adj_pos_mask[BOARD_SIZE_SQR][ADJ_SIZE];
-
 extern const char squares_in_dir[BOARD_SIZE_SQR][ADJ_SIZE];
 
 extern const char dir_offset[ADJ_SIZE];
+
+extern const uint64_t adj_pos_mask[BOARD_SIZE_SQR][ADJ_SIZE];
+
+extern const uint64_t rays_to_flip[BOARD_SIZE_SQR][ADJ_SIZE][6];
 
 #endif
