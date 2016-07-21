@@ -111,7 +111,7 @@ inline void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, 
   int pos_index = __builtin_clzll(pos);
   
   if(side == W){
-
+    /*
     bitboard_set_pos(dest, pos, W);
     
     char dir_list = bitboard_adj_given_pos(dest, pos, B);
@@ -121,6 +121,7 @@ inline void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, 
     for(dir=0;dir<ADJ_SIZE;dir++){
       if((1 << dir) & dir_list){
 	BitMask head = offset_bitmask(pos, dir_offset[dir]);
+
 	char distance = 1;
 	while((head & dest->b) && (distance < squares_in_dir[bitpos][dir])){
 	  head = offset_bitmask(head, dir_offset[dir]);
@@ -133,9 +134,12 @@ inline void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, 
 	}
       }
     }
+    */
+
+    flip_bitboard_w[pos_index](dest);
     
   } else {
-
+    /*
     bitboard_set_pos(dest, pos, B);
     
     char dir_list = bitboard_adj_given_pos(dest, pos, W);
@@ -158,6 +162,9 @@ inline void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, 
 	}
       }
     }
+    */
+    
+    flip_bitboard_b[pos_index](dest);
     
   }
 

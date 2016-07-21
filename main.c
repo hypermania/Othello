@@ -120,7 +120,79 @@ int main(int argc, char **argv){
   
   exit(0);
 
+
+  /*
+  for(i=0;i<64;i++){
+    printf("char flip_bitboard_b_%02d(BitBoard *board){\n", i);
+    printf("uint64_t my = board->b;\n");
+    printf("uint64_t opp = board->w;\n");
+    printf("char result = 0;\n");
+
+    for(j=0;j<8;j++){
+      if(squares_in_dir[i][j] >= 2){
+	printf("int count_%d;\n", j);
+
+	uint64_t head = offset_bitmask(ATOM(0,0) >> i, dir_offset[j]);
+	
+	printf("if(opp & 0x%016lx){\n", head);
+	printf("count_%d = 0;\n", j);
+	
+	int k;
+	for(k=0;k<squares_in_dir[i][j]-2;k++){
+	  head = offset_bitmask(head, dir_offset[j]);
+	  printf("if(opp & 0x%016lx){\n", head);
+	  printf("count_%d++;\n", j);
+	}
+	for(k=0;k<squares_in_dir[i][j]-2;k++){
+	  printf("}\n");
+	}
+
+	printf("if(my & offset_bitmask(rays_to_flip[%d][%d][count_%d], %d)){\n",
+	       i, j, j, dir_offset[j]);
+	printf("board->b ^= rays_to_flip[%d][%d][count_%d];\n", i, j, j);
+	printf("board->w ^= rays_to_flip[%d][%d][count_%d];\n", i, j, j);
+	printf("result |= 0x%02x;\n", 1 << j);
+	
+	printf("}\n");
+	printf("}\n");
+	
+      }
+    }
+
+    printf("\nboard->b |= 0x%016lx;\n", ATOM(0,0) >> i);
+    
+    printf("\nreturn result;\n");
+    printf("}\n\n");    
+  }
+
+  exit(0);
+  */
+
+  /*
+  BitBoard board = new_initial_bitboard();
+
+  bitboard_set_pos(&board, ATOM(0,1), B);
+  bitboard_set_pos(&board, ATOM(0,2), B);
+  bitboard_set_pos(&board, ATOM(0,3), B);
+  bitboard_set_pos(&board, ATOM(0,4), W);
+  bitboard_set_pos(&board, ATOM(0,5), B);
+  bitboard_set_pos(&board, ATOM(0,6), B);
+  bitboard_set_pos(&board, ATOM(0,7), W);
+
+  bitboard_set_pos(&board, ATOM(1,1), B);
+  bitboard_set_pos(&board, ATOM(2,2), W);
+
+  print_bitboard(board);
   
+  unsigned char flipped = (flip_bitboard_b)[26](&board);
+
+  print_bitboard(board);
+  
+  printf("flipped = 0x%02x\n", flipped);
+  
+  exit(0);
+  */
+
   /*
   int r,c;
   printf("const char squares_in_dir[BOARD_SIZE_SQR][ADJ_SIZE] = {\n");
