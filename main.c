@@ -116,7 +116,7 @@ int main(int argc, char **argv){
 
   double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
 
-  printf("game/s = %lf\n", (double)(1 << 20)/elapsed);
+  printf("game/s = %lf\n", (double)(1 << 21)/elapsed);
   
   exit(0);
 

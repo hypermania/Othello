@@ -207,7 +207,7 @@ int test_bitstate(void){
   }
   */
   
-  int times = 1 << 20;
+  int times = 1 << 21;
   int i;
   for(i=0;i<times;i++){
     init_bitstate(state);
@@ -242,7 +242,7 @@ int test_bitstate(void){
 int test_state(void){
   State state = create_state();
 
-  int times = 1 << 20;
+  int times = 1 << 21;
   int i;
   for(i=0;i<times;i++){
     init_state(state);
