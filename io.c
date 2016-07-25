@@ -94,19 +94,47 @@ int print_state(State state){
   return 0;
 }
 
+int print_bitstate(BitState *state){
+  if(state == NULL)
+    return -1;
+  
+  //printf("state->turn = %d\n", state->turn);
+  if(state->turn == W){
+    write(1, "(white's turn)\n", 15);
+  } else {
+    write(1, "(black's turn)\n", 15);
+  } 
+  print_bitboard(state->board);
 
-void print_options(Pos *moves, int movec){
+  return 0;
+}
+
+
+void print_options(BitMask *moves, int movec){
   int i;
   for(i=0;i<(movec+7-1)/7;i++){
     int j = 7*i;
     while(j<movec && j<7*(i+1)){
-      printf("%2d:%c%c (%d,%d)  ", j, moves[j].c+'A', moves[j].r+'1', moves[j].r, moves[j].c);
+      int clz = __builtin_clzll(moves[j]);
+      int r, c;
+      r = clz / 8;
+      c = clz % 8;
+
+      
+      printf("%2d:%c%c (%d,%d)  ", j, c+'A', r+'1', r, c);
       j++;
     }
     printf("\n");
   }
 }
 
+void print_move_made(BitMask move, int index){
+  int clz = __builtin_clzll(move);
+  int r, c;
+  r = clz / 8;
+  c = clz % 8;
+  printf("(makes move at %c%c (%d,%d) (move index %d))\n", c+'A', r+'1', r, c, index);
+}
 
 int get_human_response(int movec){
   int response;

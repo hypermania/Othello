@@ -68,6 +68,8 @@ inline unsigned long int index_for_config_fast(Pattern pattern, Config_store con
 */
 inline unsigned long int index_for_config(Pattern pattern, Config_store config) REGPARM(2);
 
+extern unsigned long int (* const index_for_config_array[50])(Config_store);
+
 
 #endif
 

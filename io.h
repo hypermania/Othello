@@ -14,6 +14,7 @@
 #include "fit_weight.h"
 
 #include "bitboard.h"
+#include "bitstate.h"
 
 static const char white_str[] = "white";
 static const char black_str[] = "black";
@@ -23,9 +24,11 @@ static const char black_str[] = "black";
 int print_board(Board board);
 int print_bitboard(BitBoard board);
 int print_state(State state);
+int print_bitstate(BitState *state);
 int print_config(Config config);
 int print_pattern(Pattern pattern);
-void print_options(Pos *moves, int movec);
+void print_options(BitMask *moves, int movec);
+void print_move_made(BitMask move, int index);
 int get_human_response(int movec);
 // change (in place) a string (of max size n) read from a file to a Pos sequence
 Pos *file_to_seq(char *buff, int n);

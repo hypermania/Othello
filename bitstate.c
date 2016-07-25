@@ -54,15 +54,18 @@ inline int bitstate_final(BitState *state){
     return 0;
   }
 
-  cpy_bitboard(&(temp_bitstate_store.board), &(state->board));
-  temp_bitstate_store.turn = opposite_side(state->turn);
-  temp_bitstate_store.control.moves_filled = false;
+  //cpy_bitboard(&(temp_bitstate_store.board), &(state->board));
+  //temp_bitstate_store.turn = opposite_side(state->turn);
+  //temp_bitstate_store.control.moves_filled = false;
   
-  bitstate_allowed_moves(&temp_bitstate_store, &temp_movec);
-  if(temp_movec > 0){
+  //bitstate_allowed_moves(&temp_bitstate_store, &temp_movec);
+
+  
+  if(find_moves_bitmask(state->board, opposite_side(state->turn)) == 0){
+    return 1;
+  } else {
     return 0;
   }
-  return 1;
 
 }
 
@@ -186,7 +189,7 @@ inline BitMask find_moves_bitmask(const BitBoard board, char side){
   
   BitMask moves;
   BitMask opp_inner_bits;
-  BitMask flip_bits;
+  BitMask flip_bits; //BitMask flip_bits_1;
   BitMask adjacent_opp_bits;
 
   opp_inner_bits = opp_bits & (unsigned long int)0x7E7E7E7E7E7E7E7E;

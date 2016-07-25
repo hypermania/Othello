@@ -24,10 +24,8 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  //srand((long int) t.tv_usec);
-  srand((long int) 100);
-
-  int i, j;
+  srand((long int) t.tv_usec);
+  //srand((long int) 100);
 
   /*
   BitBoard bitboard = new_initial_bitboard();
@@ -104,21 +102,33 @@ int main(int argc, char **argv){
   exit(0);
   */
   
-
+  /*
+  long int iter = 10000000000;
+  
   struct timeval start;
   struct timeval end;
   
   gettimeofday(&start, NULL);
   
-  test_bitstate();
+  //test_bitstate();
   
+  const BitBoard board = {0,0};
+  BitMask output;
+  long int i;
+  for(i=0;i<iter;i++){
+    output = find_moves_bitmask(board, W);
+  }
+  printf("output=%ld\n", output);
+
   gettimeofday(&end, NULL);
 
   double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
 
-  printf("game/s = %lf\n", (double)(1 << 21)/elapsed);
+  printf("iter/s = %lf\n", (double)(iter)/elapsed);
+  printf("cycle/iter = %lf\n", ((double)2600000000)/((double)(iter)/elapsed));
   
   exit(0);
+  */
 
 
   /*
@@ -415,15 +425,17 @@ int main(int argc, char **argv){
   global_n_f = n_f;
   global_fcts = fcts;
 
+  //printf("%d\n",n_f);
 
   //Player black = human_player();
-  //Player black = random_player();
-  Player black = mixed_player(10, heuristic_score_2, 21);
-  Player white = mixed_player(10, heuristic_score_2, 21);
+  Player black = random_player();
+  //Player black = mixed_player(10, heuristic_score_2, 22);
+  Player white = mixed_player(10, heuristic_score_2, 22);
 
+  //int i;
   //for(i=0;i<1000;i++){
   run_game(1, 1, white, black);
-  //}
+    //}
 
   free(white.param);
   free(black.param);

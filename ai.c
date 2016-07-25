@@ -4,30 +4,26 @@ Table global_table;
 FlatConfTable **global_fcts;
 int global_n_f;
 
-State temp_state;
-
 // heuristic scoring functions
 
-long int count_0 = 0;
-long int count_1 = 0;
-long int count_2 = 0;
-long int count_3 = 0;
+static long int count_0 = 0;
+static long int count_1 = 0;
+static long int count_2 = 0;
+static long int count_3 = 0;
 
-double heuristic_score_0(State state){
-  //return (double) (count_pieces(state->board, W) - count_pieces(state->board, B));
+double heuristic_score_0(BitState *state){
   count_0++;
-  //printf("count_0 = %d\n", count_0);
-  return (double) piece_diff(state->board, W, B);
+  //return (double) piece_diff(state->board, W, B);
   //Config_store board = board_to_conf_nocreate(state->board);
-  //return __builtin_popcountl(board.w) - __builtin_popcountl(board.b);
+  return __builtin_popcountll(state->board.w) - __builtin_popcountll(state->board.b);
 }
-
-double heuristic_score_1(State state){
+/*
+double heuristic_score_1(BitState *state){
   //printf("heuristic_score_1\n");
 
   count_1++;
   int side = W;
-  int is_at_final = state_final(state);
+  int is_at_final = bitstate_final(state);
   
   double result;
   int mypieces = count_pieces(state->board, side);
@@ -67,55 +63,54 @@ double heuristic_score_1(State state){
 
   return result;
 }
+*/
 
 
-
-double heuristic_score_2(State state){
+double heuristic_score_2(BitState *state){
   //count_2++;
+
+  Config_store board;
+  board.w = state->board.w;
+  board.b = state->board.b;
+  board.x = ~(board.w | board.b);
   
-  Config_store board = board_to_conf_nocreate(state->board);
-  int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
-  /*
-  if(state_final(state)){
-    return link_function_inverse(heuristic_score_0(state));
-  }
-  */
+  int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountll(board.x));
   
   return get_score_from_fct_list(global_fcts[cat], global_n_f, board);
 }
 
-double heuristic_score_3(State state){
+double heuristic_score_3(BitState *state){
   count_3++;
   
-  int movec;
-  allowed_moves_inplace(state, &movec);
+  int movec = __builtin_popcountll(find_moves_bitmask(state->board, state->turn));
+  //bitstate_allowed_moves(state, &movec);
   
-  return -(double)movec;
+  return ((state->turn == W) ? 1 : (-1)) * (double)movec;
 }
 
 
-int optimizing_move(State state, double (*score_func)(State)){
+int optimizing_move(BitState *state, double (*score_func)(BitState *)){
   int side = state->turn;
   
   int movec;
-  allowed_moves_inplace(state, &movec);
-  State pivot = create_state();
+  bitstate_allowed_moves(state, &movec);
+  BitState *pivot = create_initial_bitstate();
 
   double max_score = -DBL_MAX;
   int max_move = 0;
   
   int i;
   for(i=0;i<movec;i++){
-    cpy_state(pivot, state);
-    place_piece_indexed(pivot, i);
+    cpy_bitstate(pivot, state);
+    bitstate_place_piece(pivot, i);
     double score = ((side == W) ? 1 : (-1)) * 
-      state_compute_score(pivot, score_func); // min(a,b) = -max(-a,-b)
+      score_func(pivot);//state_compute_score(pivot, score_func); // min(a,b) = -max(-a,-b)
     if(score > max_score){
       max_move = i;
       max_score = score;
     }
   }
-  free_state(pivot);
+  free_bitstate(pivot);
   return max_move;
 }
 
@@ -125,7 +120,7 @@ double max_t = 0;
 
 #define SHOW_STAT
 
-int negamaxing_move(State state, int depth, double (*score_func)(State)){
+int negamaxing_move(BitState *state, int depth, double (*score_func)(BitState *)){
   assert(state != NULL);
 
 #ifdef SHOW_STAT  
@@ -160,7 +155,7 @@ int negamaxing_move(State state, int depth, double (*score_func)(State)){
 }
 
 
-int mixed_move(State state, int depth_middle, double (*score_func)(State), int depth_end){
+int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState *), int depth_end){
   assert(state != NULL);
 
   
@@ -178,16 +173,15 @@ int mixed_move(State state, int depth_middle, double (*score_func)(State), int d
   
   count_node = 0;
   
-  Config_store board = board_to_conf_nocreate(state->board);
-  int empty_sqr = __builtin_popcountl(board.x);
+  int empty_sqr = BOARD_SIZE_SQR -
+    (__builtin_popcountll(state->board.b) + __builtin_popcountll(state->board.w));
   
   int move_num = 0;
   
   if(empty_sqr > depth_end){
     negamax(state, depth_middle, -DBL_MAX, DBL_MAX, &move_num, score_func);
   } else {
-    int remaining = count_pieces(state->board, X);
-    double score = negamax_end(state, -DBL_MAX, DBL_MAX, &move_num, heuristic_score_0, remaining);
+    double score = negamax_end(state, -DBL_MAX, DBL_MAX, &move_num, heuristic_score_0, empty_sqr);
     printf("end game: score = %lf\n", score);
   }
 
@@ -205,7 +199,7 @@ int mixed_move(State state, int depth_middle, double (*score_func)(State), int d
   printf("count_node = %ld\n", count_node);
   printf("max_count_node = %ld\n", max_count_node);
 
-  printf("node/s = %lf\n", (double)count_node/elapsed);
+  printf("node/s = %lf k/s\n", (double)count_node/elapsed/(double)1000);
 
   printf("count_0 = %ld, count_2 = %ld\n", count_0, count_2);
   printf("count_0/count_node = %lf\n", (double)count_0/(double)count_node);  
@@ -216,43 +210,66 @@ int mixed_move(State state, int depth_middle, double (*score_func)(State), int d
   return move_num;
 }
 
+char init_order[POS_STORE_SIZE] = {
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+  21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+};
 
-double negamax(State state, int depth, double alpha, double beta, int *max_move, double (*score_func)(State)){
+
+double negamax(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *)){
   assert(state != NULL);
 
   count_node++;
 
   /* check if this is a leaf */
   int side = state->turn;
-  if(depth == 0 || state_final(state)){
+  int is_end = 0;
+  if(depth == 0 || (is_end = bitstate_final(state))){
     count_2++;
-    return ((side == W) ? 1 : (-1)) * score_func(state);//state_compute_score(state, score_func);
-  }
+    if(is_end){
+      return ((side == W) ? 100000 : (-100000)) * heuristic_score_0(state);  
+    } else {
+      return ((side == W) ? 1 : (-1)) * score_func(state);
+    }
+  } 
+  //
+
 
   /* get basic state info */
-  int movec;
-  allowed_moves_inplace(state, &movec);
+  // since movec is guranteed to be computed before here,
+  // we read movec from the state directly to speed up
+  int movec = state->movec;
+  //bitstate_allowed_moves(state, &movec);
 
 
   /* logic for turn skipping */
   if(movec == 0){
-    skip_turn(state);
+    bitstate_skip_turn(state);
     return (-1) * negamax(state, depth-1, -beta, -alpha, NULL, score_func);
   }
 
   /* move ordering */
-  char order[POS_STORE_SIZE]; int m;
+  char order[POS_STORE_SIZE];
+  memcpy(order, init_order, POS_STORE_SIZE * sizeof(char));
+  
+  /*
+  int m;
   for(m=0;m<movec;m++){
     order[m] = m;
   }
+  */
 
-  if(depth >= 4){
-    order_moves(state, order, movec, 1, heuristic_score_2);
+  if(depth >= 2){
+    order_moves(state, order, movec, 1, heuristic_score_3);
   }
+
   
   /* logic for move making */
 
-  State pivot = create_state();
+  //BitState *pivot = create_initial_bitstate();
+  BitState pivot_bitstate;
+  BitState *pivot = &pivot_bitstate;
+
   
   double best_score = -DBL_MAX;
   char best_movec = 0;
@@ -262,8 +279,13 @@ double negamax(State state, int depth, double alpha, double beta, int *max_move,
   
   int i;
   for(i=0;i<movec;i++){
-    cpy_state(pivot, state);
-    place_piece_indexed(pivot, order[i]);
+    //cpy_bitstate(pivot, state);
+    //bitstate_place_piece(pivot, order[i]);
+
+    pivot->board = state->positions[(int)order[i]];
+    pivot->turn = opposite_side(state->turn);
+    pivot->control.moves_filled = false;
+    
     double score = (-1) * negamax(pivot, depth-1, -beta, -alpha, NULL, score_func);
     
     if(score > best_score){
@@ -279,42 +301,49 @@ double negamax(State state, int depth, double alpha, double beta, int *max_move,
     }
   }
 
-  int r = rand() % best_movec;
+  int r = 0;//rand() % best_movec;
   if(max_move != NULL){
     *max_move = best_moves[r];//best_move_num;
   }
 
-  free(pivot);
+  //free(pivot);
   return best_score;
 }
 
-double negamax_dnorder(State state, int depth, double alpha, double beta, int *max_move, double (*score_func)(State)){
+double negamax_dnorder(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *)){
   assert(state != NULL);
 
   count_node++;
   
   int side = state->turn;
-  if(depth == 0 || state_final(state)){
+  if(depth == 0 || bitstate_final(state)){
     return ((side == W) ? 1 : (-1)) * score_func(state);//state_compute_score(state, score_func);
   }
 
   double best_score = -DBL_MAX;
   int best_move_num = 0;
   
-  int movec;
-  allowed_moves_inplace(state, &movec);
+  // since movec is guranteed to be computed before here,
+  // we read movec from the state directly to speed up
+  int movec;// = state->movec;
+  bitstate_allowed_moves(state, &movec);
 
   if(movec == 0){
-    skip_turn(state);
+    bitstate_skip_turn(state);
     return (-1) * negamax_dnorder(state, depth-1, -beta, -alpha, NULL, score_func);
   }
   
-  State pivot = create_state();
+  BitState *pivot = create_initial_bitstate();
   
   int i;
   for(i=0;i<movec;i++){
-    cpy_state(pivot, state);
-    place_piece_indexed(pivot, i);
+    //cpy_bitstate(pivot, state);
+    //bitstate_place_piece(pivot, i);
+
+    pivot->board = state->positions[i];
+    pivot->turn = opposite_side(state->turn);
+    pivot->control.moves_filled = false;
+    
     double score = (-1) * negamax_dnorder(pivot, depth-1, -beta, -alpha, NULL, score_func);
     if(score >= best_score){
       best_score = score;
@@ -335,42 +364,50 @@ double negamax_dnorder(State state, int depth, double alpha, double beta, int *m
 }
 
 
-double negamax_end(State state, double alpha, double beta, int *max_move, double (*score_func)(State), int remaining){
+double negamax_end(BitState *state, double alpha, double beta, int *max_move, double (*score_func)(BitState *), int remaining){
   assert(state != NULL);
 
   count_node++;
   
   int side = state->turn;
-  if(state_final(state)){
-    return ((side == W) ? 1 : (-1)) * score_func(state);//state_compute_score(state, score_func);
+  if((remaining == 0) || bitstate_final(state)){
+    return ((side == W) ? 1 : (-1)) * score_func(state);
   }
 
   double best_score = -DBL_MAX;
   int best_move_num = 0;
-  
-  int movec;
-  allowed_moves_inplace(state, &movec);
+
+  // since movec is guranteed to be computed before here,
+  // we read movec from the state directly to speed up
+  int movec = state->movec;
+  //bitstate_allowed_moves(state, &movec);
 
   if(movec == 0){
-    skip_turn(state);
+    bitstate_skip_turn(state);
     return (-1) * negamax_end(state, -beta, -alpha, NULL, score_func, remaining);
   }
 
-  char order[POS_STORE_SIZE]; int m;
-  for(m=0;m<movec;m++){
-    order[m] = m;
-  }
+  
+  char order[POS_STORE_SIZE];
+  memcpy(order, init_order, POS_STORE_SIZE * sizeof(char));
 
-  if(remaining > 9){
-    order_moves(state, order, movec, 1, heuristic_score_2);
+  if(remaining > 5){
+    order_moves(state, order, movec, 1, heuristic_score_3);
   }
   
-  State pivot = create_state();
+  //BitState *pivot = create_initial_bitstate();
+  BitState pivot_bitstate;
+  BitState *pivot = &pivot_bitstate;
   
   int i;
   for(i=0;i<movec;i++){
-    cpy_state(pivot, state);
-    place_piece_indexed(pivot, order[i]);
+    //cpy_bitstate(pivot, state);
+    //bitstate_place_piece(pivot, order[i]);
+
+    pivot->board = state->positions[(int)order[i]];
+    pivot->turn = opposite_side(state->turn);
+    pivot->control.moves_filled = false;
+    
     double score = (-1) * negamax_end(pivot, -beta, -alpha, NULL, score_func, remaining-1);
     if(score > best_score){
       best_score = score;
@@ -386,86 +423,14 @@ double negamax_end(State state, double alpha, double beta, int *max_move, double
     *max_move = best_move_num;
   }
 
-  free(pivot);
+  //free(pivot);
   return best_score;
 }
 
-
-// TODO
-double negamax_dep_lim(State state, int depth, double alpha, double beta, double *move_scores, int *id_node_count, double (*score_func)(State)){
-  assert(state != NULL);
-
-  (*id_node_count)++;
-
-  /* check if this is a leaf */
-  int side = state->turn;
-  if(depth == 0 || state_final(state)){
-    return ((side == W) ? 1 : (-1)) * state_compute_score(state, score_func);
-  }
-
-  /* get basic state info */
-  int movec;
-  allowed_moves_inplace(state, &movec);
-
-
-  /* logic for turn skipping */
-  if(movec == 0){
-    skip_turn(state);
-    return (-1) * negamax_dep_lim(state, depth-1, -beta, -alpha, NULL, id_node_count, score_func);
-  }
-
-  /* move ordering */
-  char order[POS_STORE_SIZE]; int m;
-  for(m=0;m<movec;m++){
-    order[m] = m;
-  }
-
-  if(depth >= 4){
-    order_moves(state, order, movec, 1, heuristic_score_2);
-  }
-  
-  /* logic for move making */
-
-  State pivot = create_state();
-  
-  double best_score = -DBL_MAX;
-  char best_movec = 0;
-  char best_moves[POS_STORE_SIZE];
-
-  //int best_move_num = 0;
-  
-  int i;
-  for(i=0;i<movec;i++){
-    cpy_state(pivot, state);
-    place_piece_indexed(pivot, order[i]);
-    double score = (-1) * negamax_dep_lim(pivot, depth-1, -beta, -alpha, NULL, id_node_count, score_func);
-    
-    if(score > best_score){
-      best_score = score;
-      best_movec = 0;
-      best_moves[(int)(best_movec++)] = order[i];
-    } else if(score == best_score){
-      best_moves[(int)(best_movec++)] = order[i];
-    }
-    alpha = MAX(alpha, score);
-    if(alpha >= beta){
-      break;
-    }
-  }
-
-  int r = rand() % best_movec;
-  /*
-  if(max_move != NULL){
-    *max_move = best_moves[r];//best_move_num;
-  }
-  */
-  free(pivot);
-  return best_score;
-}
 
 
 /*
-double iterative_deepening(State state, int node_limit, double (*score_func)(State)){
+double iterative_deepening(BitState *state, int node_limit, double (*score_func)(BitState *)){
   int id_node_count = 0;
 
   // the scores for each move
@@ -481,27 +446,33 @@ double iterative_deepening(State state, int node_limit, double (*score_func)(Sta
     negamax_dep_lim(state, depth, alpha, beta, move_scores, &id_node_count, score_func);
   }
   int movec = 0;
-  allowed_moves_inplace(state, &movec);
+  bitstate_allowed_moves(state, &movec);
 
   double max_score = -DBL_MAX;
   char max_move = 0;
 }
 */
 
-void order_moves(State state, char *order, int movec, int depth, double (*score_func)(State)){
+static BitState temp_bitstate;
+
+void order_moves(BitState *state, char *order, int movec, int depth, double (*score_func)(BitState *)){
 
   int cmp(const void*move1, const void*move2){
-    State temp = create_state();
     
-    cpy_state(temp, state);
-    place_piece_indexed(temp, *(char *)move1);  
-    double score1 = negamax_dnorder(temp, depth-1, -DBL_MAX, DBL_MAX, NULL, score_func);
+
+    temp_bitstate.board = state->positions[(int)*(char *)move1];
+    temp_bitstate.turn = opposite_side(state->turn);
+    temp_bitstate.control.moves_filled = false;
     
-    cpy_state(temp, state);
-    place_piece_indexed(temp, *(char *)move2);
-    double score2 = negamax_dnorder(temp, depth-1, -DBL_MAX, DBL_MAX, NULL, score_func);
+    double score1 = negamax_dnorder(&temp_bitstate, depth-1, -DBL_MAX, DBL_MAX, NULL, score_func);
     
-    free(temp);
+
+    temp_bitstate.board = state->positions[(int)*(char *)move2];
+    temp_bitstate.turn = opposite_side(state->turn);
+    temp_bitstate.control.moves_filled = false;
+    
+    double score2 = negamax_dnorder(&temp_bitstate, depth-1, -DBL_MAX, DBL_MAX, NULL, score_func);
+    
     
     if(score1 > score2){
       return 1;

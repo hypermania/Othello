@@ -157,15 +157,28 @@ extern inline BitMask offset_bitmask(const BitMask mask, char offset){
 
 #ifndef MY_BLSI_U64
 #define MY_BLSI_U64
-extern inline BitMask my_blsi_u64(const BitMask mask){
-  return mask & -mask;
+extern inline BitMask my_blsi_u64(BitMask mask){
+  BitMask blsi;
+  asm(
+      "blsi %1, %0"
+      : "=r" (blsi)
+      : "r" (mask)
+      );
+  return blsi;//mask & -mask;
 }
 #endif
 
 #ifndef MY_BLSR_U64
 #define MY_BLSR_U64
-extern inline BitMask my_blsr_u64(const BitMask mask){
-  return (mask - 1) & mask;
+extern inline BitMask my_blsr_u64(BitMask mask){
+  BitMask blsr;
+  asm(
+      "blsr %1, %0"
+      : "=r" (blsr)
+      : "r" (mask)
+      );
+  return blsr;
+  //return (mask - 1) & mask;
 }
 #endif
 

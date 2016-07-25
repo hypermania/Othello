@@ -182,6 +182,7 @@ Example *append_random_games_to_examples(Example *examples, int *n_e, int n_g){
   return examples;
 }
 
+/*
 Example *append_mixed_games_to_examples(Example *examples, int *n_e, int n_g){
 
   printf("begin appending mixed games to examples\n");
@@ -236,3 +237,4 @@ Example *append_mixed_games_to_examples(Example *examples, int *n_e, int n_g){
   return examples;
 }
 
+*/

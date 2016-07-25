@@ -21,9 +21,9 @@ FlatConfTable **global_fcts;
 
 
 int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Player black);
-int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_midgame_flag);
+int run_game_from_seq(BitState *state, Pos *seq, int print_endgame_flag, int print_midgame_flag);
 
-int get_move(State state, Player player);
+int get_move(BitState *state, Player player);
 
 
 #endif

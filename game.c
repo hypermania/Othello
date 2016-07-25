@@ -5,27 +5,24 @@ FlatConfTable **global_fcts;
 int global_n_f;
 
 int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Player black){
-  State state = create_state();
-  init_state(state);
+  BitState *state = create_initial_bitstate();
+  init_bitstate(state);
 
-  const int size = 1 << 2;
-  Table table = create_and_init_table(size);
-  global_table = table;
   int turn = 0;
   if(print_midgame_flag){
     printf("(Turn %d)\n", turn);
-    print_state(state);
+    print_bitstate(state);
   }
 
-  while(!state_final(state)){
+  while(!bitstate_final(state)){
 
     int movec;    
-    Pos *moves = allowed_moves_inplace(state, &movec);
+    bitstate_allowed_moves(state, &movec);
     
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
-      skip_turn(state);
+      bitstate_skip_turn(state);
     } else {
       
       int move_num;
@@ -34,31 +31,22 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
       } else {
 	move_num = get_move(state, white);
       }
+
+      uint64_t move_made = state->moves[move_num];
       
-      place_piece_indexed(state, move_num);
+      bitstate_place_piece(state, move_num);
 
       if(print_midgame_flag)
-	printf("(makes move at %c%c (%d,%d) (move index %d))\n", moves[move_num].c+'A', moves[move_num].r+'1', moves[move_num].r, moves[move_num].c, move_num);
+	print_move_made(move_made, move_num);
+      
     }
-    
+
     turn++;
-
-    table_free_nonreachable_state(table, state);
-
-
-    //printf("table->total = %d\n", table->total);
     
     if(print_midgame_flag){
       printf("\n(Turn %d)\n", turn);
-      print_state(state);
+      print_bitstate(state);
 
-      /*
-      Config_store board = board_to_conf_nocreate(state->board);
-      int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
-      int n_f = global_n_f;
-      double score = get_score_from_fct_list(global_fcts[cat], n_f, board);
-      printf("score = %30.20lf\n", score);
-      */
     }
   }
   
@@ -68,8 +56,8 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
 
   if(print_endgame_flag){
     
-    int wp = count_pieces(state->board, W);
-    int bp = count_pieces(state->board, B);
+    int wp = __builtin_popcountll(state->board.w);
+    int bp = __builtin_popcountll(state->board.b);
     if(wp > bp){
       printf("White wins: %d - %d\n", wp, bp);
     } else if(wp < bp){
@@ -79,31 +67,31 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
     }
   }
 
-  free_table(table);
-  free_state(state);
+  free_bitstate(state);
   return 0;
 
 }
 
-int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_midgame_flag){
+/*
+int run_game_from_seq(BitState *state, BitMask *seq, int print_endgame_flag, int print_midgame_flag){
   assert(state != NULL);
   int turn = 0;
   
-  //State state = create_state();
-  Pos moves[POS_STORE_SIZE]; int movec; 
-  //init_state(state);
+  //BitState *state = create_initial_bitstate();
+  BitMask moves[POS_STORE_SIZE]; int movec; 
+  //init_bitstate(state);
 
   if(print_midgame_flag){
     printf("(Turn %d)\n", turn);
-    print_state(state);
+    print_bitstate(state);
   }
 
-  while(!state_final(state)){
+  while(!bitstate_final(state)){
     movec = allowed_moves(state, moves);
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
-      skip_turn(state);
+      bitstate_skip_turn(state);
     } else {
       int i; int moved = 0;
       for(i=0;i<movec;i++){
@@ -125,7 +113,7 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
 
     if(print_midgame_flag){
       printf("\n(Turn %d)\n", turn);
-      print_state(state);
+      print_bitstate(state);
     }
 
   }
@@ -150,12 +138,13 @@ int run_game_from_seq(State state, Pos *seq, int print_endgame_flag, int print_m
   return 0;
 
 }
+*/
 
-int get_move(State state, Player player){
+int get_move(BitState *state, Player player){
 
   int move_num;
   int movec;
-  Pos *moves = allowed_moves_inplace(state, &movec);
+  BitMask *moves = bitstate_allowed_moves(state, &movec);
   switch(player.type){
   case HUMAN:
     print_options(moves, movec);

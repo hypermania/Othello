@@ -12,4 +12,6 @@ int ipow(int base, int exp);
 
 void binarize_items(Pattern *patterns, int *indices, int n);
 
+
+
 #endif

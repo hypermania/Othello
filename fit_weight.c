@@ -699,20 +699,23 @@ double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f,
   return total_error/n_e;
 }
 
+
+// TODO
 double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store board){
   double score = 0;
   
   int f;
   for(f=0;f<n_f;f++){
-    unsigned long int index = index_for_config(fct_list[f].pattern, board);
-    //if(fct_list[f].valid[index]){
-      score += fct_list[f].weights[index];
-      //}
+    //unsigned long int index = index_for_config(fct_list[f].pattern, board);
+    unsigned long int index = index_for_config_array[f](board);
+    score += fct_list[f].weights[index];
+
   }
   
   return score;
 }
 
+// TODO
 FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
   int i, j;
   const int pattern_set_size = 12; // max 12
@@ -756,7 +759,7 @@ FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
 
   sort_examples_into_categories(examples, categories, cat_sizes, n_e);
   
-  int n_b;
+  int n_b = 0;
   Config boards = malloc(n_e * sizeof(Config_store));
   //read_configs_from_file("./dat/boards/boards_random.dat", &n_b);
 
@@ -823,5 +826,5 @@ FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
     free(examples);
   }
 
-  //  return 
+  return NULL;
 }

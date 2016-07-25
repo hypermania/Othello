@@ -12,7 +12,7 @@ Player random_player(void){
   return player;
 }
 
-Player optimizing_player(double (*score_func)(State)){
+Player optimizing_player(double (*score_func)(BitState *)){
   Player player;
   player.type = IMMEDIATE;
   player.param = score_func;
@@ -20,7 +20,7 @@ Player optimizing_player(double (*score_func)(State)){
 }
 
 
-Player negamaxing_player(int depth, double (*score_func)(State)){
+Player negamaxing_player(int depth, double (*score_func)(BitState *)){
   Player player;
   player.type = NEGAMAX;
 
@@ -33,7 +33,7 @@ Player negamaxing_player(int depth, double (*score_func)(State)){
 }
 
 /*
-Player negamaxing_dnstore_player(int depth, double (*score_func)(State)){
+Player negamaxing_dnstore_player(int depth, double (*score_func)(BitState *)){
   Player player;
   player.type = NEGAMAX_DNSTORE;
 
@@ -48,7 +48,7 @@ Player negamaxing_dnstore_player(int depth, double (*score_func)(State)){
 */
 
 
-Player mixed_player(int depth_middle, double (*score_func)(State), int depth_end){
+Player mixed_player(int depth_middle, double (*score_func)(BitState *), int depth_end){
   Player player;
   player.type = MIXED;
 
