@@ -425,12 +425,10 @@ int main(int argc, char **argv){
   global_n_f = n_f;
   global_fcts = fcts;
 
-  //printf("%d\n",n_f);
-
   //Player black = human_player();
-  Player black = random_player();
-  //Player black = mixed_player(10, heuristic_score_2, 22);
-  Player white = mixed_player(10, heuristic_score_2, 22);
+  //Player black = random_player();
+  Player black = mixed_player(9, heuristic_score_2, 21);
+  Player white = mixed_player(9, heuristic_score_2, 21);
 
   //int i;
   //for(i=0;i<1000;i++){

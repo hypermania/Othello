@@ -21,12 +21,15 @@ typedef struct {
   struct {
     // true iff transposition info are filled accordingly
     bool moves_filled;
+    bool move_mask_filled;
   } control;
   
   // transposition info (dependent only on board and turn)
   int movec;
   BitMask moves[POS_STORE_SIZE];
   BitBoard positions[POS_STORE_SIZE];
+  
+  BitMask move_mask;
 } BitState;
 
 

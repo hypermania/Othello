@@ -1,6 +1,5 @@
 #include "game.h"
 
-Table global_table;
 FlatConfTable **global_fcts;
 int global_n_f;
 

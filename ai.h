@@ -35,7 +35,7 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
 
 double negamax_dnorder(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *));
 
-double negamax_end(BitState *state, double alpha, double beta, int *max_move, double (*score_func)(BitState *), int remaining);
+double negamax_end(BitState *state, double alpha, double beta, int *max_move, int remaining);
 
 //double negamax_iterative(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *));
 
@@ -56,7 +56,7 @@ double iterative_deepening(BitState *state, int node_limit, double (*score_func)
    Perform search with score_func up to depth, 
    and sort the moves in descending order.
  */
-void order_moves(BitState *state, char *order, int movec, int depth, double (*score_func)(BitState *));
+void order_moves_fastest_first(BitState *state, char *order, int movec, BitMask *opp_move_masks);
 
 
 #endif
