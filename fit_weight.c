@@ -754,6 +754,14 @@ FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
   Pattern *completion = complete_pattern_set(patterns, pattern_set_size, &n_f);
   printf("n_f = %d\n", n_f);
 
+  int f;
+  for(f=0;f<50;f++){
+    printf("f=%d:\n",f);
+    print_bitboard((BitBoard){completion[f], 0});
+  }
+  
+  exit(0);
+  
   Example *categories[CAT_NUM];
   int cat_sizes[CAT_NUM];
 

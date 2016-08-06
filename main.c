@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <time.h>
 #include <math.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -14,8 +15,11 @@
 #include "fit_weight.h"
 #include "test.h"
 #include "preprocess.h"
+#include "util.h"
+
 
 #include "bitboard.h"
+#include "evaluate.h"
 
 FlatConfTable **global_fcts;
 int global_n_f;
@@ -26,6 +30,31 @@ int main(int argc, char **argv){
   gettimeofday(&t, NULL);
   srand((long int) t.tv_usec);
   //srand((long int) 100);
+
+  //fit_fcts_for_examples(NULL, 0);
+  
+  /*
+  long int i; long int times = 2400000000LL;
+  BitMask input = (((uint64_t)rand()) << 32) + (uint64_t)rand();
+  BitMask out;
+  
+  for(i=0;i<times;i++){
+    out = flipDiagA1H8(input);
+    //out = pattern_reflect_diag(input);    
+  }
+
+  printf("out = %016lx\n", out);
+
+  exit(0);
+  */
+
+  //printf("out1 = %016lx; out2 = %016lx;\n", out1, out2);
+  
+  /*
+  if(out1 - out2){
+    printf("wrong\n");
+  }
+  */
 
   /*
   BitBoard bitboard = new_initial_bitboard();
@@ -384,6 +413,7 @@ int main(int argc, char **argv){
       free(fct);
     }
   }
+
   /*
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){

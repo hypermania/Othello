@@ -5,7 +5,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <semaphore.h>
 #include "hash.h"
 #include "state.h"
 

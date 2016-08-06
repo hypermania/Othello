@@ -286,7 +286,7 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
     }
   }
 
-  int r = 0;//rand() % best_movec;
+  int r = rand() % best_movec;
   if(max_move != NULL){
     *max_move = best_moves[r];//best_move_num;
   }
@@ -378,8 +378,6 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
   return best_score;
 }
 
-
-
 /*
 double iterative_deepening(BitState *state, int node_limit, double (*score_func)(BitState *)){
   int id_node_count = 0;
@@ -394,7 +392,7 @@ double iterative_deepening(BitState *state, int node_limit, double (*score_func)
   int depth = 1;
   while(1){
     double alpha = -DBL_MAX; double beta = DBL_MAX;
-    negamax_dep_lim(state, depth, alpha, beta, move_scores, &id_node_count, score_func);
+    negamax(state, depth, alpha, beta, move_scores, &id_node_count, score_func);
   }
   int movec = 0;
   bitstate_allowed_moves(state, &movec);
