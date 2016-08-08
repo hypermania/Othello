@@ -3,15 +3,13 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
-#include <float.h>
-#include <pthread.h>
-#include <sys/stat.h>
 
 #include "bitboard.h"
-#include "preprocess.h"
+//#include "bitstate.h"
+//#include "preprocess.h"
 
-#include "macro.h"
+//#include "macro.h"
+#include "weights.h"
 
 BitMask flipVertical(BitMask mask);
 BitMask flipDiagA1H8(BitMask mask);

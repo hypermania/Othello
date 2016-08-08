@@ -17,8 +17,8 @@ CPPFLAGS += -std=gnu90
 
 CFLAGS += -pthread -Wall
 
-CFLAGS += -msse4.2 -mpopcnt 
-CPPFLAGS += -msse4.2 -mpopcnt
+CFLAGS += -msse4.2 -mpopcnt -mbmi -mbmi2
+CPPFLAGS += -msse4.2 -mpopcnt -mbmi -mbmi2
 
 #CFLAGS += -O0
 #CPPFLAGS += -O0

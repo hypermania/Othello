@@ -20,6 +20,7 @@
 
 #include "bitboard.h"
 #include "evaluate.h"
+#include "weights.h"
 
 FlatConfTable **global_fcts;
 int global_n_f;
@@ -31,6 +32,14 @@ int main(int argc, char **argv){
   srand((long int) t.tv_usec);
   //srand((long int) 100);
 
+  init_offsets();
+
+  check_offset();
+  
+  exit(0);  
+  //printf("%d\n", sizeof(row_1)/8);
+
+  
   //fit_fcts_for_examples(NULL, 0);
   
   /*
@@ -457,8 +466,8 @@ int main(int argc, char **argv){
 
   //Player black = human_player();
   //Player black = random_player();
-  Player black = mixed_player(9, heuristic_score_2, 21);
-  Player white = mixed_player(9, heuristic_score_2, 21);
+  Player black = mixed_player(10, heuristic_score_2, 22);
+  Player white = mixed_player(10, heuristic_score_2, 22);
 
   //int i;
   //for(i=0;i<1000;i++){

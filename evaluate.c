@@ -20,13 +20,3 @@ BitMask flipDiagA1H8(BitMask mask){
   return mask;
 }
 
-BitMask mirrorHorizontal(BitMask mask) {
-  const BitMask k1 = 0x5555555555555555;
-  const BitMask k2 = 0x3333333333333333;
-  const BitMask k4 = 0x0f0f0f0f0f0f0f0f;
-
-  mask = ((mask >> 1) & k1) | ((mask & k1) << 1);
-  mask = ((mask >> 2) & k2) | ((mask & k2) << 2);
-  mask = ((mask >> 4) & k4) | ((mask & k4) << 4);
-  return mask;
-}
