@@ -8,7 +8,7 @@
 #define BOARD_SIZE_SQR (BOARD_SIZE * BOARD_SIZE)
 #define POS_STORE_SIZE (BOARD_SIZE * BOARD_SIZE / 2)
 #define ADJ_SIZE 8
-#define X 0
+#define EMPTY 0
 #define W 1
 #define B (-1)
 #define OPPOSITE_SIDE(val) (-(val))

@@ -28,7 +28,7 @@ inline char bitboard_get_pos(BitBoard *board, BitMask pos){
   if(pos & board->b){
     return B;
   } 
-  return X;
+  return EMPTY;
 }
 
 
@@ -40,7 +40,7 @@ inline char bitboard_get_pos_nonref(BitBoard board, BitMask pos){
   if(pos & board.b){
     return B;
   } 
-  return X;
+  return EMPTY;
 }
 
 

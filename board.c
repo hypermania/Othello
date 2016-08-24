@@ -48,7 +48,7 @@ int check_pos(Pos pos){
 }
 
 int check_val(char val){
-  if(val != X && val != W && val != B)
+  if(val != EMPTY && val != W && val != B)
     return -1;
   return 0;
 }
@@ -115,7 +115,7 @@ int adj_empty_pos(Board board, Pos pos, Pos *store){
 	Pos temp = pos;
 	temp.r += direc_h;
 	temp.c += direc_v;
-	if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == X))
+	if((check_pos(temp) >= 0) && (board_get_pos(board, temp) == EMPTY))
 	  store[count++] = temp;
       }
     }

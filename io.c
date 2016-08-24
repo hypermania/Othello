@@ -34,7 +34,7 @@ int print_board(Board board){
     writecolor(rownum, "52", "46");
     for(c=0;c<BOARD_SIZE;c++){
       switch(board_get_pos(board, (Pos) {r,c})){
-      case X:
+      case EMPTY:
 	writecolor("* ", "94", "08");
 	break;
       case W:
@@ -62,7 +62,7 @@ int print_bitboard(BitBoard board){
     writecolor(rownum, "52", "46");
     for(c=0;c<BOARD_SIZE;c++){
       switch(bitboard_get_pos(&board, pos_mask[r][c])){
-      case X:
+      case EMPTY:
 	writecolor("* ", "94", "08");
 	break;
       case W:
@@ -219,7 +219,7 @@ int print_config(Config config){
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
       if(ATOM(r,c) & config->x){
-	board_set_pos(board, (Pos) {r,c}, X);
+	board_set_pos(board, (Pos) {r,c}, EMPTY);
       } else if(ATOM(r,c) & config->w){
 	board_set_pos(board, (Pos) {r,c}, W);	
       } else if(ATOM(r,c) & config->b){

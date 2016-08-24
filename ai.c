@@ -6,21 +6,23 @@ FlatConfTable **global_fcts;
 int global_n_f;
 
 #ifdef SHOW_STAT
-static long int count_0 = 0;
-static long int count_1 = 0;
-static long int count_2 = 0;
-static long int count_3 = 0;
+static long int count_leaf = 0;
+
+static long int count_movec = 0;
 
 static long int count_node = 0;
 static long int max_count_node = 0;
 static double max_t = 0;
+
+FILE *log_file;
+
 #endif
 
 // heuristic scoring functions
 
 inline double heuristic_score_0(BitState *state){
 #ifdef SHOW_STAT
-  count_0++;
+  count_leaf++;
 #endif
   //return (double) piece_diff(state->board, W, B);
   //Config_store board = board_to_conf_nocreate(state->board);
@@ -30,7 +32,7 @@ inline double heuristic_score_0(BitState *state){
 double heuristic_score_1(BitState *state){
   //printf("heuristic_score_1\n");
 
-  count_1++;
+  count_leaf++;
   int side = W;
   int is_at_final = bitstate_final(state);
   
@@ -77,7 +79,7 @@ double heuristic_score_1(BitState *state){
 
 inline double heuristic_score_2(BitState *state){
 #ifdef SHOW_STAT
-  count_2++;
+  count_leaf++;
 #endif
   
   Config_store board;
@@ -92,13 +94,20 @@ inline double heuristic_score_2(BitState *state){
 
 inline double heuristic_score_3(BitState *state){
 #ifdef SHOW_STAT
-  count_3++;
+  count_leaf++;
 #endif
   
   int movec = __builtin_popcountll(find_moves_bitmask(state->board, state->turn));
   //bitstate_allowed_moves(state, &movec);
   
   return ((state->turn == W) ? 1 : (-1)) * (double)movec;
+}
+
+inline double heuristic_score_4(BitState *state){
+#ifdef SHOW_STAT
+  count_leaf++;
+#endif
+  return evaluate(state);
 }
 
 int optimizing_move(BitState *state, double (*score_func)(BitState *)){
@@ -133,7 +142,6 @@ int negamaxing_move(BitState *state, int depth, double (*score_func)(BitState *)
   int move_num = 0;
   negamax(state, depth, -DBL_MAX, DBL_MAX, &move_num, score_func);
 
-  
   return move_num;
 }
 
@@ -148,12 +156,10 @@ int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState 
   
   gettimeofday(&start, NULL);
 
-  count_0 = 0;
-  count_1 = 0;
-  count_2 = 0;
-  count_3 = 0;
+  count_leaf = 0;
   
   count_node = 0;
+  count_movec = 0;
 #endif
   
   int empty_sqr = BOARD_SIZE_SQR -
@@ -165,7 +171,6 @@ int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState 
     negamax(state, depth_middle, -DBL_MAX, DBL_MAX, &move_num, score_func);
   } else {
     double score = negamax_end(state, -DBL_MAX, DBL_MAX, &move_num, empty_sqr);
-    //double score = negamax(state, empty_sqr, -DBL_MAX, DBL_MAX, &move_num, heuristic_score_0);
     printf("end game: score = %lf\n", score);
   }
 
@@ -178,16 +183,21 @@ int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState 
   max_t = MAX(elapsed, max_t);
   
   printf("time = %lfs\n", elapsed);
-  printf("max_t = %lfs\n", max_t);
   
   printf("count_node = %ld\n", count_node);
-  printf("max_count_node = %ld\n", max_count_node);
+  //printf("count_movec = %ld\n", count_movec);
 
   printf("node/s = %lf k/s\n", (double)count_node/elapsed/(double)1000);
 
-  printf("count_0/count_node = %lf\n", (double)count_0/(double)count_node);
-  printf("count_2/count_node = %lf\n", (double)count_2/(double)count_node);
-  //printf("count_3/count_node = %lf\n", (double)count_3/(double)count_node);  
+  printf("count_leaf/count_node = %lf\n", (double)count_leaf/(double)count_node);
+  printf("avg movec = %lf\n", (double)count_movec/((double)count_node - (double)count_leaf));
+
+  // is_endgame, count_leaf, count_node, elapsed
+  fprintf(log_file, "%d, %ld, %ld, %ld, %lf\n",
+	  (empty_sqr <= depth_end),
+	  count_node, count_leaf, count_movec,
+	  elapsed);
+  
 #endif
 
   
@@ -225,6 +235,10 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
   int movec = state->movec;
   //bitstate_allowed_moves(state, &movec);
 
+#ifdef SHOW_STAT
+  count_movec += movec;
+#endif
+
 
   /* logic for turn skipping */
   if(movec == 0){
@@ -237,8 +251,10 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
   memcpy(order, init_order, POS_STORE_SIZE * sizeof(char));
   
   BitMask opp_move_masks[POS_STORE_SIZE];
+  bool ordered = false;
   if(depth >= 4){
     order_moves_fastest_first(state, order, movec, opp_move_masks);
+    ordered = true;
   }
 
   
@@ -263,13 +279,8 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
     pivot->turn = opp_side;
     pivot->control.moves_filled = false;
 
-    if(depth >= 4){
-      pivot->move_mask = opp_move_masks[(int)order[i]];
-      pivot->control.move_mask_filled = true;
-    } else {
-      pivot->control.move_mask_filled = false;
-    }
-
+    pivot->move_mask = opp_move_masks[(int)order[i]];
+    pivot->control.move_mask_filled = ordered;
     
     double score = (-1) * negamax(pivot, depth-1, -beta, -alpha, NULL, score_func);
     
@@ -315,6 +326,10 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
   int movec = state->movec;
   //bitstate_allowed_moves(state, &movec);
 
+#ifdef SHOW_STAT
+  count_movec += movec;
+#endif
+  
   if(movec == 0){
     bitstate_skip_turn(state);
     return (-1) * negamax_end(state, -beta, -alpha, NULL, remaining);
@@ -333,8 +348,6 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
 
   BitState pivot_bitstate;
   BitState *pivot = &pivot_bitstate;
-
-  //long int last_count = 0;
   
   int opp_side = opposite_side(state->turn);
   int i;
@@ -344,22 +357,11 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
     pivot->turn = opp_side;
     pivot->control.moves_filled = false;
 
-    //if(ordered){
     pivot->move_mask = opp_move_masks[(int)order[i]];
     pivot->control.move_mask_filled = ordered;
-      //} else {
-      //pivot->control.move_mask_filled = false;
-      //}
 
     double score = (-1) * negamax_end(pivot, -beta, -alpha, NULL, remaining-1);
 
-    /*
-    if(remaining == 21){
-      printf("count_node for %d-th branch = %ld\n", i, count_node - last_count);
-      last_count = count_node;
-    }
-    */
-    
     if(score > best_score){
       best_score = score;
       best_move_num = order[i];
@@ -423,3 +425,4 @@ inline void order_moves_fastest_first(BitState *state, char *order, int movec, B
   qsort(order, movec, sizeof(char), cmp);
 
 }
+

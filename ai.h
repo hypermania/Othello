@@ -2,6 +2,7 @@
 #define AI_H
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <limits.h>
 #include <pthread.h>
 #include <float.h>
@@ -15,6 +16,8 @@
 #include "table.h"
 #include "config.h"
 #include "fit_weight.h"
+#include "evaluate.h"
+
 
 // does not provide error handling
 
@@ -23,6 +26,7 @@ double heuristic_score_0(BitState *state);
 double heuristic_score_1(BitState *state);
 double heuristic_score_2(BitState *state);
 double heuristic_score_3(BitState *state);
+double heuristic_score_4(BitState *state);
 
 // move determination functions
 int optimizing_move(BitState *state, double (*score_func)(BitState *));

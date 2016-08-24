@@ -188,7 +188,7 @@ inline void fill_moves(State state){
     char r,c;
     for(r=0;r<BOARD_SIZE;r++){
       for(c=0;c<BOARD_SIZE;c++){
-	if(board_get_pos(board, (Pos) {r,c}) != X)
+	if(board_get_pos(board, (Pos) {r,c}) != EMPTY)
 	  continue;
 	if(try_to_place(board, state->positions[movec], (Pos) {r,c}, state->turn) > 0){
 	  state->moves[movec++] = (Pos) {r,c};

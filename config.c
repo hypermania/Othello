@@ -300,7 +300,7 @@ int board_to_conf(Board board, Config config){
   int r, c;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
-      if(board_get_pos(board, (Pos) {r,c}) == X){
+      if(board_get_pos(board, (Pos) {r,c}) == EMPTY){
 	config->x |= ATOM(r,c);
       } else if(board_get_pos(board, (Pos) {r,c}) == W){
 	config->w |= ATOM(r,c);
@@ -326,7 +326,7 @@ Config_store board_to_conf_nocreate(Board board){
   int r, c;
   for(r=0;r<BOARD_SIZE;r++){
     for(c=0;c<BOARD_SIZE;c++){
-      if(board_get_pos(board, (Pos) {r,c}) == X){
+      if(board_get_pos(board, (Pos) {r,c}) == EMPTY){
 	config.x |= ATOM(r,c);
       } else if(board_get_pos(board, (Pos) {r,c}) == W){
 	config.w |= ATOM(r,c);

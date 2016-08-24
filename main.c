@@ -17,6 +17,7 @@
 #include "preprocess.h"
 #include "util.h"
 
+#include "flip_computation.h"
 
 #include "bitboard.h"
 #include "evaluate.h"
@@ -24,6 +25,8 @@
 
 FlatConfTable **global_fcts;
 int global_n_f;
+
+FILE *log_file;
 
 int main(int argc, char **argv){
   // set up random number generator
@@ -33,26 +36,41 @@ int main(int argc, char **argv){
   //srand((long int) 100);
 
   init_offsets();
-
-  check_offset();
+  check_offsets();
   
-  exit(0);  
-  //printf("%d\n", sizeof(row_1)/8);
+  clear_weights();
+  printf("check_weights() = %d\n", check_weights());
 
+
+  BitState *state = create_initial_bitstate();
+  state->board = (BitBoard){
+    ATOM(0,0),
+    ROW(0) & (~ATOM(0,0)) & (~ATOM(0,7))
+  };
+
+  struct timeval start;
+  struct timeval end;
+  gettimeofday(&start, NULL);
+  long int i;
+  long int times = 100000000;
+  long int freq = 1300000000;
+  for(i=0;i<times;i++){
+    evaluate(state);
+  }
+  gettimeofday(&end, NULL);
+
+  print_bitstate(state);
+  
+  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
+  double cycles = (double)freq * elapsed / (double)times;
+  printf("cycles = %lf\n", cycles);
+
+
+  exit(0);
   
   //fit_fcts_for_examples(NULL, 0);
   
   /*
-  long int i; long int times = 2400000000LL;
-  BitMask input = (((uint64_t)rand()) << 32) + (uint64_t)rand();
-  BitMask out;
-  
-  for(i=0;i<times;i++){
-    out = flipDiagA1H8(input);
-    //out = pattern_reflect_diag(input);    
-  }
-
-  printf("out = %016lx\n", out);
 
   exit(0);
   */
@@ -424,6 +442,35 @@ int main(int argc, char **argv){
   }
 
   /*
+  long int i; long int times = 260000000LL;
+  double out;
+
+  BitState *state = create_initial_bitstate();
+  
+  struct timeval start;
+  struct timeval end;
+  
+  gettimeofday(&start, NULL);
+  
+  for(i=0;i<times;i++){
+    //out = flipDiagA1H8(input);
+    //out = pattern_reflect_diag(input);
+    out = evaluate(state);
+    //out = get_score_from_fct_list(fcts[0], n_f, (Config_store) {0,0,0});
+  }
+
+  gettimeofday(&end, NULL);
+  
+  printf("out = %lf\n", out);
+
+  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
+
+  printf("cycle/call = %lf\n", (double)2600000000LL * elapsed/(double)times);
+  
+  exit(0);
+  */
+  
+  /*
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
       FlatConfTable fct = fcts[cat][f];
@@ -464,19 +511,23 @@ int main(int argc, char **argv){
   global_n_f = n_f;
   global_fcts = fcts;
 
+  char log_filename[120];
+  sprintf(log_filename, "./log/%ld.csv", t.tv_sec);
+  log_file = fopen(log_filename, "w");
+  
   //Player black = human_player();
   //Player black = random_player();
-  Player black = mixed_player(10, heuristic_score_2, 22);
-  Player white = mixed_player(10, heuristic_score_2, 22);
+  Player black = mixed_player(11, heuristic_score_0, 0);
+  Player white = mixed_player(11, heuristic_score_0, 0);
 
-  //int i;
-  //for(i=0;i<1000;i++){
+
   run_game(1, 1, white, black);
-    //}
 
+  
   free(white.param);
   free(black.param);
-  
+
+  fclose(log_file);
 
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){

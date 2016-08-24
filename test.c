@@ -115,7 +115,7 @@ int test_board(void){
   init_board(board);
   
   int naive_board[BOARD_SIZE][BOARD_SIZE];
-  char vals[3] = {X, W, B};
+  char vals[3] = {EMPTY, W, B};
   int i, j;
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
@@ -126,7 +126,7 @@ int test_board(void){
 
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
-      if(board_get_pos(board, (Pos) {i,j}) != X)
+      if(board_get_pos(board, (Pos) {i,j}) != EMPTY)
 	return -1;
       board_set_pos(board, (Pos) {i,j}, naive_board[i][j]);
     }
@@ -161,7 +161,7 @@ int test_bitboard(void){
   BitBoard board = new_empty_bitboard();
 
   int naive_board[BOARD_SIZE][BOARD_SIZE];
-  char vals[3] = {X, W, B};
+  char vals[3] = {EMPTY, W, B};
   int i, j;
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
@@ -173,7 +173,7 @@ int test_bitboard(void){
 
   for(i=0;i<BOARD_SIZE;i++){
     for(j=0;j<BOARD_SIZE;j++){
-      if(bitboard_get_pos_nonref(board, pos_mask[i][j]) != X)
+      if(bitboard_get_pos_nonref(board, pos_mask[i][j]) != EMPTY)
 	return -1;
       bitboard_set_pos(&board, pos_mask[i][j], naive_board[i][j]);
     }
