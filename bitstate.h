@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#include "board.h"
+
 #include "bitboard.h"
 
 #include "flip_computation.h"

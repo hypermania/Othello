@@ -38,7 +38,7 @@ double heuristic_score_1(BitState *state){
   
   double result;
   int mypieces = count_pieces(state->board, side);
-  int opp_side = opposite_side(side);
+  int opp_side = OPPOSITE_SIDE(side);
   int opppieces = count_pieces(state->board, opp_side);
   
   result = (double)mypieces;
@@ -269,7 +269,7 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
   char best_movec = 0;
   char best_moves[POS_STORE_SIZE];
 
-  int opp_side = opposite_side(state->turn);  
+  int opp_side = OPPOSITE_SIDE(state->turn);  
   int i;
   for(i=0;i<movec;i++){
     //cpy_bitstate(pivot, state);
@@ -349,7 +349,7 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
   BitState pivot_bitstate;
   BitState *pivot = &pivot_bitstate;
   
-  int opp_side = opposite_side(state->turn);
+  int opp_side = OPPOSITE_SIDE(state->turn);
   int i;
   for(i=0;i<movec;i++){
 
@@ -411,7 +411,7 @@ int opp_mobility[POS_STORE_SIZE];
 inline void order_moves_fastest_first(BitState *state, char *order, int movec, BitMask *opp_move_masks){
 
   int i;
-  int opp_side = opposite_side(state->turn);
+  int opp_side = OPPOSITE_SIDE(state->turn);
 
   for(i=0;i<movec;i++){
     opp_move_masks[i] = find_moves_bitmask(state->positions[i], opp_side);

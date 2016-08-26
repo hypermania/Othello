@@ -2,7 +2,6 @@
 #define GENCONF_H
 
 
-#include "state.h"
 #include "fct.h"
 
 #include "hash.h"
@@ -18,8 +17,6 @@
 #include <pthread.h>
 #include <math.h>
 #include <limits.h>
-
-
 
 
 /* pattern related utilities */

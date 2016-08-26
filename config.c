@@ -291,6 +291,7 @@ Config_store reflect_bdiag(Config_store config){
   
 }
 
+/*
 int board_to_conf(Board board, Config config){
   assert(board != NULL);
   assert(config != NULL);
@@ -312,8 +313,8 @@ int board_to_conf(Board board, Config config){
   return 0;
   
 }
-
-
+*/
+/*
 Config_store board_to_conf_nocreate(Board board){
   assert(board != NULL);
 
@@ -337,4 +338,4 @@ Config_store board_to_conf_nocreate(Board board){
   }
   return config;
 }
-
+*/

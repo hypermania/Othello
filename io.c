@@ -20,38 +20,6 @@ void writecolor(const char *str, const char *back, const char *color){
   write(1, "m", 1);
 }
 
-int print_board(Board board){
-  if(board == NULL)
-    return -1;
-
-  writecolor("  A B C D E F G H ", "52", "46");
-  write(1, "\e[0m", 5);
-  write(1, "\n", 1);
-  write(1, "\e[0m", 5);
-  int r,c = 0;
-  for(r=0;r<BOARD_SIZE;r++){
-    char rownum[3] = {'1'+r, ' '};
-    writecolor(rownum, "52", "46");
-    for(c=0;c<BOARD_SIZE;c++){
-      switch(board_get_pos(board, (Pos) {r,c})){
-      case EMPTY:
-	writecolor("* ", "94", "08");
-	break;
-      case W:
-	writecolor("W ", "94", "15");
-	break;
-      case B:
-	writecolor("B ", "94", "00");
-	break;
-      }
-      write(1, "\e[0m", 5);
-    }
-    write(1, "\n", 1);
-    write(1, "\e[0m", 5);
-  }
-  return 0;
-}
-
 int print_bitboard(BitBoard board){
 
   writecolor("  A B C D E F G H ", "52", "46");
@@ -75,22 +43,6 @@ int print_bitboard(BitBoard board){
     }
     write(1, "\n", 1);
   }
-  return 0;
-}
-
-
-int print_state(State state){
-  if(state == NULL)
-    return -1;
-  
-  //printf("state->turn = %d\n", state->turn);
-  if(state->turn == W){
-    write(1, "(white's turn)\n", 15);
-  } else {
-    write(1, "(black's turn)\n", 15);
-  } 
-  print_board(state->board);
-
   return 0;
 }
 
@@ -154,6 +106,7 @@ int get_human_response(int movec){
   return response;
 }
 
+/*
 Pos *file_to_seq(char *buff, int n){
   assert(buff != NULL);
   int i;
@@ -209,7 +162,9 @@ Pos *randomized_file_to_seq(char *buff, int n){
 
   return (Pos *)buff;
 }
+*/
 
+/*
 int print_config(Config config){
   assert(config != NULL);
 
@@ -240,9 +195,11 @@ int print_config(Config config){
 	 );
   return 0;
 }
+*/
 
 int print_pattern(Pattern pattern){
 
+  /*
   Board board = create_board();
   init_board(board);
   int r, c;
@@ -255,6 +212,11 @@ int print_pattern(Pattern pattern){
   }
   print_board(board);
   free_board(board);
+  */
+
+  BitBoard board = (BitBoard) {pattern, 0};
+  print_bitboard(board);
+  
   printf("pattern = %016lx\n", pattern);
   printf("degree = %d\n", __builtin_popcountl(pattern));
 

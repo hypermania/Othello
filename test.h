@@ -1,5 +1,5 @@
-#include "board.h"
-#include "state.h"
+#ifndef TEST_H
+#define TEST_H
 
 #include "bitboard.h"
 #include "bitstate.h"
@@ -14,3 +14,4 @@
 int test_bitboard(void);
 int test_bitstate(void);
 
+#endif

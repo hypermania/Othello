@@ -5,8 +5,6 @@
 #include <assert.h>
 #include <string.h>
 
-#include "board.h"
-
 #include "const.h"
 #include "macro.h"
 
@@ -32,8 +30,8 @@ int free_config(Config config);
 
 
 int check_board_as_config(Config_store conf);
-int board_to_conf(Board board, Config config);
-Config_store board_to_conf_nocreate(Board board);
+//int board_to_conf(Board board, Config config);
+//Config_store board_to_conf_nocreate(Board board);
 
 
 

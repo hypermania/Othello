@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "state.h"
 #include "io.h"
 #include "genconf.h"
 #include "game.h"
@@ -415,7 +414,7 @@ int main(int argc, char **argv){
   }
 
 
-
+  /*
   BitState *state = create_initial_bitstate();
 
   struct timeval start;
@@ -430,13 +429,6 @@ int main(int argc, char **argv){
     //state->board.w = (uint64_t)rand() + ((uint64_t)rand() << 32);
     //state->board.b = ((uint64_t)rand() + ((uint64_t)rand() << 32)) & (~state->board.w);
     evaluate(state);
-    
-    //Config_store conf;
-    //conf.w = state->board.w;
-    //conf.b = state->board.b;
-    //conf.x = ~(conf.w | conf.b);
-    
-    //get_score_from_fct_list(fcts[0], n_f, conf);
   }
   gettimeofday(&end, NULL);
 
@@ -447,7 +439,7 @@ int main(int argc, char **argv){
   printf("cycles = %lf\n", cycles);
 
   exit(0);
-
+  */
   
   /*
   long int i; long int times = 260000000LL;
@@ -525,8 +517,8 @@ int main(int argc, char **argv){
   
   //Player black = human_player();
   //Player black = random_player();
-  Player black = mixed_player(13, heuristic_score_2, 0);
-  Player white = mixed_player(13, heuristic_score_2, 0);
+  Player black = mixed_player(10, heuristic_score_2, 20);
+  Player white = mixed_player(10, heuristic_score_2, 20);
 
 
   run_game(1, 1, white, black);

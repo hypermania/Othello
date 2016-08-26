@@ -7,9 +7,8 @@
 #include <float.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 
-
-#include "state.h"
 #include "example.h"
 #include "pattern.h"
 #include "config.h"

@@ -1,7 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "state.h"
 #include "bitstate.h"
 
 enum PlayerType {HUMAN, RANDOM, IMMEDIATE, NEGAMAX, MIXED};

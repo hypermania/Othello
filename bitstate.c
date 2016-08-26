@@ -36,7 +36,7 @@ inline void bitstate_place_piece(BitState *state, int move_num){
   assert(state->control.moves_filled);
   
   state->board = state->positions[move_num];
-  state->turn = opposite_side(state->turn);
+  state->turn = OPPOSITE_SIDE(state->turn);
   state->control.moves_filled = false;
   state->control.move_mask_filled = false;
 }
@@ -44,7 +44,7 @@ inline void bitstate_place_piece(BitState *state, int move_num){
 inline void bitstate_skip_turn(BitState *state){
   assert(state->control.moves_filled);
 
-  state->turn = opposite_side(state->turn);
+  state->turn = OPPOSITE_SIDE(state->turn);
   state->control.moves_filled = false;
   state->control.move_mask_filled = false;
 }
@@ -57,7 +57,7 @@ inline int bitstate_final(BitState *state){
     return 0;
   }
   
-  if(find_moves_bitmask(state->board, opposite_side(state->turn)) == 0){
+  if(find_moves_bitmask(state->board, OPPOSITE_SIDE(state->turn)) == 0){
     return 1;
   } else {
     return 0;
