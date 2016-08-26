@@ -8,7 +8,7 @@
 #include <string.h>
 
 
-#include "state.h"
+//#include "state.h"
 #include "player.h"
 #include "ai.h"
 #include "io.h"

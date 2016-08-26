@@ -32,41 +32,14 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  srand((long int) t.tv_usec);
-  //srand((long int) 100);
+  //srand((long int) t.tv_usec);
+  srand((long int) 100);
 
   init_offsets();
   check_offsets();
-  
   clear_weights();
   printf("check_weights() = %d\n", check_weights());
 
-
-  BitState *state = create_initial_bitstate();
-  state->board = (BitBoard){
-    ATOM(0,0),
-    ROW(0) & (~ATOM(0,0)) & (~ATOM(0,7))
-  };
-
-  struct timeval start;
-  struct timeval end;
-  gettimeofday(&start, NULL);
-  long int i;
-  long int times = 100000000;
-  long int freq = 1300000000;
-  for(i=0;i<times;i++){
-    evaluate(state);
-  }
-  gettimeofday(&end, NULL);
-
-  print_bitstate(state);
-  
-  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
-  double cycles = (double)freq * elapsed / (double)times;
-  printf("cycles = %lf\n", cycles);
-
-
-  exit(0);
   
   //fit_fcts_for_examples(NULL, 0);
   
@@ -441,6 +414,41 @@ int main(int argc, char **argv){
     }
   }
 
+
+
+  BitState *state = create_initial_bitstate();
+
+  struct timeval start;
+  struct timeval end;
+  gettimeofday(&start, NULL);
+  long int i;
+  long int times = 100000000;
+  long int freq = 1300000000;
+  state->board.w = (uint64_t)rand() + ((uint64_t)rand() << 32);
+  state->board.b = ((uint64_t)rand() + ((uint64_t)rand() << 32)) & (~state->board.w);
+  for(i=0;i<times;i++){
+    //state->board.w = (uint64_t)rand() + ((uint64_t)rand() << 32);
+    //state->board.b = ((uint64_t)rand() + ((uint64_t)rand() << 32)) & (~state->board.w);
+    evaluate(state);
+    
+    //Config_store conf;
+    //conf.w = state->board.w;
+    //conf.b = state->board.b;
+    //conf.x = ~(conf.w | conf.b);
+    
+    //get_score_from_fct_list(fcts[0], n_f, conf);
+  }
+  gettimeofday(&end, NULL);
+
+  print_bitstate(state);
+  
+  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
+  double cycles = (double)freq * elapsed / (double)times;
+  printf("cycles = %lf\n", cycles);
+
+  exit(0);
+
+  
   /*
   long int i; long int times = 260000000LL;
   double out;
@@ -517,8 +525,8 @@ int main(int argc, char **argv){
   
   //Player black = human_player();
   //Player black = random_player();
-  Player black = mixed_player(11, heuristic_score_0, 0);
-  Player white = mixed_player(11, heuristic_score_0, 0);
+  Player black = mixed_player(13, heuristic_score_2, 0);
+  Player white = mixed_player(13, heuristic_score_2, 0);
 
 
   run_game(1, 1, white, black);

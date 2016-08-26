@@ -3,7 +3,7 @@
 
 Config list_variations(Pattern pattern, int *n_var){
   assert(n_var != NULL);
-  int s = __builtin_popcountl(pattern);
+  int s = __builtin_popcountll(pattern);
 
 
   if(s == 0){
@@ -218,71 +218,6 @@ int match_pair_conf(Config_store config_1, Config_store config_2){
   if(xw | xb | wx | wb | bx | bw)
     return 0;
   return 1;
-}
-
-
-GeneratedConf genconf_for_patterns(Pattern *patterns, Config boards, int n_p, int n_b, double threshold, int symmetrize){
-  assert(patterns != NULL);
-  assert(threshold >= 0);
-  
-  Pattern empty = 0;
-  
-  int n_v;
-  Config variations = list_variations(empty, &n_v);
-
-
-  int i;
-  for(i=0;i<n_p;i++){
-    // compute variations
-
-    int new_n_v;
-    Config new_variations = list_variations(patterns[i], &new_n_v);
-
-    // find matches and filter new variations
-    int *new_matches =
-      match_variations(new_variations, boards, new_n_v, n_b, symmetrize);
-    int filtered_num;  
-    Config filtered =
-      filter_variations(new_variations, new_matches,
-			new_n_v, n_b, &filtered_num, threshold);
-
-    // cross-matching known variations with variations of the new known pattern
-    int cross_num;
-    Config cross =
-      cross_match(variations, filtered, n_v, filtered_num, &cross_num);
-
-    // match the joined variations
-    int *joined_matches =
-      match_variations(cross, boards, cross_num, n_b, symmetrize);
-    int joined_filtered_num; 
-    Config joined_filtered =
-      filter_variations(cross, joined_matches,
-			cross_num, n_b,
-			&joined_filtered_num, threshold);
-
-
-    // free redundant info
-    free(new_variations); 
-    free(new_matches);
-    free(filtered);
-    free(cross);
-    free(variations);
-    n_v = joined_filtered_num;
-    variations = joined_filtered;
-
-    printf("phase %d finished\ncurrent number of variations: %d\n\n", i, n_v);
-    
-  }
-  
-  int *matches = match_variations(variations, boards, n_v, n_b, symmetrize);  
-
-  GeneratedConf gc;
-  gc.n = n_v;
-  gc.variations = variations;
-  gc.matches = matches;
-
-  return gc;
-  
 }
 
 int *match_std_variation_list(Pattern pattern, Config boards, int n_b){

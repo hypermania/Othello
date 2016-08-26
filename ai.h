@@ -9,12 +9,12 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
-#include "state.h"
-#include "board.h"
+//#include "state.h"
+//#include "board.h"
 #include "bitboard.h"
 #include "bitstate.h"
-#include "table.h"
-#include "config.h"
+//#include "table.h"
+//#include "config.h"
 #include "fit_weight.h"
 #include "evaluate.h"
 

@@ -8,7 +8,7 @@
 #include "const.h"
 #include "macro.h"
 
-typedef unsigned long int Pattern;
+typedef uint64_t Pattern;
 
 /* pattern utilities */
 // dihedral group

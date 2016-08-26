@@ -1,5 +1,6 @@
 #include "preprocess.h"
 
+/*
 int example_from_seq(State state, Pos *seq, Example *example){
   assert(state != NULL);
   assert(seq != NULL);
@@ -39,6 +40,7 @@ int example_from_seq(State state, Pos *seq, Example *example){
   }
   return count;
 }
+*/
 
 int sort_examples_into_categories(Example *examples, Example **categories, int *cat_sizes, int example_size){
 
@@ -75,7 +77,7 @@ int sort_examples_into_categories(Example *examples, Example **categories, int *
 }
 
 
-
+/*
 Example *append_filed_games_to_examples(Example *examples, int *n_e, const char *filename){
   
   printf("begin appending games from file %s to examples\n", filename);
@@ -117,18 +119,13 @@ Example *append_filed_games_to_examples(Example *examples, int *n_e, const char 
   printf("...complete. n_e = %d\n", (*n_e));
   examples = realloc(examples, (*n_e) * sizeof(Example));
   
-  /*
-  int fd = open("examples.dat", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-  write(fd, examples, count_examples * sizeof(Example));
-  close(fd);
-  */
-  
   fclose(fp);
   
   return examples;
 }
+*/
 
-
+/*
 Example *append_random_games_to_examples(Example *examples, int *n_e, int n_g){
 
   printf("begin appending random games to examples\n");
@@ -181,6 +178,8 @@ Example *append_random_games_to_examples(Example *examples, int *n_e, int n_g){
   
   return examples;
 }
+*/
+
 
 /*
 Example *append_mixed_games_to_examples(Example *examples, int *n_e, int n_g){
