@@ -3,10 +3,9 @@
 
 
 #include "fct.h"
-
-#include "hash.h"
-
 #include "index_computation.h"
+
+#include "confcount.h"
 
 #include "const.h"
 #include "macro.h"
@@ -17,6 +16,8 @@
 #include <pthread.h>
 #include <math.h>
 #include <limits.h>
+
+
 
 
 /* pattern related utilities */

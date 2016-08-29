@@ -279,7 +279,7 @@ Config read_configs_from_file(const char *filename, int *count_configs){
 
 void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   
-  //printf("reading data from file %s .....\n", filename);
+  printf("reading data from file %s .....\n", filename);
   FILE *fp;
   if((fp = fopen(filename, "r")) == NULL){
     printf("failed: file access error\n");
@@ -296,7 +296,7 @@ void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   Config data = malloc(lSize);
   fread(data, lSize, 1, fp);
 
-  //printf("read %ld items.\n", lSize/obj_size);
+  printf("read %ld items.\n", lSize/obj_size);
   
   fclose(fp);
 

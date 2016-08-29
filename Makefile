@@ -23,8 +23,8 @@ CPPFLAGS += -msse4.2 -mpopcnt -mbmi -mbmi2 -mavx -mavx2
 #CFLAGS += -O0
 #CPPFLAGS += -O0
 
-CFLAGS += -Ofast
-CPPFLAGS += -Ofast
+CFLAGS += -O3
+CPPFLAGS += -O3
 
 #CPPFLAGS += -pg
 #CFLAGS += -pg

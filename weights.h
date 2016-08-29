@@ -8,6 +8,7 @@
 #include <x86intrin.h>
 
 #include "util.h"
+#include "bitboard.h"
 
 // offsets
 
@@ -32,7 +33,7 @@ extern int offset_59049[1024];
   white = (binary)01101110;
   black = (binary)10010000.
  */
-
+  
 // center-column reflect symmetry
 extern double row_1[15][256][256];
 extern double row_2[15][256][256];
@@ -73,6 +74,45 @@ extern double corner_25[15][59049];
 extern double edge_xx[15][59049];
 
 
+typedef struct {
+  // center-column reflect symmetry
+  double row_1[256][256];
+  double row_2[256][256];
+  double row_3[256][256];
+  double row_4[256][256];
+
+  // anti-diagonal reflect symmetry
+  double diag_8[256][256];
+  double diag_7[128][128];
+  double diag_6[64][64];
+  double diag_5[32][32];
+  double diag_4[16][16];
+
+  // diagonal reflect symmetry
+  double corner_33[19683];
+
+  // no symmetry
+  double corner_25[59049];
+
+  // center-column reflect symmetry
+  double edge_xx[59049];
+} Weights;
+
+//extern Weights weights[15];
+
+
+// reflection symmetry mapping
+extern uint32_t map_reverse_256[256];
+extern uint32_t map_reverse_128[128];
+extern uint32_t map_reverse_64[64];
+extern uint32_t map_reverse_32[32];
+extern uint32_t map_reverse_16[16];
+
+extern uint32_t map_corner_33[19683];
+extern uint32_t map_edge_xx[59049];
+
+
+
 
 // initialize offsets
 void init_offsets(void);
@@ -86,6 +126,23 @@ void clear_weights(void);
 // check for symmetry properties in the weights
 int check_weights(void);
 
+
+// weight modifiers
+void increment_256(double table[256][256], uint32_t white, uint32_t black, double increment);
+void increment_128(double table[128][128], uint32_t white, uint32_t black, double increment);
+void increment_64(double table[64][64], uint32_t white, uint32_t black, double increment);
+void increment_32(double table[32][32], uint32_t white, uint32_t black, double increment);
+void increment_16(double table[16][16], uint32_t white, uint32_t black, double increment);
+
+void increment_corner_33(double table[19683], uint32_t white, uint32_t black, double increment);
+void increment_corner_25(double table[59049], uint32_t white, uint32_t black, double increment);
+void increment_edge_xx(double table[59049], uint32_t white, uint32_t black, double increment);
+
+void increment_global_by_bitboard(BitBoard board, double increment);
+
+
+// initialize maps
+void init_maps(void);
 
 
 

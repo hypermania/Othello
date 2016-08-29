@@ -45,6 +45,7 @@
 
 /* Game control macros */
 
+#define MAX_GAME_LENGTH 60
 
 /* Miscellaneous */
 

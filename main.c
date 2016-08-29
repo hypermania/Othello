@@ -21,6 +21,7 @@
 #include "bitboard.h"
 #include "evaluate.h"
 #include "weights.h"
+#include "datpt.h"
 
 FlatConfTable **global_fcts;
 int global_n_f;
@@ -31,13 +32,73 @@ int main(int argc, char **argv){
   // set up random number generator
   struct timeval t;
   gettimeofday(&t, NULL);
-  //srand((long int) t.tv_usec);
-  srand((long int) 100);
+  srand((long int) t.tv_usec);
+  //srand((long int) 100);
 
   init_offsets();
   check_offsets();
   clear_weights();
-  printf("check_weights() = %d\n", check_weights());
+  //printf("check_weights() = %d\n", check_weights());
+
+  init_maps();
+
+
+  /*
+  int k;
+  for(k=0;k<16;k++){
+    printf("map_edge_xx[%d] = %03x\n", k, map_edge_xx[k]);
+  }
+
+  exit(0);
+
+  FILE *fp = fopen("./game_base/all_games.txt", "r");
+
+  long int n_dp;
+  DataPoint *datapoints = datapoints_from_file(fp, &n_dp);
+  
+  printf("n_dp = %ld\n", n_dp);
+  
+  ConfigCounter *ccount = malloc(sizeof(ConfigCounter));
+  memset(ccount, 0, sizeof(ConfigCounter));
+
+  int dp_index;
+  for(dp_index = 0; dp_index < n_dp; dp_index++){
+    increment_confcount(ccount, datapoints[dp_index].board);
+    if((dp_index % 100000) == 0){
+      printf("dp_index = %d\n", dp_index);
+    }
+  }
+
+  ConfigCounter *ccount_marker = malloc(sizeof(ConfigCounter));
+  memset(ccount_marker, 0, sizeof(ConfigCounter));
+  
+  uint32_t total = n_dp * 4;
+  int i, j;
+  int count = 0;
+  for(i=0;i<256;i++){
+    for(j=0;j<256;j++){
+      if(i & j){
+	continue;
+      }
+      if(ccount_marker->row_1[i][j]){
+	continue;
+      }
+      double frac = (double)ccount->row_1[i][j] / (double)total;
+      if(frac > 0.0001){
+	printf("(i,j)=(%d,%d)\n", i, j);
+	count++;
+      }
+      ccount_marker->row_1[i][j]++;
+      ccount_marker->row_1[j][i]++;
+      
+    }
+  }
+
+  printf("total = %u\n", total);
+  printf("count = %d\n", count);
+  */
+
+
 
   
   //fit_fcts_for_examples(NULL, 0);
@@ -413,15 +474,92 @@ int main(int argc, char **argv){
     }
   }
 
+  //memset(weights, 0, sizeof(weights));
 
-  /*
+  int k;
+  uint32_t w_index, b_index;
+  for(k=0;k<100000;k++){
+    /*
+    w_index = rand() % 16;
+    b_index = (rand() % 16) & (~w_index);
+    for(cat=0;cat<15;cat++){
+      increment_16(diag_4[cat], w_index, b_index, 1);
+    }
+    
+    w_index = rand() % 256;
+    b_index = (rand() % 256) & (~w_index);
+    for(cat=0;cat<15;cat++){
+      increment_256(row_1[cat], w_index, b_index, 1);
+    }
+    
+    w_index = rand() % 256;
+    b_index = (rand() % 256) & (~w_index);
+    for(cat=0;cat<15;cat++){
+      increment_256(row_2[cat], w_index, b_index, 1);
+    }
+    */
+    w_index = rand() % 512;
+    b_index = (rand() % 512) & (~w_index);
+    for(cat=0;cat<15;cat++){
+      increment_corner_33(corner_33[cat], w_index, b_index, 1);
+    }
+    
+    w_index = rand() % 1024;
+    b_index = (rand() % 1024) & (~w_index);
+    for(cat=0;cat<15;cat++){
+      increment_corner_25(corner_25[cat], w_index, b_index, 1);
+    }
+    
+    w_index = rand() % 1024;
+    b_index = (rand() % 1024) & (~w_index);
+    for(cat=0;cat<15;cat++){
+      increment_edge_xx(edge_xx[cat], w_index, b_index, 1);
+    }
+  }
+
+  
   BitState *state = create_initial_bitstate();
 
+  state->board.w = (uint64_t)rand() | ((uint64_t)rand() << 32);//(ROW(0) & (~ATOM(0,0))) | ATOM(2,1);
+  state->board.b = ((uint64_t)rand() | ((uint64_t)rand() << 32)) & (~state->board.w);
+  
+  print_bitstate(state);
+  printf("score = %lf\n", evaluate(state));
+
+  state->board.w = flipVertical(state->board.w);
+  state->board.b = flipVertical(state->board.b);
+  print_bitstate(state);
+  printf("score = %lf\n", evaluate(state));
+
+  state->board.w = flipHorizontal(state->board.w);
+  state->board.b = flipHorizontal(state->board.b);
+  print_bitstate(state);
+  printf("score = %lf\n", evaluate(state));
+
+  state->board.w = flipDiagA1H8(state->board.w);
+  state->board.b = flipDiagA1H8(state->board.b);
+  print_bitstate(state);
+  printf("score = %lf\n", evaluate(state));
+  
+  state->board.w = rotate90Clockwise(state->board.w);
+  state->board.b = rotate90Clockwise(state->board.b);
+  print_bitstate(state);
+  printf("score = %lf\n", evaluate(state));
+
+  
+  //printf("diag_4[cat][8][1] = %lf\n", diag_4[0][8][1]);
+  //printf("diag_4[cat][1][8] = %lf\n", diag_4[0][1][8]);
+  //printf("diag_4[cat][8][1] = %lf\n", diag_4[0][1][8]);
+  //printf("diag_4[cat][8][1] = %lf\n", diag_4[0][8][1]);
+  
+  exit(0);
+
+  
   struct timeval start;
   struct timeval end;
   gettimeofday(&start, NULL);
   long int i;
-  long int times = 100000000;
+  long int times = 200000000;
   long int freq = 1300000000;
   state->board.w = (uint64_t)rand() + ((uint64_t)rand() << 32);
   state->board.b = ((uint64_t)rand() + ((uint64_t)rand() << 32)) & (~state->board.w);
@@ -439,7 +577,7 @@ int main(int argc, char **argv){
   printf("cycles = %lf\n", cycles);
 
   exit(0);
-  */
+
   
   /*
   long int i; long int times = 260000000LL;

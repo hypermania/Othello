@@ -75,10 +75,8 @@ inline void bitstate_fill_moves(BitState *state){
   BitMask moves;
   if(state->control.move_mask_filled){
     moves = state->move_mask;
-    //printf("correct: remaining = %d\n", 64 - (__builtin_popcountll(state->board.w) + __builtin_popcountll(state->board.b)));
   } else {
     moves = find_moves_bitmask(state->board, state->turn);
-    //printf("fail: remaining = %d\n", 64 - (__builtin_popcountll(state->board.w) + __builtin_popcountll(state->board.b)));
   }
   
   BitMask pos;
