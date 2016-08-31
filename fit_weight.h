@@ -49,7 +49,7 @@ void grad_descent_mt(DataPoint *datapoints, long int n_dp, int cat, double alpha
 /* Returns the weight store in fct for board.
    If the pattern is not active for this board: return 0.
  */
-double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store board);
+//double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store board);
 
 
 

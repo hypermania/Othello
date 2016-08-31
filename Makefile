@@ -1,4 +1,4 @@
-program_NAME := main
+program_NAME := Othello
 program_C_SRCS := $(wildcard *.c)
 # program_CXX_SRCS := $(wildcard *.cpp)
 program_C_OBJS := ${program_C_SRCS:.c=.o}

@@ -123,113 +123,8 @@ int get_human_response(int movec){
   return response;
 }
 
-/*
-Pos *file_to_seq(char *buff, int n){
-  assert(buff != NULL);
-  int i;
-  for(i=0;i<n/2;i++){
-    buff[2*i+0] -= 'A';
-    buff[2*i+1] -= '1';
-    // swapping adjacent char
-    buff[2*i+1] ^= buff[2*i+0];
-    buff[2*i+0] ^= buff[2*i+1];
-    buff[2*i+1] ^= buff[2*i+0];
-  }
-  return (Pos *)buff;
-}
-
-Pos *randomized_file_to_seq(char *buff, int n){
-  assert(buff != NULL);
-  int i;
-  for(i=0;i<n/2;i++){
-    // preprocess
-    buff[2*i+0] -= 'A';
-    buff[2*i+1] -= '1';
-    // swapping adjacent char
-    buff[2*i+1] ^= buff[2*i+0];
-    buff[2*i+0] ^= buff[2*i+1];
-    buff[2*i+1] ^= buff[2*i+0];
-  }
-  // filp along diagonal at random
-  if(rand() % 2){
-    for(i=0;i<n/2;i++){
-      // swap row and column
-      buff[2*i+1] ^= buff[2*i+0];
-      buff[2*i+0] ^= buff[2*i+1];
-      buff[2*i+1] ^= buff[2*i+0];
-    }
-  }
-  // flip along reverse diagonal at random
-  if(rand() % 2){
-    for(i=0;i<n/2;i++){
-      char temp = BOARD_SIZE - 1 - buff[2*i+1];
-      buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+0];
-      buff[2*i+0] = temp;
-    }
-  }
-
-
-  if(rand() % 2){
-    for(i=0;i<n/2;i++){
-      buff[2*i+0] = BOARD_SIZE - 1 - buff[2*i+0];
-      buff[2*i+1] = BOARD_SIZE - 1 - buff[2*i+1];
-    }
-  }
-
-
-  return (Pos *)buff;
-}
-*/
-
-/*
-int print_config(Config config){
-  assert(config != NULL);
-
-  Board board = create_board();
-  init_board(board);
-  int r, c;
-  for(r=0;r<BOARD_SIZE;r++){
-    for(c=0;c<BOARD_SIZE;c++){
-      if(ATOM(r,c) & config->x){
-	board_set_pos(board, (Pos) {r,c}, EMPTY);
-      } else if(ATOM(r,c) & config->w){
-	board_set_pos(board, (Pos) {r,c}, W);	
-      } else if(ATOM(r,c) & config->b){
-	board_set_pos(board, (Pos) {r,c}, B);
-      }
-    }
-  }
-  print_board(board);
-  free_board(board);
-  
-  printf("config->x = %016lx\n", config->x);
-  printf("config->w = %016lx\n", config->w);
-  printf("config->b = %016lx\n", config->b);
-  printf("degree = %d\n",
-	 __builtin_popcountl(config->x) +
-	 __builtin_popcountl(config->w) +
-	 __builtin_popcountl(config->b)
-	 );
-  return 0;
-}
-*/
 
 int print_pattern(Pattern pattern){
-
-  /*
-  Board board = create_board();
-  init_board(board);
-  int r, c;
-  for(r=0;r<BOARD_SIZE;r++){
-    for(c=0;c<BOARD_SIZE;c++){
-      if(ATOM(r,c) & pattern){
-	board_set_pos(board, (Pos) {r,c}, W);
-      }
-    }
-  }
-  print_board(board);
-  free_board(board);
-  */
 
   BitBoard board = (BitBoard) {pattern, 0};
   print_bitboard(board);
@@ -238,6 +133,98 @@ int print_pattern(Pattern pattern){
   printf("degree = %d\n", __builtin_popcountl(pattern));
 
   return 0;
+}
+
+void get_players(Player *white, Player *black){
+  char white_choice, black_choice;
+  char white_chosen, black_chosen;
+  white_chosen = 0;
+  black_chosen = 0;
+  
+  printf("Choose player for white:\n");
+  printf("Enter 'c' for computer and 'h' for human: ");
+
+  while(white_chosen == 0){
+    int ret = scanf("%c", &white_choice);
+    if(ret < 0){
+      printf("please enter 'c' or 'h': ");
+      continue;
+    }
+    switch(white_choice){
+    case 'c':
+      {
+	int midgame_depth, endgame_depth;
+	midgame_depth = 10;
+	endgame_depth = 20;
+	printf("Enter the depth for white's midgame search (typically 10): ");
+	int ret1 = scanf("%d", &midgame_depth);
+	if(ret1 < 0 || midgame_depth <= 0){
+	  midgame_depth = 10;
+	}
+	printf("Enter the depth for white's endgame search (typically 20): ");
+	int ret2 = scanf("%d", &endgame_depth);
+	if(ret2 < 0 || endgame_depth < 0){
+	  endgame_depth = 20;
+	}
+	*white = mixed_player(midgame_depth, heuristic_score_4, endgame_depth);
+	white_chosen = 1;
+      }
+      break;
+    case 'h':
+      {
+	*white = human_player();
+	white_chosen = 1;
+      }
+      break;
+    default:
+      printf("please enter 'c' or 'h': ");
+      break;
+    }
+  }
+
+  printf("Choose player for black:\n");
+  printf("Enter 'c' for computer and 'h' for human: ");
+
+  while(black_chosen == 0){
+    int ret = scanf("%c", &black_choice);
+    if(ret < 0){
+      printf("please enter 'c' or 'h': ");
+      continue;
+    }
+    switch(black_choice){
+    case 'c':
+      {
+	int midgame_depth, endgame_depth;
+	midgame_depth = 10;
+	endgame_depth = 20;
+	printf("Enter the depth for black's midgame search (typically 10): ");
+	int ret1 = scanf("%d", &midgame_depth);
+	if(ret1 < 0 || midgame_depth <= 0){
+	  midgame_depth = 10;
+	}
+	printf("Enter the depth for black's endgame search (typically 20): ");
+	int ret2 = scanf("%d", &endgame_depth);
+	if(ret2 < 0 || endgame_depth < 0){
+	  endgame_depth = 20;
+	}
+	*black = mixed_player(midgame_depth, heuristic_score_4, endgame_depth);
+	black_chosen = 1;
+      }
+      break;
+    case 'h':
+      {
+	*black = human_player();
+	black_chosen = 1;
+      }
+      break;
+    default:
+      printf("please enter 'c' or 'h': ");
+      break;
+    }
+  }
+
+  printf("point 0\n");
+  
 }
 
 Example *read_examples_from_file(const char *filename, int *count_examples){

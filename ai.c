@@ -2,9 +2,6 @@
 
 #define SHOW_STAT
 
-FlatConfTable **global_fcts;
-int global_n_f;
-
 #ifdef SHOW_STAT
 static long int count_leaf = 0;
 
@@ -76,7 +73,7 @@ double heuristic_score_1(BitState *state){
 }
 */
 
-
+/*
 inline double heuristic_score_2(BitState *state){
 #ifdef SHOW_STAT
   count_leaf++;
@@ -91,6 +88,7 @@ inline double heuristic_score_2(BitState *state){
   
   return get_score_from_fct_list(global_fcts[cat], global_n_f, board);
 }
+*/
 
 
 inline double heuristic_score_3(BitState *state){
@@ -186,18 +184,19 @@ int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState 
   printf("time = %lfs\n", elapsed);
   
   printf("count_node = %ld\n", count_node);
-  //printf("count_movec = %ld\n", count_movec);
 
   printf("node/s = %lf k/s\n", (double)count_node/elapsed/(double)1000);
 
-  printf("count_leaf/count_node = %lf\n", (double)count_leaf/(double)count_node);
-  printf("avg movec = %lf\n", (double)count_movec/((double)count_node - (double)count_leaf));
+  //printf("count_leaf/count_node = %lf\n", (double)count_leaf/(double)count_node);
+  //printf("avg movec = %lf\n", (double)count_movec/((double)count_node - (double)count_leaf));
 
   // is_endgame, count_leaf, count_node, elapsed
+  /*
   fprintf(log_file, "%d, %ld, %ld, %ld, %lf\n",
 	  (empty_sqr <= depth_end),
 	  count_node, count_leaf, count_movec,
 	  elapsed);
+  */
   
 #endif
 

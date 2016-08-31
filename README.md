@@ -1,8 +1,10 @@
 # Othello
 
-simple command-line reversi game
+Simple command-line reversi game
 
+# Installation
 
+Use clone the git repository to your local computer, and run make.
 
 
 Reference:
