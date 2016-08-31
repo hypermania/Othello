@@ -34,7 +34,7 @@ int main(int argc, char **argv){
   //srand((long int) 100);
 
   init_offsets();
-  check_offsets();
+  //check_offsets();
   init_maps();
   clear_weights();
   

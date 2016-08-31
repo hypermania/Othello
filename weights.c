@@ -62,19 +62,21 @@ uint32_t map_corner_33[19683];
 uint32_t map_edge_xx[59049];
 
 
+void init_one_offset_array(int *array, int num_of_bits){
+  int n = 0;
+  int index;
+  int array_length = ipow(2, num_of_bits);
+  for(index = 0; index < array_length; index++){
+    int num_of_remaining_bits = num_of_bits - __builtin_popcountl(index);
+    int section_size = ipow(2, num_of_remaining_bits);
+    array[index] = n;
+    n += section_size;
+  }
+}
+
+
 void init_offsets(void){
 
-  void init_one_offset_array(int *array, int num_of_bits){
-    int n = 0;
-    int index;
-    int array_length = ipow(2, num_of_bits);
-    for(index = 0; index < array_length; index++){
-      int num_of_remaining_bits = num_of_bits - __builtin_popcountl(index);
-      int section_size = ipow(2, num_of_remaining_bits);
-      array[index] = n;
-      n += section_size;
-    }
-  }
 
   init_one_offset_array(offset_81, 4);
   init_one_offset_array(offset_243, 5);
@@ -86,6 +88,7 @@ void init_offsets(void){
 
 }
 
+/*
 int check_offsets(void){
 
   // check those arrays with center reflect symmetry
@@ -158,6 +161,7 @@ int check_offsets(void){
   
   return 0;
 }
+*/
 
 void clear_weights(void){
   memset(row_1, 0, sizeof(row_1));
