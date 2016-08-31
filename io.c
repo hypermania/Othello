@@ -1,5 +1,22 @@
 #include "io.h"
 
+static char filename_templates[12][120] = {
+  "./weights/row_1_%02d.dat",
+  "./weights/row_2_%02d.dat",
+  "./weights/row_3_%02d.dat",
+  "./weights/row_4_%02d.dat",
+
+  "./weights/diag_8_%02d.dat",
+  "./weights/diag_7_%02d.dat",
+  "./weights/diag_6_%02d.dat",
+  "./weights/diag_5_%02d.dat",
+  "./weights/diag_4_%02d.dat",
+
+  "./weights/corner_33_%02d.dat",
+  "./weights/corner_25_%02d.dat",
+  "./weights/edge_xx_%02d.dat"
+};
+
 void writecolor(const char *str, const char *back, const char *color){
   write(1, "\e[48;5;", 7);
   write(1, back, 2);
@@ -327,4 +344,553 @@ int get_file_size(const char *filename, size_t obj_size){
   size = lSize/sizeof(Example);
 
   return size;
+}
+
+void write_flat_weights(const char *filename, double *weights, int bits){
+
+  int size = ipow(2, bits);
+
+  uint32_t *reverse_table;
+  switch(size){
+  case 16:
+    reverse_table = map_reverse_16;
+    break;
+  case 32:
+    reverse_table = map_reverse_32;
+    break;
+  case 64:
+    reverse_table = map_reverse_64;
+    break;
+  case 128:
+    reverse_table = map_reverse_128;
+    break;
+  case 256:
+    reverse_table = map_reverse_256;
+    break;
+  default:
+    reverse_table = map_reverse_256;
+    break;
+  }
+
+  FILE *fp;
+  if((fp = fopen(filename, "w+")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(size * size * sizeof(char));
+  memset(counter, 0, size * size * sizeof(char));
+  
+  uint32_t white, black, rwhite, rblack;
+  //uint32_t count = 0;
+  for(white = 0; white < size; white++){
+    for(black = 0; black < size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      rwhite = reverse_table[white];
+      rblack = reverse_table[black];
+      if((white == rblack) && (black == rwhite)){
+	continue;
+      }
+      if(counter[white * size + black]){
+	continue;
+      }
+      counter[white * size + black]++;
+      counter[black * size + white]++;
+      counter[rwhite * size + rblack]++;
+      counter[rblack * size + rwhite]++;
+
+      fwrite(weights + white * size + black, sizeof(double), 1, fp);
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void write_corner_33(const char *filename, double *weights){
+  
+  int bits = 9;
+  
+  int array_size = ipow(3, bits);
+  int color_size = ipow(2, bits);
+
+  uint32_t *reverse_table;
+  reverse_table = map_corner_33;
+  
+  FILE *fp;
+  if((fp = fopen(filename, "w+")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(array_size * sizeof(char));
+  memset(counter, 0, array_size * sizeof(char));
+  
+  uint32_t white, black, rwhite, rblack;
+
+  for(white = 0; white < color_size; white++){
+    for(black = 0; black < color_size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      rwhite = reverse_table[white];
+      rblack = reverse_table[black];
+      if((white == rblack) && (black == rwhite)){
+	continue;
+      }
+
+      int orig_index = offset_19683[white] + _pext_u32(black, ~white);
+      int reverse_index = offset_19683[black] + _pext_u32(white, ~black);
+      int reflect_index = offset_19683[rwhite] + _pext_u32(rblack, ~rwhite);
+      int both_index = offset_19683[rblack] + _pext_u32(rwhite, ~rblack);
+      
+      if(counter[orig_index]){
+	continue;
+      }
+      
+      counter[orig_index]++;
+      counter[reverse_index]++;
+      counter[reflect_index]++;
+      counter[both_index]++;
+
+      fwrite(&weights[orig_index], sizeof(double), 1, fp);
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void write_edge_xx(const char *filename, double *weights){
+  
+  int bits = 10;
+  
+  int array_size = ipow(3, bits);
+  int color_size = ipow(2, bits);
+
+  uint32_t *reverse_table;
+  reverse_table = map_edge_xx;
+  
+  FILE *fp;
+  if((fp = fopen(filename, "w+")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(array_size * sizeof(char));
+  memset(counter, 0, array_size * sizeof(char));
+  
+  uint32_t white, black, rwhite, rblack;
+
+  for(white = 0; white < color_size; white++){
+    for(black = 0; black < color_size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      rwhite = reverse_table[white];
+      rblack = reverse_table[black];
+      if((white == rblack) && (black == rwhite)){
+	continue;
+      }
+
+      int orig_index = offset_59049[white] + _pext_u32(black, ~white);
+      int reverse_index = offset_59049[black] + _pext_u32(white, ~black);
+      int reflect_index = offset_59049[rwhite] + _pext_u32(rblack, ~rwhite);
+      int both_index = offset_59049[rblack] + _pext_u32(rwhite, ~rblack);
+      
+      if(counter[orig_index]){
+	continue;
+      }
+      
+      counter[orig_index]++;
+      counter[reverse_index]++;
+      counter[reflect_index]++;
+      counter[both_index]++;
+
+      fwrite(&weights[orig_index], sizeof(double), 1, fp);
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void write_corner_25(const char *filename, double *weights){
+  
+  int bits = 10;
+  
+  int array_size = ipow(3, bits);
+  int color_size = ipow(2, bits);
+
+  FILE *fp;
+  if((fp = fopen(filename, "w+")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(array_size * sizeof(char));
+  memset(counter, 0, array_size * sizeof(char));
+  
+  uint32_t white, black;
+
+  for(white = 0; white < color_size; white++){
+    for(black = 0; black < color_size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      
+      int orig_index = offset_59049[white] + _pext_u32(black, ~white);
+      int reverse_index = offset_59049[black] + _pext_u32(white, ~black);
+      
+      if(counter[orig_index]){
+	continue;
+      }
+      
+      counter[orig_index]++;
+      counter[reverse_index]++;
+
+      fwrite(&weights[orig_index], sizeof(double), 1, fp);
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+
+void read_flat_weights(const char *filename, double *weights, int bits){
+
+  int size = ipow(2, bits);
+
+  uint32_t *reverse_table;
+  switch(size){
+  case 16:
+    reverse_table = map_reverse_16;
+    break;
+  case 32:
+    reverse_table = map_reverse_32;
+    break;
+  case 64:
+    reverse_table = map_reverse_64;
+    break;
+  case 128:
+    reverse_table = map_reverse_128;
+    break;
+  case 256:
+    reverse_table = map_reverse_256;
+    break;
+  default:
+    reverse_table = map_reverse_256;
+    break;
+  }
+
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(size * size * sizeof(char));
+  memset(counter, 0, size * size * sizeof(char));
+  
+  uint32_t white, black, rwhite, rblack;
+  //uint32_t count = 0;
+  for(white = 0; white < size; white++){
+    for(black = 0; black < size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      rwhite = reverse_table[white];
+      rblack = reverse_table[black];
+      if((white == rblack) && (black == rwhite)){
+	continue;
+      }
+      if(counter[white * size + black]){
+	continue;
+      }
+      counter[white * size + black]++;
+      counter[black * size + white]++;
+      counter[rwhite * size + rblack]++;
+      counter[rblack * size + rwhite]++;
+
+      double value;
+      fread(&value, sizeof(double), 1, fp);
+      *(weights + white * size + black) = value;
+      *(weights + black * size + white) = -value;
+      *(weights + rwhite * size + rblack) = value;
+      *(weights + rblack * size + rwhite) = -value;
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void read_corner_33(const char *filename, double *weights){
+  
+  int bits = 9;
+  
+  int array_size = ipow(3, bits);
+  int color_size = ipow(2, bits);
+
+  uint32_t *reverse_table;
+  reverse_table = map_corner_33;
+  
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(array_size * sizeof(char));
+  memset(counter, 0, array_size * sizeof(char));
+  
+  uint32_t white, black, rwhite, rblack;
+
+  for(white = 0; white < color_size; white++){
+    for(black = 0; black < color_size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      rwhite = reverse_table[white];
+      rblack = reverse_table[black];
+      if((white == rblack) && (black == rwhite)){
+	continue;
+      }
+
+      int orig_index = offset_19683[white] + _pext_u32(black, ~white);
+      int reverse_index = offset_19683[black] + _pext_u32(white, ~black);
+      int reflect_index = offset_19683[rwhite] + _pext_u32(rblack, ~rwhite);
+      int both_index = offset_19683[rblack] + _pext_u32(rwhite, ~rblack);
+      
+      if(counter[orig_index]){
+	continue;
+      }
+      
+      counter[orig_index]++;
+      counter[reverse_index]++;
+      counter[reflect_index]++;
+      counter[both_index]++;
+
+      double value;
+      fread(&value, sizeof(double), 1, fp);
+      weights[orig_index] = value;
+      weights[reverse_index] = -value;
+      weights[reflect_index] = value;
+      weights[both_index] = -value;
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void read_edge_xx(const char *filename, double *weights){
+  
+  int bits = 10;
+  
+  int array_size = ipow(3, bits);
+  int color_size = ipow(2, bits);
+
+  uint32_t *reverse_table;
+  reverse_table = map_edge_xx;
+  
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(array_size * sizeof(char));
+  memset(counter, 0, array_size * sizeof(char));
+  
+  uint32_t white, black, rwhite, rblack;
+
+  for(white = 0; white < color_size; white++){
+    for(black = 0; black < color_size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+      rwhite = reverse_table[white];
+      rblack = reverse_table[black];
+      if((white == rblack) && (black == rwhite)){
+	continue;
+      }
+
+      int orig_index = offset_59049[white] + _pext_u32(black, ~white);
+      int reverse_index = offset_59049[black] + _pext_u32(white, ~black);
+      int reflect_index = offset_59049[rwhite] + _pext_u32(rblack, ~rwhite);
+      int both_index = offset_59049[rblack] + _pext_u32(rwhite, ~rblack);
+      
+      if(counter[orig_index]){
+	continue;
+      }
+      
+      counter[orig_index]++;
+      counter[reverse_index]++;
+      counter[reflect_index]++;
+      counter[both_index]++;
+
+      double value;
+      fread(&value, sizeof(double), 1, fp);
+      weights[orig_index] = value;
+      weights[reverse_index] = -value;
+      weights[reflect_index] = value;
+      weights[both_index] = -value;
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void read_corner_25(const char *filename, double *weights){
+  
+  int bits = 10;
+  
+  int array_size = ipow(3, bits);
+  int color_size = ipow(2, bits);
+
+  FILE *fp;
+  if((fp = fopen(filename, "r")) == NULL){
+    printf("error calling fopen()\n");
+  }
+
+  char *counter = malloc(array_size * sizeof(char));
+  memset(counter, 0, array_size * sizeof(char));
+  
+  uint32_t white, black;
+
+  for(white = 0; white < color_size; white++){
+    for(black = 0; black < color_size; black++){
+      if(white & black){
+	continue;
+      }
+      if(white == black){
+	continue;
+      }
+
+      int orig_index = offset_59049[white] + _pext_u32(black, ~white);
+      int reverse_index = offset_59049[black] + _pext_u32(white, ~black);
+      
+      if(counter[orig_index]){
+	continue;
+      }
+      
+      counter[orig_index]++;
+      counter[reverse_index]++;
+
+      double value;
+      fread(&value, sizeof(double), 1, fp);
+      weights[orig_index] = value;
+      weights[reverse_index] = -value;
+      
+    }
+  }
+  fclose(fp);
+  free(counter);
+}
+
+void save_all_weights(void){
+  int cat;
+  char filename[120];
+
+  for(cat = 0; cat < CAT_NUM; cat++){
+    sprintf(filename, filename_templates[0], cat);
+    write_flat_weights(filename, &row_1[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[1], cat);
+    write_flat_weights(filename, &row_2[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[2], cat);
+    write_flat_weights(filename, &row_3[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[3], cat);
+    write_flat_weights(filename, &row_4[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[4], cat);
+    write_flat_weights(filename, &diag_8[cat][0][0], 8);
+    
+    sprintf(filename, filename_templates[5], cat);
+    write_flat_weights(filename, &diag_7[cat][0][0], 7);
+    
+    sprintf(filename, filename_templates[6], cat);
+    write_flat_weights(filename, &diag_6[cat][0][0], 6);
+    
+    sprintf(filename, filename_templates[7], cat);
+    write_flat_weights(filename, &diag_5[cat][0][0], 5);
+    
+    sprintf(filename, filename_templates[8], cat);
+    write_flat_weights(filename, &diag_4[cat][0][0], 4);
+    
+    sprintf(filename, filename_templates[9], cat);
+    write_corner_33(filename, &corner_33[cat][0]);
+
+    sprintf(filename, filename_templates[10], cat);
+    write_corner_25(filename, &corner_25[cat][0]);
+
+    sprintf(filename, filename_templates[11], cat);
+    write_edge_xx(filename, &edge_xx[cat][0]);
+  }
+
+}
+
+void load_all_weights(void){
+  int cat;
+  char filename[120];
+
+  for(cat = 0; cat < CAT_NUM; cat++){
+    sprintf(filename, filename_templates[0], cat);
+    read_flat_weights(filename, &row_1[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[1], cat);
+    read_flat_weights(filename, &row_2[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[2], cat);
+    read_flat_weights(filename, &row_3[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[3], cat);
+    read_flat_weights(filename, &row_4[cat][0][0], 8);
+
+    sprintf(filename, filename_templates[4], cat);
+    read_flat_weights(filename, &diag_8[cat][0][0], 8);
+    
+    sprintf(filename, filename_templates[5], cat);
+    read_flat_weights(filename, &diag_7[cat][0][0], 7);
+    
+    sprintf(filename, filename_templates[6], cat);
+    read_flat_weights(filename, &diag_6[cat][0][0], 6);
+    
+    sprintf(filename, filename_templates[7], cat);
+    read_flat_weights(filename, &diag_5[cat][0][0], 5);
+    
+    sprintf(filename, filename_templates[8], cat);
+    read_flat_weights(filename, &diag_4[cat][0][0], 4);
+    
+    sprintf(filename, filename_templates[9], cat);
+    read_corner_33(filename, &corner_33[cat][0]);
+
+    sprintf(filename, filename_templates[10], cat);
+    read_corner_25(filename, &corner_25[cat][0]);
+
+    sprintf(filename, filename_templates[11], cat);
+    read_edge_xx(filename, &edge_xx[cat][0]);
+  }
+
 }

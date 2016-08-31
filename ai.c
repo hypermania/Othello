@@ -92,6 +92,7 @@ inline double heuristic_score_2(BitState *state){
   return get_score_from_fct_list(global_fcts[cat], global_n_f, board);
 }
 
+
 inline double heuristic_score_3(BitState *state){
 #ifdef SHOW_STAT
   count_leaf++;

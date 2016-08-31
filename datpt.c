@@ -83,3 +83,40 @@ DataPoint *datapoints_from_file(FILE *fp, long int *n_dp){
   
   return result;
 }
+
+DataPoint **categorize_datpts(DataPoint *datapoints, long int n_dp, long int cat_sizes[CAT_NUM]){
+
+  DataPoint **categories = malloc(CAT_NUM * sizeof(DataPoint *));
+  
+  const int chunk = 100;
+
+  long int allocated[CAT_NUM];
+  int cat;
+  for(cat = 0; cat < CAT_NUM; cat++){
+    allocated[cat] = chunk;
+    categories[cat] = malloc(allocated[cat] * sizeof(DataPoint));
+    cat_sizes[cat] = 0;
+  }
+
+  long int i;
+  int pieces;
+  for(i = 0; i < n_dp; i++){
+    pieces = __builtin_popcountll(datapoints[i].board.w) +
+      __builtin_popcountll(datapoints[i].board.b);
+    cat = CAT(pieces);
+
+    if(cat_sizes[cat] == allocated[cat]){
+      allocated[cat] += chunk;
+      categories[cat] = realloc(categories[cat], allocated[cat] * sizeof(DataPoint));
+    }
+
+    categories[cat][cat_sizes[cat]] = datapoints[i];
+    cat_sizes[cat]++;
+  }
+
+  for(cat = 0; cat < CAT_NUM; cat++){
+    categories[cat] = realloc(categories[cat], cat_sizes[cat] * sizeof(DataPoint));
+  }
+
+  return categories;
+}

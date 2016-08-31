@@ -1,6 +1,265 @@
 #include "fit_weight.h"
 
+double link_function(double x){
+  return 2*BOARD_SIZE_SQR/(1+exp((-1)*x)) - BOARD_SIZE_SQR;
+  //return x;
+}
 
+double link_function_deriv_relation(double link_function_val){
+  return  (link_function_val + BOARD_SIZE_SQR) * (BOARD_SIZE_SQR - link_function_val) / (2*BOARD_SIZE_SQR);
+  //return 1;
+}
+
+double link_function_inverse(double g){
+  return (-1) * log((2 * BOARD_SIZE_SQR)/(BOARD_SIZE_SQR + g) - 1);
+}
+
+double link_function_2nd_deriv_relation(double g_score, double g_deriv){
+  return 2 * g_deriv * g_deriv / (g_score + BOARD_SIZE) - g_deriv;
+}
+
+
+double total_error(DataPoint *datapoints, long int n_dp){
+  double E = 0;
+  
+  long int i;
+  for(i = 0; i < n_dp; i++){
+    double x_score = evaluate((BitState *)(&datapoints[i].board));
+    double g_score = link_function(x_score);
+    double sqr_diff = (g_score - datapoints[i].score);
+    sqr_diff *= sqr_diff;
+    E += sqr_diff;
+  }
+  
+  E /= (double)n_dp;
+  return E;
+}
+
+ConfigCounter *hik_abs;
+
+double grad_descent_step(DataPoint *datapoints, long int n_dp, Weights *weights, double alpha){
+  double total_deriv = 0;
+  
+  long int i;
+  for(i = 0; i < n_dp; i++){
+    double x_score = evaluate((BitState *)(&datapoints[i].board));
+    double g_score = link_function(x_score);
+    double g_deriv = link_function_deriv_relation(g_score);
+    double deriv = 2 * g_deriv * (datapoints[i].score - g_score) / (double)n_dp;
+    double delta = deriv * alpha;
+    total_deriv += deriv * deriv;
+    
+    increment_by_bitboard(weights, datapoints[i].board, delta);
+  }
+
+  total_deriv = sqrt(total_deriv);
+  return total_deriv;
+}
+
+DataPoint *global_datapoints;
+long int *global_bounds;
+double *global_deriv_sqr;
+long int global_n_dp;
+double global_alpha;
+
+void *grad_descent_step_thread(void *ptr){
+  long int start = *(long int*)ptr;
+  long int end = *(((long int*)ptr) + 1);
+  int th = ((long int)ptr - (long int)global_bounds) / sizeof(long int);
+  
+  double total_deriv = 0;
+
+  Weights *my_weights = malloc(sizeof(Weights));
+  memset(my_weights, 0, sizeof(Weights));
+  
+  long int i;
+  for(i = start; i < end; i++){
+    double x_score = evaluate((BitState *)(&global_datapoints[i].board));
+    double g_score = link_function(x_score);
+    double g_deriv = link_function_deriv_relation(g_score);
+    double deriv = 2 * g_deriv * (global_datapoints[i].score - g_score) / (double)global_n_dp;
+    double delta = deriv * global_alpha;
+    total_deriv += deriv * deriv;
+    
+    increment_by_bitboard(my_weights, global_datapoints[i].board, delta);
+  }
+
+  global_deriv_sqr[th] = total_deriv;
+  //total_deriv = sqrt(total_deriv);
+  return (void *)my_weights;
+}
+
+
+double grad_descent_step_mt(DataPoint *datapoints, long int n_dp, Weights *weights, double alpha){
+
+  long int bounds[TH_NUM + 1];
+
+  int th; int interval = n_dp/4;
+  for(th = 0; th < TH_NUM; th++){
+    bounds[th] = interval * th;
+  }
+  bounds[th] = n_dp;
+
+  double deriv_sqr[TH_NUM];
+  
+  global_datapoints = datapoints;
+  global_bounds = bounds;
+  global_deriv_sqr = deriv_sqr;
+  global_n_dp = n_dp;
+  global_alpha = alpha;
+
+  pthread_t tids[TH_NUM];
+  Weights *section_delta[TH_NUM];
+  for(th = 0; th < TH_NUM; th++){
+    pthread_create(&(tids[th]), NULL, grad_descent_step_thread, &bounds[th]);
+  }
+  for(th = 0; th < TH_NUM; th++){
+    pthread_join(tids[th], (void *)&section_delta[th]);
+  }
+
+  for(th = 0; th < TH_NUM; th++){
+    uint32_t white, black;
+    for(white = 0; white < 256; white++){
+      for(black = 0; black < 256; black++){
+	if(white & black){
+	  continue;
+	}
+	weights->row_1[white][black] += section_delta[th]->row_1[white][black];
+	weights->row_2[white][black] += section_delta[th]->row_2[white][black];
+	weights->row_3[white][black] += section_delta[th]->row_3[white][black];
+	weights->row_4[white][black] += section_delta[th]->row_4[white][black];
+
+	weights->diag_8[white][black] += section_delta[th]->diag_8[white][black];
+      }
+    }
+    for(white = 0; white < 128; white++){
+      for(black = 0; black < 128; black++){
+	if(white & black){
+	  continue;
+	}
+	weights->diag_7[white][black] += section_delta[th]->diag_7[white][black];
+      }
+    }
+    for(white = 0; white < 64; white++){
+      for(black = 0; black < 64; black++){
+	if(white & black){
+	  continue;
+	}
+	weights->diag_6[white][black] += section_delta[th]->diag_6[white][black];
+      }
+    }
+    for(white = 0; white < 32; white++){
+      for(black = 0; black < 32; black++){
+	if(white & black){
+	  continue;
+	}
+	weights->diag_5[white][black] += section_delta[th]->diag_5[white][black];
+      }
+    }
+    for(white = 0; white < 16; white++){
+      for(black = 0; black < 16; black++){
+	if(white & black){
+	  continue;
+	}
+	weights->diag_4[white][black] += section_delta[th]->diag_4[white][black];
+      }
+    }
+    for(white = 0; white < 512; white++){
+      for(black = 0; black < 512; black++){
+	if(white & black){
+	  continue;
+	}
+	int index = offset_19683[white] + _pext_u32(black, ~white);
+	weights->corner_33[index] += section_delta[th]->corner_33[index];
+      }
+    }
+    for(white = 0; white < 1024; white++){
+      for(black = 0; black < 1024; black++){
+	if(white & black){
+	  continue;
+	}
+	int index = offset_59049[white] + _pext_u32(black, ~white);
+	weights->corner_25[index] += section_delta[th]->corner_25[index];
+	weights->edge_xx[index] += section_delta[th]->edge_xx[index];
+      }
+    }
+  }
+
+  for(th = 0; th < TH_NUM; th++){
+    free(section_delta[th]);
+  }
+  
+  double total_deriv = 0;
+  for(th = 0; th < TH_NUM; th++){
+    total_deriv += global_deriv_sqr[th];
+  }
+  total_deriv = sqrt(total_deriv);
+
+  return total_deriv;
+}
+
+
+
+void grad_descent(DataPoint *datapoints, long int n_dp, int cat, double alpha, double precision, int chunk){
+  Weights *weights = malloc(sizeof(Weights));
+  memset(weights, 0, sizeof(Weights));
+  
+  double deriv, last_deriv;
+  double error, last_error;
+  deriv = DBL_MAX;
+  last_deriv = DBL_MAX;
+  error = DBL_MAX;
+  last_error = DBL_MAX;
+  
+  int iter = 0;  
+  while(1){
+    iter++;
+    deriv = grad_descent_step_mt(datapoints, n_dp, weights, alpha);
+
+    memcpy(row_1[cat], weights->row_1, sizeof(row_1[cat]));
+    memcpy(row_2[cat], weights->row_2, sizeof(row_2[cat]));
+    memcpy(row_3[cat], weights->row_3, sizeof(row_3[cat]));
+    memcpy(row_4[cat], weights->row_4, sizeof(row_4[cat]));
+
+    memcpy(diag_8[cat], weights->diag_8, sizeof(diag_8[cat]));
+    memcpy(diag_7[cat], weights->diag_7, sizeof(diag_7[cat]));
+    memcpy(diag_6[cat], weights->diag_6, sizeof(diag_6[cat]));
+    memcpy(diag_5[cat], weights->diag_5, sizeof(diag_5[cat]));
+    memcpy(diag_4[cat], weights->diag_4, sizeof(diag_4[cat]));
+
+    memcpy(corner_33[cat], weights->corner_33, sizeof(corner_33[cat]));
+    memcpy(corner_25[cat], weights->corner_25, sizeof(corner_25[cat]));
+    memcpy(edge_xx[cat], weights->edge_xx, sizeof(edge_xx[cat]));
+
+    double deriv_diff = (deriv - last_deriv)/last_deriv;
+    last_deriv = deriv;
+    double error_diff;
+
+    printf("iteration %d: deriv = %lf, deriv_diff = %lf, alpha = %lf\n", iter, deriv, deriv_diff, alpha);
+    
+    if(iter % chunk == 0){
+      error = total_error(datapoints, n_dp);
+      error_diff = (error - last_error)/last_error;
+      last_error = error;
+      printf("total error = %lf, error_diff = %lf\n", error, error_diff);
+      if(error_diff < 0 && fabs(error_diff) < precision){
+	break;
+      }
+    }
+    
+    if(deriv_diff < 0 && fabs(deriv_diff) < 0.01){
+      alpha *= 1.02;
+    }
+    
+    if(deriv_diff > 0){
+      alpha /= 1.5;
+    }
+  }
+
+  //free(hik_abs);
+  free(weights);
+}
+/*
 char **compute_hik(Weight weight, Example *examples, int N){
   assert(examples != NULL);
   assert(N >= 0);
@@ -93,332 +352,9 @@ double *compute_delta(Weight weight, Example *examples, int N, char **hik, doubl
   return delta;
 }
 
-int grad_descent(Weight *weight, Example *examples, int N, double alpha, double precision, bool print_iters){
-  int i;
-  
-  char **hik = compute_symmetric_hik(*weight, examples, N);
-  int *sum_hik = compute_sum_hik(*weight, hik, N);
-
-  int iter = 0;
-  
-  double last_deriv_norm = DBL_MAX;
-  double delta_norm = 0;
-  double deriv_norm = 0;
-
-  double *last_delta = malloc(weight->n * sizeof(double));
-  memset(last_delta, 0, weight->n * sizeof(double));
-
-  int count_seq = 0;
-  
-  while(1){
-    iter++;
-    double *sum_wi_hik = compute_sum_wi_hik(*weight, hik, N);
-    double *delta = compute_delta(*weight, examples, N, hik, sum_wi_hik, sum_hik, alpha);
-    delta_norm = 0;
-    for(i=0;i<weight->n;i++){
-	delta_norm += fabs(delta[i]) * fabs(delta[i]);
-	weight->w[i] += delta[i] + 0.5 * last_delta[i];
-    }
-    delta_norm = sqrt(delta_norm);
-    deriv_norm = delta_norm / alpha;
-
-    double quotient = (deriv_norm - last_deriv_norm)/last_deriv_norm;
-    
-    if(print_iters)
-      printf("iteration %5d,    deriv_norm = %12.10lf,   alpha = %12.10lf,   quotient = %12.20lf\n",
-	     iter,
-	     deriv_norm,
-	     alpha,
-	     quotient);
-    //printf("total error = %30.20lf\n", total_error(*weight, examples, N));
-
-    if(count_seq >= 10 && quotient < 0 && quotient > -0.002){
-      alpha *= 1.5;
-      count_seq = 0;
-    } else if(quotient > 0) {
-      alpha /= 10;
-    } else {
-      count_seq++;
-    }
-    
-    if(deriv_norm < precision){
-      free(delta);
-      free(sum_wi_hik);
-      break;
-    }
-
-    memcpy(last_delta, delta, weight->n * sizeof(double));
-    
-    last_deriv_norm = deriv_norm;
-    
-    free(delta);
-    free(sum_wi_hik);
-  }
-
-  free(sum_hik);  
-  for(i=0;i<weight->n;i++){
-    free(hik[i]);
-  }
-  free(hik);
-
-  return iter;
-  
-}
-
-int sto_grad_descent(Weight *weight, Example *examples, int N, double alpha, double precision, bool print_iters){
-
-  char **hik = compute_hik(*weight, examples, N);
-  int *sum_hik = compute_sum_hik(*weight, hik, N);
-
-
-  double *sum_wi_hik_init = compute_sum_wi_hik(*weight, hik, N);
-  double *total_delta_init = compute_delta(*weight, examples, N, hik, sum_wi_hik_init, sum_hik, 1);
-  
-  double init_deriv = 0;
-  int w_index;
-  for(w_index = 0; w_index < weight->n; w_index++){
-    init_deriv += fabs(total_delta_init[w_index]) * fabs(total_delta_init[w_index]);
-  }
-  init_deriv = sqrt(init_deriv);
-
-  free(sum_wi_hik_init);
-  free(total_delta_init);
-  
-  int iter = 0;
-  double alpha_now = alpha;
-  double alpha_min = alpha;
-  
-  while(1){
-    iter++;
-
-    int w_index;
-    int e_index = rand() % N;
-
-    // compute sum_wi_hik
-    double sum_wi_hik = 0;
-    for(w_index = 0; w_index < weight->n; w_index++){
-      if(hik[w_index][e_index]){
-	sum_wi_hik += weight->w[w_index];
-      }
-    }
-
-    // compute link function values
-    double g_score = link_function(sum_wi_hik);
-    double g_deriv = link_function_deriv_relation(g_score);
-
-    // compute delta and update weight
-    short game_score = examples[e_index].score;    
-    for(w_index = 0; w_index < weight->n; w_index++){
-      if(hik[w_index][e_index]){
-	weight->w[w_index] += g_deriv * (game_score - g_score) * alpha_now;
-      }
-    }
-    
-    // check how good is the weight every 10000 iteration
-    if(iter % 1000000 == 0){
-      // compute total derivative
-      double *sum_wi_hik = compute_sum_wi_hik(*weight, hik, N);
-      double *total_delta = compute_delta(*weight, examples, N, hik, sum_wi_hik, sum_hik, 1);
-      
-      double deriv_norm = 0;
-      for(w_index = 0; w_index < weight->n; w_index++){
-	deriv_norm += fabs(total_delta[w_index]) * fabs(total_delta[w_index]);
-      }
-
-      deriv_norm = sqrt(deriv_norm);
-      printf("iteration %5d,    deriv_norm = %12.10lf,   alpha = %24.20lf\n",
-	     iter,
-	     deriv_norm,
-	     alpha_now);
-
-      free(sum_wi_hik);
-      free(total_delta);
-      
-      //alpha_now = pow(deriv_norm / init_deriv, 1) * alpha ;
-      if(alpha_min < alpha_now){
-	alpha_now = alpha_min;
-      } else {
-	alpha_min = alpha_now;
-      }
-      
-      if(deriv_norm < precision)
-	break;
-    }
-
-  }
-    
-
-  int i;
-  for(i=0;i<weight->n;i++){
-    free(hik[i]);
-  }
-  free(sum_hik);
-  free(hik);
-
-  return iter;
-}
-
-
-double total_error(Weight weight, Example *examples, int N){
-
-  assert(examples != NULL);
-  assert(N > 0);
-  
-  char **hik = compute_symmetric_hik(weight, examples, N);
-  double *sum_wi_hik = compute_sum_wi_hik(weight, hik, N);
-
-  double total_error = 0;
-  
-  int i;
-  for(i=0;i<N;i++){
-    double error = examples[i].score - link_function(sum_wi_hik[i]);
-    error *= error;
-    total_error += error;
-  }
-
-  total_error /= N;
-  
-  free(sum_wi_hik);
-  for(i=0;i<weight.n;i++){
-    free(hik[i]);
-  }
-  free(hik);
-
-  return total_error;
-}
-
-
-double link_function(double x){
-  return 2*BOARD_SIZE_SQR/(1+exp((-1)*x)) - BOARD_SIZE_SQR;
-}
-
-double link_function_deriv_relation(double link_function_val){
-  return  (link_function_val + BOARD_SIZE_SQR) * (BOARD_SIZE_SQR - link_function_val) / (2*BOARD_SIZE_SQR);
-}
-
-double link_function_inverse(double g){
-  return (-1) * log((2 * BOARD_SIZE_SQR)/(BOARD_SIZE_SQR + g) - 1);
-}
-
-
-double link_function_2nd_deriv_relation(double g_score, double g_deriv){
-  return 2 * g_deriv * g_deriv / (g_score + BOARD_SIZE) - g_deriv;
-}
-
-/*
-// TODO
-Weight symmetrize_weight(Weight *weight){
-  assert(weight != NULL);
-  
-  char *processed = malloc(weight->n * sizeof(char));
-  memset(processed, 0, weight->n * sizeof(char));
-
-  Weight result;
-  result.c = malloc(4 * weight->n * sizeof(Config_store));
-  result.w = malloc(4 * weight->n * sizeof(double));
-
-  int count = 0;
-  
-  int i; int j;
-  for(i=0;i<weight->n;i++){
-    if(processed[i])
-      continue;
-    
-    Config_store diag = reflect_diag(weight->c[i]);
-    char has_diag = 0; int diag_index = 0;
-    Config_store rdiag = reflect_rdiag(weight->c[i]);
-    char has_rdiag = 0; int rdiag_index = 0;
-    Config_store diag_rdiag = reflect_rdiag(reflect_diag(weight->c[i]));
-    char has_diag_rdiag = 0; int diag_rdiag_index = 0;
-    
-    for(j=i+1;j<weight->n;j++){
-      if(memcmp(&diag, &weight->c[j], sizeof(Config_store)) == 0){
-	has_diag = 1;
-	diag_index = j;
-	processed[j] = 1;
-      }
-      if(memcmp(&rdiag, &weight->c[j], sizeof(Config_store)) == 0){
-	has_rdiag = 1;
-	rdiag_index = j;
-	processed[j] = 1;
-      }
-      if(memcmp(&diag_rdiag, &weight->c[j], sizeof(Config_store)) == 0){
-	has_diag_rdiag = 1;
-	diag_rdiag_index = j;
-	processed[j] = 1;
-      }
-    }
-    char sum_has = 1 + has_diag + has_rdiag + has_diag_rdiag;
-    double sum_weights = weight->w[i] +
-      has_diag * weight->w[diag_index] +
-      has_rdiag * weight->w[rdiag_index] +
-      has_diag_rdiag * weight->w[diag_rdiag_index];
-    double avg_weight = sum_weights/sum_has;
-
-
-    char symm, rsymm = 0;
-    if(memcmp(&diag, &weight->c[i], sizeof(Config_store)) == 0)
-      symm = 1;
-    if(memcmp(&rdiag, &weight->c[i], sizeof(Config_store)) == 0)
-      rsymm = 1;
-
-    if((!symm) && (!rsymm)){
-      result.c[count] = weight->c[i];
-      result.c[count+1] = diag;
-      result.c[count+2] = rdiag;
-      result.c[count+3] = diag_rdiag;
-      result.w[count] = avg_weight;
-      result.w[count+1] = avg_weight;
-      result.w[count+2] = avg_weight;
-      result.w[count+3] = avg_weight;
-      
-      result.n += 4;
-      count += 4;
-    } else if(symm){
-      result.c[count] = weight->c[i];
-      result.c[count+1] = rdiag;
-      result.w[count] = avg_weight;
-      result.w[count+1] = avg_weight;
-      
-      result.n += 2;
-      count += 2;
-    } else if(rsymm){
-      result.c[count] = weight->c[i];
-      result.c[count+1] = diag;
-      result.w[count] = avg_weight;
-      result.w[count+1] = avg_weight;
-      
-      result.n += 2;
-      count += 2;
-    }
-    
-  }    
-  return result;
-}
-
-
-
 */
 
-
-
-Weight init_weight_from_configs(Config configs, int n){
-  Weight weight;
-  weight.n = n;
-  weight.c = malloc(n * sizeof(Config_store));
-  weight.w = malloc(n * sizeof(double));
-
-  memcpy(weight.c, configs, n * sizeof(Config_store));
-  memset(weight.w, 0, n * sizeof(double));
-  
-  return weight;
-}
-
-void free_weight(Weight weight){
-  free(weight.c);
-  free(weight.w);
-}
-
+/*
 
 double get_weight_from_fct(FlatConfTable fct, Config_store board){
   unsigned long int index = index_for_config(fct.pattern, board);
@@ -432,7 +368,9 @@ double get_weight_from_fct(FlatConfTable fct, Config_store board){
 
 int **global_sum_hik_fct;
 int **global_indices;
+*/
 
+/*
 double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha, double precision, int chunk){
   // temporary variables, denoting index for fct_list and examples
   int f, e;
@@ -507,8 +445,9 @@ double fit_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e
   
   return 0;
 }
+*/
 
-
+/*
 FlatConfTable *global_fct_list;
 Example *global_examples;
 void *global_bounds;
@@ -622,6 +561,8 @@ double iterate_descent_for_fct_list(FlatConfTable *fct_list, Example *examples, 
   return deriv;
 }
 
+
+
 double iterate_descent_for_fct_list_mt(FlatConfTable *fct_list, Example *examples, int n_f, int n_e, double alpha){
 
 
@@ -675,9 +616,9 @@ double iterate_descent_for_fct_list_mt(FlatConfTable *fct_list, Example *example
   deriv = sqrt(deriv) / alpha / n_e;
   return deriv;
 }
+*/
 
-
-
+/*
 double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f, int n_e){
   assert(fct_list != NULL);
   assert(examples != NULL);
@@ -698,9 +639,9 @@ double total_error_fct_list(FlatConfTable *fct_list, Example *examples, int n_f,
   
   return total_error/n_e;
 }
+*/
 
 
-// TODO
 double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store board){
   double score = 0;
   
@@ -715,124 +656,4 @@ double get_score_from_fct_list(FlatConfTable *fct_list, int n_f, Config_store bo
   return score;
 }
 
-// TODO
-FlatConfTable **fit_fcts_for_examples(Example *examples, int n_e){
-  int i, j;
-  const int pattern_set_size = 12; // max 12
-  Pattern patterns[20] =
-    {
-      DIAG(0),
-      
-      ATOM(0,1)|ATOM(1,2)|ATOM(2,3)|ATOM(3,4)|ATOM(4,5)|ATOM(5,6)|ATOM(6,7),
-      
-      ATOM(0,2)|ATOM(1,3)|ATOM(2,4)|ATOM(3,5)|ATOM(4,6)|ATOM(5,7),
-      
-      ATOM(0,3)|ATOM(1,4)|ATOM(2,5)|ATOM(3,6)|ATOM(4,7),
-      
-      ATOM(0,4)|ATOM(1,5)|ATOM(2,6)|ATOM(3,7),
-      
-      ROW(0),
-      
-      ROW(1),
-      
-      ROW(2),
-      
-      ROW(3),
 
-      ROW(0)|ATOM(1,1)|ATOM(1,6),
-      
-      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|
-      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|
-      ATOM(2,0)|ATOM(2,1)|ATOM(2,2),
-
-      ATOM(0,0)|ATOM(0,1)|ATOM(0,2)|ATOM(0,3)|ATOM(0,4)|
-      ATOM(1,0)|ATOM(1,1)|ATOM(1,2)|ATOM(1,3)|ATOM(1,4)  
-    };
-
-
-  int n_f;
-  Pattern *completion = complete_pattern_set(patterns, pattern_set_size, &n_f);
-  printf("n_f = %d\n", n_f);
-
-  int f;
-  for(f=0;f<50;f++){
-    printf("f=%d:\n",f);
-    print_bitboard((BitBoard){completion[f], 0});
-  }
-  
-  exit(0);
-  
-  Example *categories[CAT_NUM];
-  int cat_sizes[CAT_NUM];
-
-  sort_examples_into_categories(examples, categories, cat_sizes, n_e);
-  
-  int n_b = 0;
-  Config boards = malloc(n_e * sizeof(Config_store));
-  //read_configs_from_file("./dat/boards/boards_random.dat", &n_b);
-
-  const int threshold = 50;
-  
-  char filename[120];
-  
-  int cat;
-
-  for(cat=0;cat<CAT_NUM;cat++){
-  
-    sprintf(filename, "./dat/examples/cat_%02d.dat", cat);
-    int n_e;
-    Example *examples = read_examples_from_file(filename, &n_e);
-    
-    int count_weights = 0; int count_valid = 0;
-    FlatConfTable *fct_list = malloc(n_f * sizeof(FlatConfTable));
-    for(i=0;i<n_f;i++){
-      fct_list[i] = genconf_single_pattern(completion[i], boards, n_b, threshold);
-      init_weights_for_fct(&fct_list[i]);
-      //print_pattern(fct_list[i].pattern);
-      printf("fct_list[%d].n = %d\n", i, fct_list[i].n);
-      count_weights += fct_list[i].n;
-      for(j=0;j<fct_list[i].n;j++){
-	if(fct_list[i].valid[j]){
-	  count_valid++;
-	}
-      }
-    }
-    
-    printf("count_weights = %d\n", count_weights);
-    printf("count_valid = %d\n", count_valid);
-    
-    fit_fct_list(fct_list, examples, n_f, n_e, 0.00001, 0.001, 100);
-    
-    
-    sprintf(filename, "./dat/fcts/rand_cat_%02d", cat);
-    mkdir(filename, 0700);
-    for(i=0;i<n_f;i++){
-      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d", cat, i);
-      mkdir(filename, 0700);
-      
-      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/fct.dat", cat, i);
-      save_dat_to_file(filename, &fct_list[i], sizeof(FlatConfTable));
-      
-      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/valid.dat", cat, i);
-      save_dat_to_file(filename, fct_list[i].valid, fct_list[i].n * sizeof(char));
-      
-      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/variations.dat", cat, i);
-      save_dat_to_file(filename, fct_list[i].variations, fct_list[i].n * sizeof(Config_store));
-      
-      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/matches.dat", cat, i);
-      save_dat_to_file(filename, fct_list[i].matches, fct_list[i].n * sizeof(int));
-      
-      sprintf(filename, "./dat/fcts/rand_cat_%02d/%02d/weights.dat", cat, i);
-      save_dat_to_file(filename, fct_list[i].weights, fct_list[i].n * sizeof(double));
-    }
-
-    
-    for(i=0;i<n_f;i++){
-      free_fct_contents(fct_list[i]);
-    }
-    free(fct_list);
-    free(examples);
-  }
-
-  return NULL;
-}

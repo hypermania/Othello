@@ -35,43 +35,43 @@ extern int offset_59049[1024];
  */
   
 // center-column reflect symmetry
-extern double row_1[15][256][256];
-extern double row_2[15][256][256];
-extern double row_3[15][256][256];
-extern double row_4[15][256][256];
+extern double row_1[CAT_NUM][256][256];
+extern double row_2[CAT_NUM][256][256];
+extern double row_3[CAT_NUM][256][256];
+extern double row_4[CAT_NUM][256][256];
 
 /*
-extern double row_1[15][6561];
-extern double row_2[15][6561];
-extern double row_3[15][6561];
-extern double row_4[15][6561];
+extern double row_1[CAT_NUM][6561];
+extern double row_2[CAT_NUM][6561];
+extern double row_3[CAT_NUM][6561];
+extern double row_4[CAT_NUM][6561];
 */
 
 // anti-diagonal reflect symmetry
-extern double diag_8[15][256][256];
-extern double diag_7[15][128][128];
-extern double diag_6[15][64][64];
-extern double diag_5[15][32][32];
-extern double diag_4[15][16][16];
+extern double diag_8[CAT_NUM][256][256];
+extern double diag_7[CAT_NUM][128][128];
+extern double diag_6[CAT_NUM][64][64];
+extern double diag_5[CAT_NUM][32][32];
+extern double diag_4[CAT_NUM][16][16];
 /*
-extern double diag_8[15][6561];
-extern double diag_7[15][2187];
-extern double diag_6[15][729];
-extern double diag_5[15][243];
-extern double diag_4[15][81];
+extern double diag_8[CAT_NUM][6561];
+extern double diag_7[CAT_NUM][2187];
+extern double diag_6[CAT_NUM][729];
+extern double diag_5[CAT_NUM][243];
+extern double diag_4[CAT_NUM][81];
 */
 
 // diagonal reflect symmetry
-//extern double corner_33[15][512][512];
-extern double corner_33[15][19683];
+//extern double corner_33[CAT_NUM][512][512];
+extern double corner_33[CAT_NUM][19683];
 
 // no symmetry
-//extern double corner_25[15][1024][1024];
-extern double corner_25[15][59049];
+//extern double corner_25[CAT_NUM][1024][1024];
+extern double corner_25[CAT_NUM][59049];
 
 // center-column reflect symmetry
-//extern double edge_xx[15][1024][1024];
-extern double edge_xx[15][59049];
+//extern double edge_xx[CAT_NUM][1024][1024];
+extern double edge_xx[CAT_NUM][59049];
 
 
 typedef struct {
@@ -98,7 +98,7 @@ typedef struct {
   double edge_xx[59049];
 } Weights;
 
-//extern Weights weights[15];
+//extern Weights weights[CAT_NUM];
 
 
 // reflection symmetry mapping
@@ -139,6 +139,7 @@ void increment_corner_25(double table[59049], uint32_t white, uint32_t black, do
 void increment_edge_xx(double table[59049], uint32_t white, uint32_t black, double increment);
 
 void increment_global_by_bitboard(BitBoard board, double increment);
+void increment_by_bitboard(Weights *weights, BitBoard board, double increment);
 
 
 // initialize maps

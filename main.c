@@ -37,259 +37,133 @@ int main(int argc, char **argv){
 
   init_offsets();
   check_offsets();
-  clear_weights();
-  //printf("check_weights() = %d\n", check_weights());
-
   init_maps();
+  clear_weights();
+  
+  /*
+  void read_weight(const char *filename, double *weight){
+    FILE *fp;
+    fp = fopen(filename, "r");
+    fseek(fp, 0L, SEEK_END);
+    long int size = ftell(fp);
+    rewind(fp);
+    fread(weight, size, 1, fp);
+    fclose(fp);
+  }
+  */
 
+  load_all_weights();
 
   /*
-  int k;
-  for(k=0;k<16;k++){
-    printf("map_edge_xx[%d] = %03x\n", k, map_edge_xx[k]);
-  }
-
-  exit(0);
-
   FILE *fp = fopen("./game_base/all_games.txt", "r");
 
   long int n_dp;
   DataPoint *datapoints = datapoints_from_file(fp, &n_dp);
-  
   printf("n_dp = %ld\n", n_dp);
+
+  long int cat_sizes[CAT_NUM];
   
-  ConfigCounter *ccount = malloc(sizeof(ConfigCounter));
-  memset(ccount, 0, sizeof(ConfigCounter));
+  DataPoint **cats = categorize_datpts(datapoints, n_dp, cat_sizes);
 
-  int dp_index;
-  for(dp_index = 0; dp_index < n_dp; dp_index++){
-    increment_confcount(ccount, datapoints[dp_index].board);
-    if((dp_index % 100000) == 0){
-      printf("dp_index = %d\n", dp_index);
-    }
-  }
-
-  ConfigCounter *ccount_marker = malloc(sizeof(ConfigCounter));
-  memset(ccount_marker, 0, sizeof(ConfigCounter));
-  
-  uint32_t total = n_dp * 4;
-  int i, j;
-  int count = 0;
-  for(i=0;i<256;i++){
-    for(j=0;j<256;j++){
-      if(i & j){
-	continue;
-      }
-      if(ccount_marker->row_1[i][j]){
-	continue;
-      }
-      double frac = (double)ccount->row_1[i][j] / (double)total;
-      if(frac > 0.0001){
-	printf("(i,j)=(%d,%d)\n", i, j);
-	count++;
-      }
-      ccount_marker->row_1[i][j]++;
-      ccount_marker->row_1[j][i]++;
-      
-    }
-  }
-
-  printf("total = %u\n", total);
-  printf("count = %d\n", count);
-  */
-
-
-
-  
-  //fit_fcts_for_examples(NULL, 0);
-  
-  /*
-
-  exit(0);
-  */
-
-  //printf("out1 = %016lx; out2 = %016lx;\n", out1, out2);
-  
-  /*
-  if(out1 - out2){
-    printf("wrong\n");
+  int i;
+  for(i = 0; i < CAT_NUM; i++){
+    printf("error for cat %d: %lf\n", i, total_error(cats[i], cat_sizes[i]));
   }
   */
 
+  /*    
+  int i;
+  for(i = 0; i < CAT_NUM; i++){
+    printf("initial error = %lf\n", total_error(cats[i], cat_sizes[i]));
+    grad_descent(cats[i], cat_sizes[i], i, 0.002, 0.0005, 100);
+  }
+
+
+  save_dat_to_file("./weights/row_1.dat", &row_1[0][0][0], sizeof(row_1));
+  save_dat_to_file("./weights/row_2.dat", &row_2[0][0][0], sizeof(row_2));
+  save_dat_to_file("./weights/row_3.dat", &row_3[0][0][0], sizeof(row_3));
+  save_dat_to_file("./weights/row_4.dat", &row_4[0][0][0], sizeof(row_4));
+
+  save_dat_to_file("./weights/diag_8.dat", &diag_8[0][0][0], sizeof(diag_8));
+  save_dat_to_file("./weights/diag_7.dat", &diag_7[0][0][0], sizeof(diag_7));
+  save_dat_to_file("./weights/diag_6.dat", &diag_6[0][0][0], sizeof(diag_6));
+  save_dat_to_file("./weights/diag_5.dat", &diag_5[0][0][0], sizeof(diag_5));
+  save_dat_to_file("./weights/diag_4.dat", &diag_4[0][0][0], sizeof(diag_4));
+
+  save_dat_to_file("./weights/corner_33.dat", &corner_33[0][0], sizeof(corner_33));
+  save_dat_to_file("./weights/corner_25.dat", &corner_25[0][0], sizeof(corner_25));
+  save_dat_to_file("./weights/edge_xx.dat", &edge_xx[0][0], sizeof(edge_xx));
+  */
+
+
   /*
-  BitBoard bitboard = new_initial_bitboard();
-  Board board = create_board();
-  BitBoard temp;
-  
-  long int k;
-  volatile char n;
-  //for(k=0;k<10000000000;k++){
-  for(k=0;k<1000000000;k++){
-    //bitboard_set_pos(&bitboard, pos_mask[1][k%8], W);
-    //n = bitboard_get_pos(&bitboard, pos_mask[1][k%8]);
+  int i;
+  for(i = 0; i < CAT_NUM; i++){
+    printf("cat_sizes[%d] = %ld\n", i, cat_sizes[i]);
+  }
+
+  for(i = 0; i < CAT_NUM; i++){
+    double E = total_error(cats[i], cat_sizes[i]);
+    printf("E[%d] = %lf\n", i, E);
+  }
+  */
+  /*
+  Weights *weights = malloc(sizeof(Weights));
+  memset(weights, 0, sizeof(Weights));
     
-    //board_set_pos(board, (Pos){1, k%8}, W);
-    //n = board_get_pos(board, (Pos) {1, k%8});
+  double E = total_error(cats[14], cat_sizes[14]);
+  printf("E[%d] = %lf\n", 14, E);
 
-    //bitboard_set_pos(&bitboard, ATOM(1, k%8), W);
-    //temp = bitboard_set_pos_nonref(bitboard, pos_mask[1][k%8], W);
-    //n = bitboard_get_pos_nonref(bitboard, pos_mask[1][k%8]);
-    //board_set_pos(board, (Pos){1, k%8}, W);
-  }
-  print_board(board);
-  print_bitboard(bitboard);
-  print_bitboard(temp);
-  printf("%d\n",n);
-  
-  exit(0);
-  */
+  int i;
+  int c = 6;
+  for(i = 0; i < 1500; i++){
+    grad_descent_step(cats[c], cat_sizes[c], weights, 0.0000000003);
 
-  /*
-  for(i=0;i<3000000;i++){
-  //for(i=0;i<10000000;i++){
-    if(test_bitboard()){
-      printf("failed\n");
-    }
-  }
-  exit(0);
-  */
-  
-  /*
-  BitBoard board = new_initial_bitboard();
-  int r,c;
-  for(r=0;r<8;r++){
-    for(c=0;c<8;c++){
-  
+    memcpy(row_1[c], weights->row_1, sizeof(row_1[c]));
+    memcpy(row_2[c], weights->row_2, sizeof(row_2[c]));
+    memcpy(row_3[c], weights->row_3, sizeof(row_3[c]));
+    memcpy(row_4[c], weights->row_4, sizeof(row_4[c]));
 
-  BitMask bitmask = pos_mask[r][c];
-  BitMask store[8];
-  int count = bitboard_adj_given_pos(&board, bitmask, store, B);
+    memcpy(diag_8[c], weights->diag_8, sizeof(diag_8[c]));
+    memcpy(diag_7[c], weights->diag_7, sizeof(diag_7[c]));
+    memcpy(diag_6[c], weights->diag_6, sizeof(diag_6[c]));
+    memcpy(diag_5[c], weights->diag_5, sizeof(diag_5[c]));
+    memcpy(diag_4[c], weights->diag_4, sizeof(diag_4[c]));
 
-  printf("(%d,%d), count = %d\n", r, c, count);
+    memcpy(corner_33[c], weights->corner_33, sizeof(corner_33[c]));
+    memcpy(corner_25[c], weights->corner_25, sizeof(corner_25[c]));
+    memcpy(edge_xx[c], weights->edge_xx, sizeof(edge_xx[c]));
 
-    }}
-  print_bitboard(board);
-  exit(0);
-  */
-
-  /*
-  BitState *state = create_initial_bitstate();
-
-  int movec;
-  BitMask *moves;
-  
-  print_bitboard(state->board);
-  
-  //moves = bitstate_allowed_moves(state, &movec); 
-  //bitstate_place_piece(state, 0);
-  //print_bitboard(state->board);
-
-  BitMask move_mask = find_moves_bitmask(state->board, state->turn);
-
-  print_bitboard((BitBoard) {move_mask, 0});
-
-  exit(0);
-  */
-  
-  /*
-  long int iter = 10000000000;
-  
-  struct timeval start;
-  struct timeval end;
-  
-  gettimeofday(&start, NULL);
-  
-  //test_bitstate();
-  
-  const BitBoard board = {0,0};
-  BitMask output;
-  long int i;
-  for(i=0;i<iter;i++){
-    output = find_moves_bitmask(board, W);
-  }
-  printf("output=%ld\n", output);
-
-  gettimeofday(&end, NULL);
-
-  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
-
-  printf("iter/s = %lf\n", (double)(iter)/elapsed);
-  printf("cycle/iter = %lf\n", ((double)2600000000)/((double)(iter)/elapsed));
-  
-  exit(0);
-  */
-
-
-  /*
-  for(i=0;i<64;i++){
-    printf("char flip_bitboard_b_%02d(BitBoard *board){\n", i);
-    printf("uint64_t my = board->b;\n");
-    printf("uint64_t opp = board->w;\n");
-    printf("char result = 0;\n");
-
-    for(j=0;j<8;j++){
-      if(squares_in_dir[i][j] >= 2){
-	printf("int count_%d;\n", j);
-
-	uint64_t head = offset_bitmask(ATOM(0,0) >> i, dir_offset[j]);
-	
-	printf("if(opp & 0x%016lx){\n", head);
-	printf("count_%d = 0;\n", j);
-	
-	int k;
-	for(k=0;k<squares_in_dir[i][j]-2;k++){
-	  head = offset_bitmask(head, dir_offset[j]);
-	  printf("if(opp & 0x%016lx){\n", head);
-	  printf("count_%d++;\n", j);
-	}
-	for(k=0;k<squares_in_dir[i][j]-2;k++){
-	  printf("}\n");
-	}
-
-	printf("if(my & offset_bitmask(rays_to_flip[%d][%d][count_%d], %d)){\n",
-	       i, j, j, dir_offset[j]);
-	printf("board->b ^= rays_to_flip[%d][%d][count_%d];\n", i, j, j);
-	printf("board->w ^= rays_to_flip[%d][%d][count_%d];\n", i, j, j);
-	printf("result |= 0x%02x;\n", 1 << j);
-	
-	printf("}\n");
-	printf("}\n");
-	
-      }
-    }
-
-    printf("\nboard->b |= 0x%016lx;\n", ATOM(0,0) >> i);
+    printf("iteration %d done\n", i);
     
-    printf("\nreturn result;\n");
-    printf("}\n\n");    
-  }
+    if(i % 10 == 0){
+      E = total_error(cats[c], cat_sizes[c]);
+      printf("E[%d] = %lf\n", c, E);
+    }
 
-  exit(0);
+  }
   */
 
+  
+  
+  // categorizing examples by number of pieces
   /*
-  BitBoard board = new_initial_bitboard();
+  Example *categories[CAT_NUM];
+  int cat_sizes[CAT_NUM];
+  sort_examples_into_categories(examples, categories, cat_sizes, count_examples);
 
-  bitboard_set_pos(&board, ATOM(0,1), B);
-  bitboard_set_pos(&board, ATOM(0,2), B);
-  bitboard_set_pos(&board, ATOM(0,3), B);
-  bitboard_set_pos(&board, ATOM(0,4), W);
-  bitboard_set_pos(&board, ATOM(0,5), B);
-  bitboard_set_pos(&board, ATOM(0,6), B);
-  bitboard_set_pos(&board, ATOM(0,7), W);
+  // free original examples
+  free(examples);
 
-  bitboard_set_pos(&board, ATOM(1,1), B);
-  bitboard_set_pos(&board, ATOM(2,2), W);
-
-  print_bitboard(board);
-  
-  unsigned char flipped = (flip_bitboard_b)[26](&board);
-
-  print_bitboard(board);
-  
-  printf("flipped = 0x%02x\n", flipped);
-  
-  exit(0);
+  // write categorized examples to file
+  for(i=0;i<CAT_NUM;i++){
+    char filename[100];
+    sprintf(filename, "./dat/examples/cat_%02d.dat", i);
+    int fd = open(filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+    printf("writing to file: cat_sizes[%d] = %d\n", i, cat_sizes[i]);
+    write(fd, categories[i], cat_sizes[i] * sizeof(Example));
+    close(fd);
+  }
   */
 
   /*
@@ -330,31 +204,7 @@ int main(int argc, char **argv){
   printf("};\n");
   exit(0);
   */
-  /*
-  printf("const uint64_t adj_pos_mask[BOARD_SIZE_SQR][ADJ_SIZE] = {\n");
-  int r, c;
-  for(r=0;r<8;r++){
-    for(c=0;c<8;c++){
-      printf("{");
-      for(i=0;i<ADJ_SIZE;i++){
-	uint64_t mask = offset_bitmask(pos_mask[r][c], dir_offset[i]);
-	if(squares_in_dir[8*r+c][i] == 0){
-	  mask = 0;
-	}
-	printf("0x%016lx", mask);
-	if(i<7){
-	  printf(", ");
-	}
-      }
-      printf("}");
-      if(r<7 || c<7){
-	printf(", \n");
-      }
-    }
-  }
-  printf("};\n");
-  exit(0);
-  */
+    
   /*
   printf("const uint64_t rays_to_flip[BOARD_SIZE_SQR][ADJ_SIZE][6] = {\n");
   int r, c;
@@ -393,46 +243,8 @@ int main(int argc, char **argv){
   exit(0);
   */
   
-  //fit_fct_for_categories();
-  //exit(0);
-  //printf("test_table = %d\n", test_table());
-  //printf("test_state = %d\n", test_state());
-  
 
   /*
-  int n_e = 0;
-  Example *examples = malloc(0);
-  //examples = append_filed_games_to_examples(examples, &n_e, "./game_base/all_games.txt");
-  examples = append_random_games_to_examples(examples, &n_e, 50000);
-  Config boards_random = create_and_init_config_list(n_e);
-  for(i=0;i<n_e;i++){
-    boards_random[i] = examples[i].board;
-  }
-  
-  save_dat_to_file("./dat/boards/boards_random.dat", boards_random, n_e * sizeof(Config_store));
-  
-
-  Example *categories[CAT_NUM];
-  int cat_sizes[CAT_NUM];
-
-  sort_examples_into_categories(examples, categories, cat_sizes, n_e);
-  
-
-  for(i=0;i<10;i++){
-    int cat = rand() % CAT_NUM;
-    int r = rand() % cat_sizes[cat];
-    print_config(&categories[cat][r].board);
-    printf("cat = %d, score = %d\n", cat, categories[cat][r].score);
-  }
-
-
-  //fit_fct_for_categories(categories, cat_sizes);
-
-  free(examples);
-  
-  exit(0);
-  */
-  
   int n_b;
   Config boards = read_configs_from_file("./dat/boards/boards.dat", &n_b);
   free(boards);
@@ -474,30 +286,14 @@ int main(int argc, char **argv){
     }
   }
 
-  //memset(weights, 0, sizeof(weights));
-
+  global_n_f = n_f;
+  global_fcts = fcts;
+  */
+  
+  /*
   int k;
   uint32_t w_index, b_index;
   for(k=0;k<100000;k++){
-    /*
-    w_index = rand() % 16;
-    b_index = (rand() % 16) & (~w_index);
-    for(cat=0;cat<15;cat++){
-      increment_16(diag_4[cat], w_index, b_index, 1);
-    }
-    
-    w_index = rand() % 256;
-    b_index = (rand() % 256) & (~w_index);
-    for(cat=0;cat<15;cat++){
-      increment_256(row_1[cat], w_index, b_index, 1);
-    }
-    
-    w_index = rand() % 256;
-    b_index = (rand() % 256) & (~w_index);
-    for(cat=0;cat<15;cat++){
-      increment_256(row_2[cat], w_index, b_index, 1);
-    }
-    */
     w_index = rand() % 512;
     b_index = (rand() % 512) & (~w_index);
     for(cat=0;cat<15;cat++){
@@ -525,36 +321,16 @@ int main(int argc, char **argv){
   
   print_bitstate(state);
   printf("score = %lf\n", evaluate(state));
-
-  state->board.w = flipVertical(state->board.w);
-  state->board.b = flipVertical(state->board.b);
-  print_bitstate(state);
-  printf("score = %lf\n", evaluate(state));
-
-  state->board.w = flipHorizontal(state->board.w);
-  state->board.b = flipHorizontal(state->board.b);
-  print_bitstate(state);
-  printf("score = %lf\n", evaluate(state));
-
-  state->board.w = flipDiagA1H8(state->board.w);
-  state->board.b = flipDiagA1H8(state->board.b);
-  print_bitstate(state);
-  printf("score = %lf\n", evaluate(state));
   
   state->board.w = rotate90Clockwise(state->board.w);
   state->board.b = rotate90Clockwise(state->board.b);
   print_bitstate(state);
   printf("score = %lf\n", evaluate(state));
-
-  
-  //printf("diag_4[cat][8][1] = %lf\n", diag_4[0][8][1]);
-  //printf("diag_4[cat][1][8] = %lf\n", diag_4[0][1][8]);
-  //printf("diag_4[cat][8][1] = %lf\n", diag_4[0][1][8]);
-  //printf("diag_4[cat][8][1] = %lf\n", diag_4[0][8][1]);
   
   exit(0);
+  */
 
-  
+  /*
   struct timeval start;
   struct timeval end;
   gettimeofday(&start, NULL);
@@ -577,77 +353,9 @@ int main(int argc, char **argv){
   printf("cycles = %lf\n", cycles);
 
   exit(0);
-
-  
-  /*
-  long int i; long int times = 260000000LL;
-  double out;
-
-  BitState *state = create_initial_bitstate();
-  
-  struct timeval start;
-  struct timeval end;
-  
-  gettimeofday(&start, NULL);
-  
-  for(i=0;i<times;i++){
-    //out = flipDiagA1H8(input);
-    //out = pattern_reflect_diag(input);
-    out = evaluate(state);
-    //out = get_score_from_fct_list(fcts[0], n_f, (Config_store) {0,0,0});
-  }
-
-  gettimeofday(&end, NULL);
-  
-  printf("out = %lf\n", out);
-
-  double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
-
-  printf("cycle/call = %lf\n", (double)2600000000LL * elapsed/(double)times);
-  
-  exit(0);
   */
   
-  /*
-  for(cat=0;cat<CAT_NUM;cat++){
-    for(f=0;f<n_f;f++){
-      FlatConfTable fct = fcts[cat][f];
-      for(i=0;i<fct.n;i++){
-	if(fct.valid[i]){
-	  if(fct.matches[i] < 5){
-	    fct.weights[i] *= (double)fct.matches[i]/5;
-	  }
-	}
-      }
-    }
-  }
-  */
-  /*
-  for(i=0;i<10000;i++){
-    cat = rand() % CAT_NUM;
-    f = rand() % n_f;
-    FlatConfTable fct = fcts[cat][f];
-    int index = rand() % fct.n;
-    if(fct.valid[index] && fabs(fct.weights[index]) > 1){
-      print_config(&fct.variations[index]);
-      printf("cat = %d, matches = %d, weight = %20.15lf\n", cat, fct.matches[index], fct.weights[index]);
-    }
-  }
-  */
-  /*
-  printf("printing examples weights for examples:\n");
-  for(i=0;i<100;i++){
-    Config_store board = boards[rand() % n_b];
-    cat = CAT(BOARD_SIZE_SQR - __builtin_popcountl(board.x));
-    double score = get_score_from_fct_list(fcts[cat], n_f, board);
-    if(fabs(score) > 0.5){
-      print_config(&board);    
-      printf("score = %30.20lf\n", score);
-    }
-  }
-  */
-  global_n_f = n_f;
-  global_fcts = fcts;
+  
 
   char log_filename[120];
   sprintf(log_filename, "./log/%ld.csv", t.tv_sec);
@@ -655,8 +363,8 @@ int main(int argc, char **argv){
   
   //Player black = human_player();
   //Player black = random_player();
-  Player black = mixed_player(10, heuristic_score_2, 20);
-  Player white = mixed_player(10, heuristic_score_2, 20);
+  Player black = mixed_player(10, heuristic_score_4, 22);
+  Player white = mixed_player(10, heuristic_score_4, 22);
 
 
   run_game(1, 1, white, black);
@@ -667,6 +375,7 @@ int main(int argc, char **argv){
 
   fclose(log_file);
 
+  /*
   for(cat=0;cat<CAT_NUM;cat++){
     for(f=0;f<n_f;f++){
       free_fct_contents(fcts[cat][f]);
@@ -674,31 +383,9 @@ int main(int argc, char **argv){
     free(fcts[cat]);
   }
   free(fcts);
-
-
-  /*
-  int *indices = malloc(n_f * sizeof(int));
-  for(i=0;i<n_f;i++){
-    indices[i] = i;
-  }
-  binarize_items(completion, indices, n_f);
   */
 
-  
-  /*
-  printf("printing example weights:\n");
-  for(i=0;i<10;i++){
-    FlatConfTable fct = fct_list[rand() % n_f];
-    int r = rand() % fct.n;
-    if(fct.valid[r] && fabs(fct.weights[r]) > 0.01){
-      print_config(&fct.variations[r]);
-      printf("weight = %20.15lf\n", fct.weights[r]);
-    }
-  }
 
-  */
-  
-  
   
   // read examples from file
 
@@ -750,15 +437,6 @@ int main(int argc, char **argv){
     close(fd);
   }
   */
-
-  
-  // run tests
-
-  //printf("test_board = %d\n", test_board());
-
-  //printf("test_table = %d\n", test_table());
-  //printf("test_genconf = %d\n", test_genconf());
-
 
   exit(0);  
 }
