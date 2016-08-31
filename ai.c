@@ -408,6 +408,10 @@ double iterative_deepening(BitState *state, int node_limit, double (*score_func)
 
 int opp_mobility[POS_STORE_SIZE];
 
+int cmp_mobility(const void*move1, const void*move2){
+  return opp_mobility[(int)*(char *)move1] - opp_mobility[(int)*(char *)move2];
+}
+
 inline void order_moves_fastest_first(BitState *state, char *order, int movec, BitMask *opp_move_masks){
 
   int i;
@@ -418,11 +422,7 @@ inline void order_moves_fastest_first(BitState *state, char *order, int movec, B
     opp_mobility[i] = __builtin_popcountll(opp_move_masks[i]);
   }
   
-  int cmp(const void*move1, const void*move2){
-    return opp_mobility[(int)*(char *)move1] - opp_mobility[(int)*(char *)move2];
-  }
-  
-  qsort(order, movec, sizeof(char), cmp);
+  qsort(order, movec, sizeof(char), cmp_mobility);
 
 }
 
