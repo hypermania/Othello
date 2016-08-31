@@ -7,7 +7,6 @@
 #include "bitboard.h"
 #include "bitstate.h"
 #include "macro.h"
-#include "io.h"
 
 
 typedef struct {
