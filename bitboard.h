@@ -33,29 +33,6 @@ extern inline void cpy_bitboard(BitBoard *dest, BitBoard *src){
 #ifndef BITBOARD_GET_POS
 #define BITBOARD_GET_POS
 extern inline char bitboard_get_pos(BitBoard *board, BitMask pos){
-  /*
-  int64_t mask_w = pos & board->w;
-  int64_t mask_b = pos & board->w;
-  mask_w <<= __builtin_clzll(mask_w);
-  mask_b <<= __builtin_clzll(mask_b);
-  mask_w >>= 63;
-  mask_b >>= 63;
-  return (W & (char)mask_w) | (B & (char)mask_b);
-  */
-  
-  /*
-  int mask_w = ((!!(pos & board->w)) << 31) >> 31;
-  int mask_b = ((!!(pos & board->b)) << 31) >> 31;
-  return (W & (char)mask_w) | (B & (char)mask_b);
-  */
-
-  /*
-  int mask_w = ((!(pos & board->w)) << 31) >> 31;
-  int mask_b = ((!(pos & board->b)) << 31) >> 31;
-  return (W & ~(char)mask_w) | (B & ~(char)mask_b);
-  */
-
-
   if(pos & board->w){
     return W;
   }

@@ -6,6 +6,8 @@ Simple command-line reversi game
 
 Use clone the git repository to your local computer, and run make.
 
+Note: This program can only run on CPUs with BMI2 support. (Intel 4XXX, 5XXX, 6XXX or AMD Zen.)
+
 
 Reference:
 

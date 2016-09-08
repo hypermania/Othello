@@ -18,7 +18,6 @@
 #include "fit_weight.h"
 #include "evaluate.h"
 
-
 // does not provide error handling
 
 // heuristic scoring functions
@@ -40,6 +39,13 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
 double negamax_dnorder(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *));
 
 double negamax_end(BitState *state, double alpha, double beta, int *max_move, int remaining);
+
+// call only when there is exactly 1 empty spot 
+double negamax_end_with_1_empty(BitState *state);
+
+// call only when there are exactly 2 empty spots
+double negamax_end_with_2_empty(BitState *state);
+
 
 //double negamax_iterative(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *));
 

@@ -78,33 +78,55 @@ inline void bitstate_fill_moves(BitState *state){
   } else {
     moves = find_moves_bitmask(state->board, state->turn);
   }
-  
-  BitMask pos;
-  for(; moves != 0; moves = my_blsr_u64(moves)){
-    pos = my_blsi_u64(moves);
-    
-    bitstate_try_to_place(&state->board, &state->positions[state->movec], pos, state->turn);
-    state->moves[state->movec] = pos;
-    state->movec++;
 
+  if(state->turn == W){
+    BitMask pos;
+    for(; moves != 0; moves = my_blsr_u64(moves)){
+      pos = my_blsi_u64(moves);
+    
+      bitstate_try_to_place_w(&state->board, &state->positions[state->movec], pos);
+      state->moves[state->movec] = pos;
+      state->movec++;
+
+    }
+  } else {
+    BitMask pos;
+    for(; moves != 0; moves = my_blsr_u64(moves)){
+      pos = my_blsi_u64(moves);
+    
+      bitstate_try_to_place_b(&state->board, &state->positions[state->movec], pos);
+      state->moves[state->movec] = pos;
+      state->movec++;
+
+    }
   }
   state->control.moves_filled = true;
   
 }
 
 
-inline void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, char side){
+inline void bitstate_try_to_place_w(BitBoard *board, BitBoard *dest, BitMask pos){
   cpy_bitboard(dest, board);
 
   int pos_index = __builtin_clzll(pos);
   
-  if(side == W){
-    flip_bitboard_w[pos_index](dest);
-  } else {
-    flip_bitboard_b[pos_index](dest);
-  }
+  //flip_bitboard_w[pos_index](dest);
+  flip_bitboard_via_pext_w(dest, pos_index);
+
   return;
 }
+
+inline void bitstate_try_to_place_b(BitBoard *board, BitBoard *dest, BitMask pos){
+  cpy_bitboard(dest, board);
+
+  int pos_index = __builtin_clzll(pos);
+
+  //flip_bitboard_b[pos_index](dest);
+  flip_bitboard_via_pext_b(dest, pos_index);
+
+  return;
+}
+
 
 inline BitMask find_moves_bitmask(const BitBoard board, char side){
 

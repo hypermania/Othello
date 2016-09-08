@@ -12,7 +12,6 @@ static long int max_count_node = 0;
 static double max_t = 0;
 
 FILE *log_file;
-
 #endif
 
 // heuristic scoring functions
@@ -21,83 +20,14 @@ inline double heuristic_score_0(BitState *state){
 #ifdef SHOW_STAT
   count_leaf++;
 #endif
-  //return (double) piece_diff(state->board, W, B);
-  //Config_store board = board_to_conf_nocreate(state->board);
   return __builtin_popcountll(state->board.w) - __builtin_popcountll(state->board.b);
 }
-/*
-double heuristic_score_1(BitState *state){
-  //printf("heuristic_score_1\n");
-
-  count_leaf++;
-  int side = W;
-  int is_at_final = bitstate_final(state);
-  
-  double result;
-  int mypieces = count_pieces(state->board, side);
-  int opp_side = OPPOSITE_SIDE(side);
-  int opppieces = count_pieces(state->board, opp_side);
-  
-  result = (double)mypieces;
-  
-  if(is_at_final){
-    if(mypieces <= opppieces){
-      return INT_MIN + 16384 + (mypieces - opppieces);
-    }
-    if(mypieces > opppieces){
-      return INT_MAX - 16384 + (mypieces - opppieces);
-    }
-  }
-
-  Pos corners[4] = {(Pos) {0,0}, (Pos) {0,BOARD_SIZE-1}, (Pos) {BOARD_SIZE-1,0}, (Pos) {BOARD_SIZE-1,BOARD_SIZE-1}};  
-  int i;
-  for(i=0;i<4;i++){
-    int corner_val = board_get_pos(state->board, corners[i]);
-    if(corner_val == side)
-      result += 10;
-    if(corner_val == opp_side)
-      result -= 10;
-
-
-    int mycount = adj_given_pos(state->board, corners[i], NULL, side);
-    if(corner_val == side) {
-      result += 8*mycount;
-    } else if(corner_val == opp_side){
-      result -= 16*mycount;
-    } else {
-      result -= 8*mycount;
-    }
-  }  
-
-  return result;
-}
-*/
-
-/*
-inline double heuristic_score_2(BitState *state){
-#ifdef SHOW_STAT
-  count_leaf++;
-#endif
-  
-  Config_store board;
-  board.w = state->board.w;
-  board.b = state->board.b;
-  board.x = ~(board.w | board.b);
-  
-  int cat = CAT(BOARD_SIZE_SQR - __builtin_popcountll(board.x));
-  
-  return get_score_from_fct_list(global_fcts[cat], global_n_f, board);
-}
-*/
-
 
 inline double heuristic_score_3(BitState *state){
 #ifdef SHOW_STAT
   count_leaf++;
 #endif
-  
   int movec = __builtin_popcountll(find_moves_bitmask(state->board, state->turn));
-  //bitstate_allowed_moves(state, &movec);
   
   return ((state->turn == W) ? 1 : (-1)) * (double)movec;
 }
@@ -314,7 +244,19 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
 #endif
   
   int side = state->turn;
-  if((remaining == 0) || bitstate_final(state)){
+  if(remaining <= 1){
+    switch(remaining){
+    case 0:
+      return ((side == W) ? 1 : (-1)) * heuristic_score_0(state);
+      break;
+    case 1:
+      return negamax_end_with_1_empty(state);
+      break;
+    case 2:
+      return negamax_end_with_2_empty(state);
+      break;
+    }
+  } else if(bitstate_final(state)){
     return ((side == W) ? 1 : (-1)) * heuristic_score_0(state);
   }
 
@@ -376,35 +318,82 @@ double negamax_end(BitState *state, double alpha, double beta, int *max_move, in
     *max_move = best_move_num;
   }
 
-  //free(pivot);
   return best_score;
 }
 
-/*
-double iterative_deepening(BitState *state, int node_limit, double (*score_func)(BitState *)){
-  int id_node_count = 0;
-
-  // the scores for each move
-  double move_scores[POS_STORE_SIZE];
+double negamax_end_with_1_empty(BitState *state){
+#ifdef SHOW_STAT
+      count_node++;
+#endif
   
-  // Condition on the number of non-empty squares on the board.
-  // A turn skipped does not appear in the principal_move.
-  char principal_move[BOARD_SIZE_SQR] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  int side = state->turn;
+  
+  BitMask pos = ~(state->board.w | state->board.b);
+  int pos_index = __builtin_clzll(pos);
+  
+  BitBoard board = state->board;
 
-  int depth = 1;
-  while(1){
-    double alpha = -DBL_MAX; double beta = DBL_MAX;
-    negamax(state, depth, alpha, beta, move_scores, &id_node_count, score_func);
+  if(side == W){
+    flip_bitboard_via_pext_w(&board, pos_index);
+    if(board.w == state->board.w){
+      flip_bitboard_via_pext_b(&board, pos_index);
+    }
+  } else {
+    flip_bitboard_via_pext_b(&board, pos_index);
+    if(board.w == state->board.w){
+      flip_bitboard_via_pext_w(&board, pos_index);
+    }
   }
-  int movec = 0;
-  bitstate_allowed_moves(state, &movec);
 
-  double max_score = -DBL_MAX;
-  char max_move = 0;
+  return ((side == W) ? 1 : (-1)) * (double) (__builtin_popcountll(board.w) - __builtin_popcountll(board.b));
 }
-*/
 
-//static BitState temp_bitstate;
+// TODO
+double negamax_end_with_2_empty(BitState *state){
+  /*
+  char side = state->turn;
+
+  BitMask empty = ~(state->board.w | state->board.b);
+  BitMask pos1 = my_blsi_u64(empty);
+  BitMask pos2 = (~pos1) & empty;
+  int pos_index1 = __builtin_clzll(pos1);
+  int pos_index2 = __builtin_clzll(pos2);
+  
+  BitBoard board1 = state->board;
+
+  double score1, score2;
+  */
+
+  /*  
+  if(side == W){
+    flip_bitboard_via_pext_w(&board1, pos_index1);
+    if(board1.w == state->board.w){
+      BitMask last_white = board1.w;
+      flip_bitboard_via_pext_b(&board1, pos_index1);
+      if(last_white == board1.w){
+
+      } else {
+	BitState temp_state;
+	temp_state.board = board1;
+	temp_state.side = B;
+	score1 = negamax_end_with_1_empty(&temp_state);
+      }
+    } else {
+      BitState temp_state;
+      temp_state.board = board1;
+      temp_state.side = B;
+      score1 = negamax_end_with_1_empty(&temp_state);
+    }
+  }
+  */
+  
+  //return ((side == W) ? 1 : (-1)) * (double) (__builtin_popcountll(board.w) - __builtin_popcountll(board.b));
+  
+  return 0;
+  
+}
+
+
 
 int opp_mobility[POS_STORE_SIZE];
 

@@ -177,8 +177,10 @@ void get_players(Player *white, Player *black){
       }
       break;
     default:
-      printf("please enter 'c' or 'h': ");
-      break;
+      {
+	printf("please enter 'c' or 'h': ");
+	break;
+      }
     }
   }
 
@@ -218,12 +220,13 @@ void get_players(Player *white, Player *black){
       }
       break;
     default:
-      printf("please enter 'c' or 'h': ");
-      break;
+      {
+	printf("please enter 'c' or 'h': ");
+	break;
+      }
     }
   }
 
-  printf("point 0\n");
   
 }
 

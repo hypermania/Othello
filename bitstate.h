@@ -48,7 +48,8 @@ int bitstate_final(BitState *state);
 // fill all transposition data
 void bitstate_fill_moves(BitState *state);
 // copies board to dest and attempts to place for side at pos
-void bitstate_try_to_place(BitBoard *board, BitBoard *dest, BitMask pos, char side); 
+void bitstate_try_to_place_w(BitBoard *board, BitBoard *dest, BitMask pos); 
+void bitstate_try_to_place_b(BitBoard *board, BitBoard *dest, BitMask pos);
 
 BitMask find_moves_bitmask(const BitBoard board, char side);
 
