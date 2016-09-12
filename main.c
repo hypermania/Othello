@@ -42,20 +42,22 @@ int main(int argc, char **argv){
   clear_weights();
   load_all_weights();
 
+  /*  
   Player white, black;
+  
+  //black = human_player();
+  //black = random_player();
+  black = mixed_player(12, heuristic_score_4, 20);
+  white = mixed_player(13, heuristic_score_4, 20);
 
-  get_players(&white, &black);
+  //get_players(&white, &black);
   
   run_game(1, 1, white, black);
   
   //free(white.param);
   //free(black.param);
+  */
 
-
-  //Player black = human_player();
-  //Player black = random_player();
-  //Player black = mixed_player(14, heuristic_score_4, 26);
-  //Player white = mixed_player(13, heuristic_score_4, 26);
   
   /*
   FILE *fp = fopen("./game_base/all_games.txt", "r");
@@ -74,28 +76,36 @@ int main(int argc, char **argv){
   }
   */
   
-  /*
+
   uint64_t int1, int2;
 
   int1 = 10;
   int2 = 100;
-  
+
+  /*
   asm (
        "movabs $0xff, %0\n"
        "lea 0x7(%0), %1\n"
        "sar $0x3, %0\n"
        "mov 0x641f40(%0, %1, 1), %0\n"
+       "movq $100, %mm0\n"
        :	
        "=r" (int1),
        "=r" (int2)
        );
+  */
 
+  asm (
+       "movq $100, %rax\n"
+       "movq %rax, %mm0\n"
+       "movq %mm0, %rdx\n"
+       );
+  
   printf("int1 = %016lx, int2 = %016lx\n", int1, int2);
 
-  printf("result = %x\n", flip_bitboard_w_assembly(1, 2));
   
   exit(0);
-  */
+
 
 
   /*

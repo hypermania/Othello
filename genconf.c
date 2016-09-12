@@ -1,6 +1,6 @@
 #include "genconf.h"
 
-
+/*
 Config list_variations(Pattern pattern, int *n_var){
   assert(n_var != NULL);
   int s = __builtin_popcountll(pattern);
@@ -91,22 +91,6 @@ int *match_variations(Config variations, Config boards, int n_v, int n_b, int sy
   assert(n_v >= 0);
   assert(n_b >= 0);
 
-  /*
-  unsigned int hash_variations =
-    hash_mem((char *)variations, n_v * sizeof(Config_store));
-
-  unsigned int hash_boards =
-    hash_mem((char *)boards, n_b * sizeof(Config_store));
-  
-  char filename[200];
-  sprintf(filename, "./dat/match_variations/%x_%x_%x.dat", hash_variations, hash_boards, symmetrize);
-
-  if(access(filename, F_OK | R_OK) == 0){
-    printf("saved data exists, reading from file %s ...\n", filename);
-    int *matches = read_dat_from_file(filename, sizeof(int), &n_v);
-    return matches;
-  }
-  */
   
   int *matches = malloc(n_v * sizeof(int));
   memset(matches, 0, n_v * sizeof(int));
@@ -265,3 +249,4 @@ int init_weights_for_fct(FlatConfTable *fct){
 }
 
 
+*/

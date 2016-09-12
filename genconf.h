@@ -3,7 +3,6 @@
 
 
 #include "fct.h"
-#include "index_computation.h"
 
 #include "confcount.h"
 

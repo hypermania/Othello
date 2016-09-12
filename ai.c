@@ -190,7 +190,6 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
   
   /* logic for move making */
 
-  //BitState *pivot = create_initial_bitstate();
   BitState pivot_bitstate;
   BitState *pivot = &pivot_bitstate;
 
@@ -202,8 +201,6 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
   int opp_side = OPPOSITE_SIDE(state->turn);  
   int i;
   for(i=0;i<movec;i++){
-    //cpy_bitstate(pivot, state);
-    //bitstate_place_piece(pivot, order[i]);
 
     pivot->board = state->positions[(int)order[i]];
     pivot->turn = opp_side;
@@ -229,10 +226,9 @@ double negamax(BitState *state, int depth, double alpha, double beta, int *max_m
 
   int r = rand() % best_movec;
   if(max_move != NULL){
-    *max_move = best_moves[r];//best_move_num;
+    *max_move = best_moves[r];
   }
 
-  //free(pivot);
   return best_score;
 }
 

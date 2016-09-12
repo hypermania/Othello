@@ -7,7 +7,6 @@
 #include "io.h"
 #include "game.h"
 #include "table.h"
-#include "genconf.h"
 #include "ai.h"
 
 

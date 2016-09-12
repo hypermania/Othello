@@ -60,6 +60,7 @@ extern const unsigned long int pat_47_squares[12];
 extern const unsigned long int pat_48_squares[12];
 extern const unsigned long int pat_49_squares[12];
 
+
 extern const int pow3[20];
 
 extern const uint64_t pos_mask[BOARD_SIZE][BOARD_SIZE];

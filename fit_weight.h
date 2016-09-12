@@ -14,14 +14,12 @@
 #include "config.h"
 #include "fct.h"
 #include "preprocess.h"
-#include "genconf.h"
 
 #include "datpt.h"
 #include "weights.h"
+#include "confcount.h"
 
 #include "macro.h"
-
-#include "index_computation.h"
 
 
 /* link function related */

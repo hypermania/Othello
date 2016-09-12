@@ -8,12 +8,10 @@
 #include <string.h>
 
 
-//#include "state.h"
 #include "player.h"
 #include "ai.h"
 #include "io.h"
 #include "table.h"
-#include "genconf.h"
 #include "fit_weight.h"
 #include "player.h"
 
