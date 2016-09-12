@@ -15,9 +15,6 @@
 #include "fit_weight.h"
 #include "player.h"
 
-FlatConfTable **global_fcts;
-
-
 int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Player black);
 
 int get_move(BitState *state, Player player);

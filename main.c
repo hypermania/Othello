@@ -41,13 +41,13 @@ int main(int argc, char **argv){
   clear_weights();
   load_all_weights();
 
-  /*  
+
   Player white, black;
   
   //black = human_player();
   //black = random_player();
-  black = mixed_player(12, heuristic_score_4, 20);
-  white = mixed_player(13, heuristic_score_4, 20);
+  black = mixed_player(10, heuristic_score_4, 20);
+  white = mixed_player(10, heuristic_score_4, 20);
 
   //get_players(&white, &black);
   
@@ -55,7 +55,7 @@ int main(int argc, char **argv){
   
   //free(white.param);
   //free(black.param);
-  */
+  exit(0);
 
   
   /*

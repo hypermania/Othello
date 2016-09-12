@@ -12,7 +12,6 @@
 #include "example.h"
 #include "pattern.h"
 #include "config.h"
-#include "fct.h"
 #include "preprocess.h"
 
 #include "datpt.h"

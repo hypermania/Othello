@@ -1,8 +1,5 @@
 #include "game.h"
 
-FlatConfTable **global_fcts;
-int global_n_f;
-
 int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Player black){
   BitState *state = create_initial_bitstate();
   init_bitstate(state);
