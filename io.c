@@ -230,6 +230,7 @@ void get_players(Player *white, Player *black){
   
 }
 
+/*
 Example *read_examples_from_file(const char *filename, int *count_examples){
 
   printf("reading examples from file %s .....\n", filename);
@@ -282,7 +283,7 @@ Config read_configs_from_file(const char *filename, int *count_configs){
 
   return configs;
 }
-
+*/
 
 void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   
@@ -300,7 +301,7 @@ void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
     *count_obj = lSize/obj_size;
   }
   
-  Config data = malloc(lSize);
+  void *data = malloc(lSize);
   fread(data, lSize, 1, fp);
 
   printf("read %ld items.\n", lSize/obj_size);
@@ -331,7 +332,7 @@ int get_file_size(const char *filename, size_t obj_size){
   fseek(fp, 0L , SEEK_END);
   long int lSize = ftell(fp);
   //rewind(fp);
-  size = lSize/sizeof(Example);
+  size = lSize/obj_size;
 
   return size;
 }

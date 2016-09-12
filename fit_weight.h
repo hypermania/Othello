@@ -9,13 +9,13 @@
 #include <sys/stat.h>
 #include <stdbool.h>
 
-#include "example.h"
+//#include "example.h"
 #include "pattern.h"
-#include "config.h"
-#include "preprocess.h"
+//#include "config.h"
 
 #include "datpt.h"
 #include "weights.h"
+#include "evaluate.h"
 #include "confcount.h"
 
 #include "macro.h"

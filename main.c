@@ -12,7 +12,6 @@
 #include "game.h"
 #include "fit_weight.h"
 #include "test.h"
-#include "preprocess.h"
 #include "util.h"
 
 #include "flip_computation.h"
@@ -46,8 +45,8 @@ int main(int argc, char **argv){
   
   //black = human_player();
   //black = random_player();
-  black = mixed_player(10, heuristic_score_4, 20);
-  white = mixed_player(10, heuristic_score_4, 20);
+  black = mixed_player(10, heuristic_score_4, 22);
+  white = mixed_player(10, heuristic_score_4, 22);
 
   //get_players(&white, &black);
   

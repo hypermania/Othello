@@ -8,8 +8,8 @@
 #include <fcntl.h>
 
 #include "pattern.h"
-#include "config.h"
-#include "example.h"
+//#include "config.h"
+//#include "example.h"
 
 #include "bitboard.h"
 #include "bitstate.h"
@@ -42,8 +42,8 @@ void get_players(Player *white, Player *black);
 //Pos *file_to_seq(char *buff, int n);
 //Pos *randomized_file_to_seq(char *buff, int n);
 
-Example *read_examples_from_file(const char *filename, int *count_examples);
-Config read_configs_from_file(const char *filename, int *count_boards);
+//Example *read_examples_from_file(const char *filename, int *count_examples);
+//Config read_configs_from_file(const char *filename, int *count_boards);
 void *read_dat_from_file(const char *filename, int obj_size, int *count_obj);
 void save_dat_to_file(const char *file_name, void *dat, int file_size);
 
