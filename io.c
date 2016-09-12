@@ -230,61 +230,6 @@ void get_players(Player *white, Player *black){
   
 }
 
-/*
-Example *read_examples_from_file(const char *filename, int *count_examples){
-
-  printf("reading examples from file %s .....\n", filename);
-  FILE *fp;
-  if((fp = fopen(filename, "r")) == NULL){
-    printf("failed: file access error\n");
-    exit(0);
-    //return NULL;
-  }
-
-  fseek(fp, 0L , SEEK_END);
-  long int lSize = ftell(fp);
-  rewind(fp);
-  if(count_examples != NULL){
-    *count_examples = lSize/sizeof(Example);
-  }
-  
-  Example *examples = malloc(lSize);
-  fread(examples, lSize, 1, fp);
-  
-  printf("read %ld examples.\n", lSize/sizeof(Example));
-
-  fclose(fp);
-
-  return examples;
-}
-
-Config read_configs_from_file(const char *filename, int *count_configs){
-
-  printf("reading configs from file %s .....\n", filename);
-  FILE *fp;
-  if((fp = fopen(filename, "r")) == NULL){
-    printf("failed: file access error\n");
-    exit(0);
-  }
-
-  fseek(fp, 0L , SEEK_END);
-  long int lSize = ftell(fp);
-  rewind(fp);
-  if(count_configs != NULL){
-    *count_configs = lSize/sizeof(Config_store);
-  }
-  
-  Config configs = malloc(lSize);
-  fread(configs, lSize, 1, fp);
-
-  printf("read %ld configs.\n", lSize/sizeof(Config_store));
-  
-  fclose(fp);
-
-  return configs;
-}
-*/
-
 void *read_dat_from_file(const char *filename, int obj_size, int *count_obj){
   
   printf("reading data from file %s .....\n", filename);
