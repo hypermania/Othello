@@ -74,20 +74,6 @@ void init_flipped_bits(void){
 }
 
 void init_diags(void){
-  /*
-  memset(diags_store, 0, sizeof(diags_store));
-  memset(anti_diags, 0, sizeof(anti_diags));
-  
-  int shift;
-  
-  uint64_t mid_diag = 0x8040201008040201;
-  for(shift = 0; shift <= 7; shift++){
-    diags[shift] = (mid_diag >> shift) & ((~0) << (shift * 8));
-  }
-  for(shift = 1; shift <= 7; shift++){
-    diags[-shift] = (mid_diag << shift) & ((~0) >> (shift * 8));
-  }
-  */
   diags[-7] = 0x0000000000000080;
   diags[-6] = 0x0000000000008040;
   diags[-5] = 0x0000000000804020;
