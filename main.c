@@ -9,7 +9,6 @@
 #include <sys/types.h>
 
 #include "io.h"
-#include "genconf.h"
 #include "game.h"
 #include "fit_weight.h"
 #include "test.h"

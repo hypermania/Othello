@@ -7,7 +7,7 @@
 #include "pattern.h"
 #include "const.h"
 
-
+/*
 inline unsigned long int index_for_config_00(Config_store config) ;
 inline unsigned long int index_for_config_01(Config_store config) ;
 inline unsigned long int index_for_config_02(Config_store config) ;
@@ -58,6 +58,8 @@ inline unsigned long int index_for_config_46(Config_store config) ;
 inline unsigned long int index_for_config_47(Config_store config) ;
 inline unsigned long int index_for_config_48(Config_store config) ;
 inline unsigned long int index_for_config_49(Config_store config) ;
+*/
+
 
 inline unsigned long int index_for_config_fast(Pattern pattern, Config_store config);
 

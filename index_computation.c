@@ -1,5 +1,6 @@
 #include "index_computation.h"
 
+
 unsigned long int index_for_config_00(Config_store config){
 unsigned long int index = 0;
 int i;
