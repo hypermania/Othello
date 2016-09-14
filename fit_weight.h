@@ -39,7 +39,7 @@ double grad_descent_step_mt(DataPoint *datapoints, long int n_dp, Weights *weigh
 
 // fit global weights (starting from 0) up to precision = d(total error)/(total error)
 void grad_descent(DataPoint *datapoints, long int n_dp, int cat, double alpha, double precision, int chunk);
-void grad_descent_mt(DataPoint *datapoints, long int n_dp, int cat, double alpha, double precision, int chunk);
+//void grad_descent_mt(DataPoint *datapoints, long int n_dp, int cat, double alpha, double precision, int chunk);
 
 /* fct utilities (deprecated) */ 
 

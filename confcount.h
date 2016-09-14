@@ -4,7 +4,8 @@
 #include <x86intrin.h>
 
 #include "bitboard.h"
-#include "weights.h"
+#include "offset.h"
+#include "symmetry_map.h"
 
 /* 
    Counter for a single category, 
@@ -33,5 +34,7 @@ typedef struct {
 // The indexes incremented are exactly the indexes accessed when the same
 // BitBoard is used to call evaluate().
 void increment_confcount(ConfigCounter *ccount, BitBoard board);
+
+
 
 #endif

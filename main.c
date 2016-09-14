@@ -44,7 +44,7 @@ int main(int argc, char **argv){
   Player white, black;
   
   //black = human_player();
-  //black = random_player();
+  //white = random_player();
   black = mixed_player(10, heuristic_score_4, 22);
   white = mixed_player(10, heuristic_score_4, 22);
 
@@ -56,8 +56,25 @@ int main(int argc, char **argv){
   //free(black.param);
   exit(0);
 
-  
+
   /*
+  memset(row_1[14], 0, sizeof(row_1[14]));
+  memset(row_2[14], 0, sizeof(row_2[14]));
+  memset(row_3[14], 0, sizeof(row_3[14]));
+  memset(row_4[14], 0, sizeof(row_4[14]));
+
+  memset(diag_8[14], 0, sizeof(diag_8[14]));
+  memset(diag_7[14], 0, sizeof(diag_7[14]));
+  memset(diag_6[14], 0, sizeof(diag_6[14]));
+  memset(diag_5[14], 0, sizeof(diag_5[14]));
+  memset(diag_4[14], 0, sizeof(diag_4[14]));
+
+  memset(corner_33[14], 0, sizeof(corner_33[14]));
+  memset(corner_25[14], 0, sizeof(corner_25[14]));
+
+  memset(edge_xx[14], 0, sizeof(edge_xx[14]));
+  */
+
   FILE *fp = fopen("./game_base/all_games.txt", "r");
 
   long int n_dp;
@@ -72,15 +89,25 @@ int main(int argc, char **argv){
   for(i = 0; i < CAT_NUM; i++){
     printf("error for cat %d: %lf\n", i, total_error(cats[i], cat_sizes[i]));
   }
-  */
-  
 
+  exit(0);
+  int working_cat = 12;
+  
+  grad_descent(cats[working_cat], cat_sizes[working_cat], working_cat, 0.0002, 0.00000001, 25);
+  
+  printf("error for cat %d: %lf\n", working_cat, total_error(cats[working_cat], cat_sizes[working_cat]));
+  
+  //save_all_weights();
+
+
+
+		  
+  /*
   uint64_t int1, int2;
 
   int1 = 10;
   int2 = 100;
 
-  /*
   asm (
        "movabs $0xff, %0\n"
        "lea 0x7(%0), %1\n"
@@ -92,7 +119,7 @@ int main(int argc, char **argv){
        "=r" (int2)
        );
   */
-
+  /*
   asm (
        "movq $100, %rax\n"
        "movq %rax, %mm0\n"
@@ -103,65 +130,10 @@ int main(int argc, char **argv){
 
   
   exit(0);
-
-
-
-  /*
-  BitState *state = create_initial_bitstate();
-
-  int i;
-  for(i = 0; i < 10; i++){
-    bitstate_fill_moves(state);
-    if(state->movec == 0){
-      break;
-    }
-    bitstate_place_piece(state, rand() % state->movec);
-  }
-
-  BitState temp1, temp2;
-  bitstate_fill_moves(state);
-  temp1 = *state;
-  temp2 = *state;
-
-  int r = rand() % state->movec;
-  BitMask pos = state->moves[r];
-  int pos_index = __builtin_clzll(pos);
-  
-
-  flip_bitboard_via_pext_b((BitBoard *)&temp1, pos_index);
-  flip_bitboard_b[pos_index]((BitBoard *)&temp2);
-
-  print_bitstate(&temp1);
-  print_bitstate(&temp2);
-
-  if(temp1.board.w == temp2.board.w && temp1.board.b == temp2.board.b){
-    printf("correct\n");
-  } else {
-    printf("incorrect for w = %016lx, b = %016lx, pos_index = %d\n", state->board.w, state->board.b, pos_index);
-  }
-  
-  free(state);
-  
-  exit(0);
   */
 
-  /*
-  BitBoard board = { 0x0040201c24040000, 0x0000500018180000 };
-  BitBoard another = board;
 
-  print_bitboard(board);
-  
-  int pos_index = 21;
 
-  flip_bitboard_b[pos_index](&board);
-  flip_bitboard_via_pext_b(&another, pos_index);
-  
-  print_bitboard(board);
-  print_bitboard(another);
-
-  exit(0);
-  */
-  
   /*
   long int times = 100000000;
   long int freq = 1300000000;
@@ -186,13 +158,6 @@ int main(int argc, char **argv){
   exit(0);
   */
 
-  /*  
-  //printf("%d\n", __builtin_clzll(0x1));
-  init_flipped_bits();
-  init_diags();
-  
-  exit(0);
-  */
 
   /*
   char log_filename[120];

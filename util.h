@@ -4,14 +4,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "pattern.h"
+#include <inttypes.h>
 
 /* miscellaneous function */
 
 int ipow(int base, int exp);
-
-void binarize_items(Pattern *patterns, int *indices, int n);
-
 
 
 #endif

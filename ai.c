@@ -97,7 +97,8 @@ int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState 
   int move_num = 0;
   
   if(empty_sqr > depth_end){
-    negamax(state, depth_middle, -DBL_MAX, DBL_MAX, &move_num, score_func);
+    double score = negamax(state, depth_middle, -DBL_MAX, DBL_MAX, &move_num, score_func);
+    printf("mid game: score = %lf\n", link_function(score));
   } else {
     double score = negamax_end(state, -DBL_MAX, DBL_MAX, &move_num, empty_sqr);
     printf("end game: score = %lf\n", score);

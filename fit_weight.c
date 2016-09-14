@@ -202,7 +202,23 @@ double grad_descent_step_mt(DataPoint *datapoints, long int n_dp, Weights *weigh
 
 void grad_descent(DataPoint *datapoints, long int n_dp, int cat, double alpha, double precision, int chunk){
   Weights *weights = malloc(sizeof(Weights));
-  memset(weights, 0, sizeof(Weights));
+  //memset(weights, 0, sizeof(Weights));
+
+  memcpy(weights->row_1, row_1[cat], sizeof(row_1[cat]));
+  memcpy(weights->row_2, row_2[cat], sizeof(row_2[cat]));
+  memcpy(weights->row_3, row_3[cat], sizeof(row_3[cat]));
+  memcpy(weights->row_4, row_4[cat], sizeof(row_4[cat]));
+
+  memcpy(weights->diag_8, diag_8[cat], sizeof(diag_8[cat]));
+  memcpy(weights->diag_7, diag_7[cat], sizeof(diag_7[cat]));
+  memcpy(weights->diag_6, diag_6[cat], sizeof(diag_6[cat]));
+  memcpy(weights->diag_5, diag_5[cat], sizeof(diag_5[cat]));
+  memcpy(weights->diag_4, diag_4[cat], sizeof(diag_4[cat]));
+
+  memcpy(weights->corner_33, corner_33[cat], sizeof(corner_33[cat]));
+  memcpy(weights->corner_25, corner_25[cat], sizeof(corner_25[cat]));
+  memcpy(weights->edge_xx, edge_xx[cat], sizeof(edge_xx[cat]));
+
   
   double deriv, last_deriv;
   double error, last_error;
@@ -248,11 +264,11 @@ void grad_descent(DataPoint *datapoints, long int n_dp, int cat, double alpha, d
     }
     
     if(deriv_diff < 0 && fabs(deriv_diff) < 0.01){
-      alpha *= 1.02;
+      //alpha *= 1.02;
     }
     
     if(deriv_diff > 0){
-      alpha /= 1.5;
+      //alpha /= 1.5;
     }
   }
 

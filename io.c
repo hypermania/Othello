@@ -765,7 +765,7 @@ void save_all_weights(void){
     
     sprintf(filename, filename_templates[5], cat);
     write_flat_weights(filename, &diag_7[cat][0][0], 7);
-    
+
     sprintf(filename, filename_templates[6], cat);
     write_flat_weights(filename, &diag_6[cat][0][0], 6);
     

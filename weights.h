@@ -9,17 +9,10 @@
 
 #include "util.h"
 #include "bitboard.h"
+#include "offset.h"
+#include "symmetry_map.h"
 
-// offsets
-
-extern int offset_81[16];
-extern int offset_243[32];
-extern int offset_729[64];
-extern int offset_2187[128];
-extern int offset_6561[256];
-extern int offset_19683[512];
-extern int offset_59049[1024];
-
+#include "confcount.h"
 
 // weights
 
@@ -98,33 +91,13 @@ typedef struct {
   double edge_xx[59049];
 } Weights;
 
-//extern Weights weights[CAT_NUM];
-
-
-// reflection symmetry mapping
-extern uint32_t map_reverse_256[256];
-extern uint32_t map_reverse_128[128];
-extern uint32_t map_reverse_64[64];
-extern uint32_t map_reverse_32[32];
-extern uint32_t map_reverse_16[16];
-
-extern uint32_t map_corner_33[19683];
-extern uint32_t map_edge_xx[59049];
-
-
-
-
-// initialize offsets
-void init_offsets(void);
-
-// check the offsets
-int check_offsets(void);
 
 // set all weights to zero
 void clear_weights(void);
 
 // check for symmetry properties in the weights
 int check_weights(void);
+
 
 
 // weight modifiers
@@ -140,10 +113,9 @@ void increment_edge_xx(double table[59049], uint32_t white, uint32_t black, doub
 
 void increment_global_by_bitboard(BitBoard board, double increment);
 void increment_by_bitboard(Weights *weights, BitBoard board, double increment);
+void increment_by_bitboard_confcount(Weights *weights, BitBoard board, ConfigCounter *confcount, double increment);
 
 
-// initialize maps
-void init_maps(void);
 
 
 
