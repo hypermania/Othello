@@ -51,10 +51,10 @@ int main(int argc, char **argv){
   //printf("elem_size = %d\n", sizeof(((TableValue *)NULL)->flag));
 
   Player white, black;
-  //black = human_player();
+  black = human_player();
   //black = random_player();
   //white = random_player();
-  black = mixed_player(12, heuristic_score_4, 21);
+  //black = mixed_player(12, heuristic_score_4, 21);
   white = mixed_player(12, heuristic_score_4, 21);
 
   //get_players(&white, &black);
