@@ -1,11 +1,11 @@
 #include "hash.h"
 
-unsigned int hash_mem(char *board, size_t size){
+inline unsigned int hash_mem(char *board, size_t size){
   unsigned int result = 0;
   unsigned char ch;
 
   int i;
-  for(i=0;i<size;i++){
+  for(i = 0; i < size; i++) {
     ch = *board++;
     result = ((result & 0x00ffffff) << 8) ^ hash_consts[result >> 24 ^ ch];
   }
@@ -13,7 +13,16 @@ unsigned int hash_mem(char *board, size_t size){
   return result;
 }
 
-
+inline uint64_t hash_bitstate(BitState *state) {
+  uint64_t *bytes = (uint64_t *)state;
+  uint32_t hash1 = 0;
+  uint32_t hash2 = 0;
+  hash1 = _mm_crc32_u64(hash1, bytes[0]);
+  hash1 = _mm_crc32_u64(hash1, bytes[1]);
+  hash2 = _mm_crc32_u64(hash1, bytes[2]);
+  
+  return (((uint64_t)hash1) << 32) | (uint64_t)hash2;
+}
 
 unsigned int hash_consts[256] = { 
 	0x6c1603e5,

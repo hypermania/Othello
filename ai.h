@@ -9,14 +9,15 @@
 #include <stdarg.h>
 #include <sys/time.h>
 
-//#include "state.h"
-//#include "board.h"
+#include "moves.h"
 #include "bitboard.h"
 #include "bitstate.h"
-//#include "table.h"
-//#include "config.h"
+#include "table.h"
+
 #include "fit_weight.h"
 #include "evaluate.h"
+
+long int count_node;
 
 // does not provide error handling
 
@@ -34,11 +35,11 @@ int mixed_move(BitState *state, int depth_middle, double (*score_func)(BitState 
 
 // search functions
 //double abpruning(BitState *state, int depth, double a, double b, int side);
-double negamax(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *));
+double negamax(BitState *state, int depth, double alpha, double beta, BitMask *max_move, double (*score_func)(BitState *));
 
-double negamax_dnorder(BitState *state, int depth, double alpha, double beta, int *max_move, double (*score_func)(BitState *));
+double negamax_end(BitState *state, double alpha, double beta, BitMask *max_move, int remaining);
 
-double negamax_end(BitState *state, double alpha, double beta, int *max_move, int remaining);
+int negamax_end_iterative(BitState *state, int alpha, int beta, BitMask *max_move);
 
 // call only when there is exactly 1 empty spot 
 double negamax_end_with_1_empty(BitState *state);

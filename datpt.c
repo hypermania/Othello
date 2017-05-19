@@ -6,7 +6,7 @@ int datapoints_from_seq(char seq[2 * MAX_GAME_LENGTH + 1], DataPoint datapoints[
   int valid_game = 1;
   while(!bitstate_final(state)){
     int movec;
-    BitMask *allowed_moves = bitstate_allowed_moves(state, &movec);
+    BitMask moves = bitstate_allowed_moves(state, &movec);
 
     if(movec == 0){
       bitstate_skip_turn(state);
@@ -16,20 +16,16 @@ int datapoints_from_seq(char seq[2 * MAX_GAME_LENGTH + 1], DataPoint datapoints[
       char row = seq[turn_num * 2 + 1] - '1';
       BitMask pos = ATOM(row, col);
 
-      int move_num;
-      int has_move = 0;
-      int index;
-      for(index = 0; index < movec; index++){
-	if(allowed_moves[index] == pos){
-	  move_num = index;
-	  has_move = 1;
-	  break;
-	}
-      }
-
-      if(has_move == 0){
+      if((pos & moves) == 0){
 	valid_game = 0;
 	break;
+      }
+      
+      int move_num = 0;
+      for(pos = pos >> 1; pos != 0; pos >>= 1){
+	if(moves & pos){
+	  move_num++;
+	}
       }
       
       bitstate_place_piece(state, move_num);

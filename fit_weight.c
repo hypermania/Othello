@@ -61,6 +61,7 @@ long int *global_bounds;
 double *global_deriv_sqr;
 long int global_n_dp;
 double global_alpha;
+ConfigCounter *global_confcount;
 
 void *grad_descent_step_thread(void *ptr){
   long int start = *(long int*)ptr;
@@ -81,7 +82,8 @@ void *grad_descent_step_thread(void *ptr){
     double delta = deriv * global_alpha;
     total_deriv += deriv * deriv;
     
-    increment_by_bitboard(my_weights, global_datapoints[i].board, delta);
+    //increment_by_bitboard(my_weights, global_datapoints[i].board, delta);
+    increment_by_bitboard_confcount(my_weights, global_datapoints[i].board, global_confcount, delta);
   }
 
   global_deriv_sqr[th] = total_deriv;
@@ -107,6 +109,13 @@ double grad_descent_step_mt(DataPoint *datapoints, long int n_dp, Weights *weigh
   global_deriv_sqr = deriv_sqr;
   global_n_dp = n_dp;
   global_alpha = alpha;
+  
+  global_confcount = malloc(sizeof(ConfigCounter));
+  memset(global_confcount, 0, sizeof(ConfigCounter));
+  long int i;
+  for(i = 0; i < n_dp; i++){
+    increment_confcount(global_confcount, datapoints[i].board);
+  }
 
   pthread_t tids[TH_NUM];
   Weights *section_delta[TH_NUM];
@@ -262,17 +271,18 @@ void grad_descent(DataPoint *datapoints, long int n_dp, int cat, double alpha, d
 	break;
       }
     }
-    
-    if(deriv_diff < 0 && fabs(deriv_diff) < 0.01){
-      //alpha *= 1.02;
+    if(iter % 50 == 0){//deriv_diff < 0 && fabs(deriv_diff) < 0.001){
+      alpha /= 2;
     }
-    
+
+
+    /*    
     if(deriv_diff > 0){
-      //alpha /= 1.5;
+      alpha /= 1.5;
     }
+    */
   }
 
-  //free(hik_abs);
   free(weights);
 }
 

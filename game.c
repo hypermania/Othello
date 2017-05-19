@@ -13,8 +13,8 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
   while(!bitstate_final(state)){
 
     int movec;    
-    bitstate_allowed_moves(state, &movec);
-    
+    BitMask *moves = bitstate_allowed_moves_array(state, &movec);
+
     if(movec == 0){
       if(print_midgame_flag)
 	printf("Turn skipped.\n");
@@ -28,14 +28,16 @@ int run_game(int print_endgame_flag, int print_midgame_flag, Player white, Playe
 	move_num = get_move(state, white);
       }
 
-      uint64_t move_made = state->moves[move_num];
+      uint64_t move_made = moves[move_num];
       
-      bitstate_place_piece(state, move_num);
+      bitstate_place_piece(state, move_made);
 
       if(print_midgame_flag)
 	print_move_made(move_made, move_num);
       
     }
+
+    free(moves);
 
     turn++;
     
@@ -72,10 +74,10 @@ int get_move(BitState *state, Player player){
 
   int move_num;
   int movec;
-  BitMask *moves = bitstate_allowed_moves(state, &movec);
+  BitMask moves = bitstate_allowed_moves(state, &movec);
   switch(player.type){
   case HUMAN:
-    print_options(moves, movec);
+    print_options(moves);
     move_num = get_human_response(movec);
     break;
   case RANDOM:

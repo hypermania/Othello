@@ -15,6 +15,9 @@
 
 
 double evaluate(BitState *state);
+double evaluate_use_avx(BitState *state);
+
+double evaluate_0(BitState *state);
 
 #endif
 

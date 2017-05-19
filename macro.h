@@ -19,7 +19,7 @@
 #define GAME_LENGTH 60
 
 #define ATOM(r,c) (((unsigned long int) 0x8000000000000000) >> (((r) << LOG_BOARD_SIZE) + (c)))
-#define ROW(r) (0xff00000000000000 >> (r << LOG_BOARD_SIZE)) // 0 <= r < 8
+#define ROW(r) (0xff00000000000000 >> ((r) << LOG_BOARD_SIZE)) // 0 <= r < 8
 #define COL(c) (0x8080808080808080 >> (c))  // 0 <= c < 8
 #define DIAG(d) (0x8040201008040201 >> (d)) // 0 <= d < 7
 #define RDIAG(d) ((0x0102040810204080 >> (d))  &  (~(COL(0) >> (d))) ) // 0 <= d < 7
@@ -50,6 +50,7 @@
 /* Miscellaneous */
 
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
+#define MIN(a,b) (((a)<(b)) ? (a) : (b))
 
 
 /* Define inline directive when available */
@@ -65,7 +66,13 @@
 #define REGPARM(num)
 #endif
   
-
+#ifndef ATTR_ALIGN
+#  if defined(__GNUC__)
+#    define ATTR_ALIGN(n) __attribute__((aligned(n)))
+#  else
+#    define ATTR_ALIGN(n) __declspec(align(n))
+#  endif
+#endif
 
 
   

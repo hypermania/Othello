@@ -40,13 +40,22 @@ int main(int argc, char **argv){
   clear_weights();
   load_all_weights();
 
+  /*
+  void *test = 0x20;
+  printf("%lx\n", test + sizeof(int8_t *));
+  int8_t *test2 = 0x10;
+  printf("%lx\n", (int)((int8_t *)test - test2));
+  exit(0);
+  */
+  
+  //printf("elem_size = %d\n", sizeof(((TableValue *)NULL)->flag));
 
   Player white, black;
-  
   //black = human_player();
+  //black = random_player();
   //white = random_player();
-  black = mixed_player(10, heuristic_score_4, 22);
-  white = mixed_player(10, heuristic_score_4, 22);
+  black = mixed_player(12, heuristic_score_4, 21);
+  white = mixed_player(12, heuristic_score_4, 21);
 
   //get_players(&white, &black);
   
@@ -57,6 +66,32 @@ int main(int argc, char **argv){
   exit(0);
 
 
+  /*
+  FILE *fp = fopen("./game_base/all_games.txt", "r");
+
+  long int n_dp;
+  DataPoint *datapoints = datapoints_from_file(fp, &n_dp);
+  printf("n_dp = %ld\n", n_dp);
+
+  long int cat_sizes[CAT_NUM];
+  
+  DataPoint **cats = categorize_datpts(datapoints, n_dp, cat_sizes);
+
+  int i;
+  for(i = 0; i < CAT_NUM; i++){
+    printf("error for cat %d: %lf\n", i, total_error(cats[i], cat_sizes[i]));
+  }
+
+  int working_cat = 5;
+  
+  grad_descent(cats[working_cat], cat_sizes[working_cat], working_cat, 10, 0.000000001, 25);
+  
+  printf("error for cat %d: %lf\n", working_cat, total_error(cats[working_cat], cat_sizes[working_cat]));
+  
+  //save_all_weights();
+
+  exit(0);
+  */
   /*
   memset(row_1[14], 0, sizeof(row_1[14]));
   memset(row_2[14], 0, sizeof(row_2[14]));
@@ -75,78 +110,89 @@ int main(int argc, char **argv){
   memset(edge_xx[14], 0, sizeof(edge_xx[14]));
   */
 
-  FILE *fp = fopen("./game_base/all_games.txt", "r");
 
-  long int n_dp;
-  DataPoint *datapoints = datapoints_from_file(fp, &n_dp);
-  printf("n_dp = %ld\n", n_dp);
+  BitState *state = create_initial_bitstate();
+  int l;
+  for(l = 0; l < 1000000; l++) {
+    //srand((long int) 100);
+    if(l % 1000 == 0)
+      printf("%d done\n", l);
+    init_bitstate(state);
+    int k;
+    for(k = 0; k < 42; k++) {
+      int movec;
+      BitMask *moves = bitstate_allowed_moves_array(state, &movec);
+      if(movec == 0) {
+	bitstate_skip_turn(state);
+      } else {
+	bitstate_place_piece(state, moves[rand() % movec]);
+      }
+      free(moves);
+    }
 
-  long int cat_sizes[CAT_NUM];
-  
-  DataPoint **cats = categorize_datpts(datapoints, n_dp, cat_sizes);
+    int empty_sqr = BOARD_SIZE_SQR -
+      (__builtin_popcountll(state->board.b) + __builtin_popcountll(state->board.w));
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+    count_node = 0;
+    double s1 = negamax_end(state, -DBL_MAX, DBL_MAX, NULL, empty_sqr);
+    gettimeofday(&end, NULL);
+    double elapsed = (double)((end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec))/(double)1000000;
 
-  int i;
-  for(i = 0; i < CAT_NUM; i++){
-    printf("error for cat %d: %lf\n", i, total_error(cats[i], cat_sizes[i]));
+    printf("s1 complete, elapsed = %lf, count_node = %ld\n", elapsed, count_node);
+    double s2 = (double)negamax_end_iterative(state, -65, 65, NULL);
+
+    if(s1 != s2) {
+      printf("(error)s1 = %lf, s2 = %lf\n", s1, s2);
+      printf("%016lx, %016lx\n", state->board.w, state->board.b);
+      printf("depth = %d\n", empty_sqr);
+      print_bitstate(state);
+      break;
+    } else {
+      printf("(passed) depth = %d\n", empty_sqr);
+    }
+    printf("\n");
   }
 
   exit(0);
-  int working_cat = 12;
   
-  grad_descent(cats[working_cat], cat_sizes[working_cat], working_cat, 0.0002, 0.00000001, 25);
-  
-  printf("error for cat %d: %lf\n", working_cat, total_error(cats[working_cat], cat_sizes[working_cat]));
-  
-  //save_all_weights();
-
-
-
-		  
-  /*
-  uint64_t int1, int2;
-
-  int1 = 10;
-  int2 = 100;
-
-  asm (
-       "movabs $0xff, %0\n"
-       "lea 0x7(%0), %1\n"
-       "sar $0x3, %0\n"
-       "mov 0x641f40(%0, %1, 1), %0\n"
-       "movq $100, %mm0\n"
-       :	
-       "=r" (int1),
-       "=r" (int2)
-       );
-  */
-  /*
-  asm (
-       "movq $100, %rax\n"
-       "movq %rax, %mm0\n"
-       "movq %mm0, %rdx\n"
-       );
-  
-  printf("int1 = %016lx, int2 = %016lx\n", int1, int2);
-
-  
-  exit(0);
-  */
-
-
 
   /*
-  long int times = 100000000;
+  Table *table = table_create(20);
+
+  long int times = 200000000;
   long int freq = 1300000000;
 
   struct timeval start, end;
-  BitBoard board;
+  //BitBoard board = new_initial_bitboard();
+  BitState *state = create_initial_bitstate();
+
+  TableValue value;
   
   gettimeofday(&start, NULL);
   long int i;
   for(i = 0; i < times; i++){
     //flip_bitboard_w_assembly(0, 0);
     //flip_bitboard_via_pext_w(&board, 0);
-    flip_bitboard_via_pext_w_00(&board, 0);
+    //evaluate_use_avx((BitState *)&board);
+    //evaluate(state);
+    evaluate(state);
+    
+    state->board.w = rand() | (uint64_t)rand() << 32;
+    state->board.b = (rand() | (uint64_t)rand() << 32) & (~state->board.w);
+
+    //table_write(table, state, value);
+    //table_read(table, state);
+    //hash_bitstate(state);
+
+    //BitMask mask1, mask2;
+    //mask1 = find_moves_bitmask(board, W);
+    //mask2 = find_moves_bitmask_avx(board, W);
+    //temp1 = (BitBoard) {flipHorizontal(board.w), flipHorizontal(board.b)};
+    //temp2 = flipHorizontal_sse(board);
+
+    //temp = (BitBoard) {flipDiagA1H8(board.w), flipDiagA1H8(board.b)};
+    //temp = flipDiagA1H8_sse(board);
   }
   gettimeofday(&end, NULL);
 
@@ -154,10 +200,11 @@ int main(int argc, char **argv){
   double cycles = (double)freq * elapsed/(double)times;
 
   printf("cycles = %lf\n", cycles);
-
+  
+  print_bitstate(state);
+  
   exit(0);
   */
-
 
   /*
   char log_filename[120];

@@ -32,8 +32,8 @@ extern uint64_t anti_diags[15]; // access via anti_diags[r+c]
 void init_flipped_bits(void);
 void init_diags(void);
 
-void REGPARM(2) flip_bitboard_via_pext_w(BitBoard *board, int pos_index);
-void REGPARM(2) flip_bitboard_via_pext_b(BitBoard *board, int pos_index);
+BitMask REGPARM(2) flip_bitboard_via_pext_w(BitBoard *board, int pos_index);
+BitMask REGPARM(2) flip_bitboard_via_pext_b(BitBoard *board, int pos_index);
 
 void REGPARM(2) flip_bitboard_w_assembly(BitBoard *board, int pos_index);
 

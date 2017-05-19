@@ -26,7 +26,7 @@ static const char black_str[] = "black";
 int print_bitboard(BitBoard board);
 int print_bitstate(BitState *state);
 int print_pattern(Pattern pattern);
-void print_options(BitMask *moves, int movec);
+void print_options(BitMask moves);
 void print_move_made(BitMask move, int index);
 int get_human_response(int movec);
 

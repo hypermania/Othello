@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string.h>
+#include <x86intrin.h>
 
 #include "macro.h"
 #include "const.h"
@@ -164,6 +165,10 @@ extern inline BitMask flipVertical(BitMask mask){
   return __builtin_bswap64(mask);
 }
 
+extern inline BitBoard flipVertical_packed(BitBoard board){
+  return (BitBoard) {__builtin_bswap64(board.w), __builtin_bswap64(board.b)};
+}
+
 extern inline BitMask flipHorizontal(BitMask mask){
   const uint64_t k1 = 0x5555555555555555;
   const uint64_t k2 = 0x3333333333333333;
@@ -172,6 +177,24 @@ extern inline BitMask flipHorizontal(BitMask mask){
   mask = ((mask >> 2) & k2) | ((mask & k2) << 2);
   mask = ((mask >> 4) & k4) | ((mask & k4) << 4);
   return mask;
+}
+
+extern inline BitBoard flipHorizontal_sse(BitBoard board){
+  __m128i mask = _mm_set_epi64x((long long)board.b, (long long)board.w);
+  const __m128i k1 = _mm_set_epi64x(0x5555555555555555, 0x5555555555555555);
+  const __m128i k2 = _mm_set_epi64x(0x3333333333333333, 0x3333333333333333);
+  const __m128i k4 = _mm_set_epi64x(0x0f0f0f0f0f0f0f0f, 0x0f0f0f0f0f0f0f0f);
+  
+  mask = _mm_or_si128(_mm_and_si128(_mm_srli_epi64(mask, 1), k1),
+		      _mm_slli_epi64(_mm_and_si128(mask, k1), 1));
+  mask = _mm_or_si128(_mm_and_si128(_mm_srli_epi64(mask, 2), k2),
+		      _mm_slli_epi64(_mm_and_si128(mask, k2), 2));
+  mask = _mm_or_si128(_mm_and_si128(_mm_srli_epi64(mask, 4), k4),
+		      _mm_slli_epi64(_mm_and_si128(mask, k4), 4));
+  
+  BitBoard result;
+  _mm_store_si128((__m128i *)&result, mask);
+  return result;
 }
 
 extern inline BitMask flipDiagA1H8(BitMask mask){
@@ -190,17 +213,68 @@ extern inline BitMask flipDiagA1H8(BitMask mask){
   return mask;
 }
 
+extern inline BitBoard flipDiagA1H8_sse(BitBoard board){
+  __m128i mask = _mm_set_epi64x((long long)board.b, (long long)board.w);
+  __m128i t;
+  const __m128i k1 = _mm_set_epi64x(0x5500550055005500, 0x5500550055005500);
+  const __m128i k2 = _mm_set_epi64x(0x3333000033330000, 0x3333000033330000);
+  const __m128i k4 = _mm_set_epi64x(0x0f0f0f0f00000000, 0x0f0f0f0f00000000);
+  
+  t = _mm_and_si128(k4, _mm_xor_si128(mask, _mm_slli_epi64(mask, 28)));
+  mask = _mm_xor_si128(mask, _mm_xor_si128(t, _mm_srli_epi64(t, 28)));
+  t = _mm_and_si128(k2, _mm_xor_si128(mask, _mm_slli_epi64(mask, 14)));
+  mask = _mm_xor_si128(mask, _mm_xor_si128(t, _mm_srli_epi64(t, 14)));
+  t = _mm_and_si128(k1, _mm_xor_si128(mask, _mm_slli_epi64(mask, 7)));
+  mask = _mm_xor_si128(mask, _mm_xor_si128(t, _mm_srli_epi64(t, 7)));
+  
+  BitBoard result;
+  _mm_store_si128((__m128i *)&result, mask);
+  return result;
+}
+
+extern inline BitBoard flipDiagA1H8_avx(BitBoard board){
+  __m128i mask = _mm_set_epi64x((long long)board.b, (long long)board.w);
+  __m128i t;
+  const __m128i k1 = _mm_set_epi64x(0x5500550055005500, 0x5500550055005500);
+  const __m128i k2 = _mm_set_epi64x(0x3333000033330000, 0x3333000033330000);
+  const __m128i k4 = _mm_set_epi64x(0x0f0f0f0f00000000, 0x0f0f0f0f00000000);
+  
+  t = _mm_and_si128(k4, _mm_xor_si128(mask, _mm_slli_epi64(mask, 28)));
+  mask = _mm_xor_si128(mask, _mm_xor_si128(t, _mm_srli_epi64(t, 28)));
+  t = _mm_and_si128(k2, _mm_xor_si128(mask, _mm_slli_epi64(mask, 14)));
+  mask = _mm_xor_si128(mask, _mm_xor_si128(t, _mm_srli_epi64(t, 14)));
+  t = _mm_and_si128(k1, _mm_xor_si128(mask, _mm_slli_epi64(mask, 7)));
+  mask = _mm_xor_si128(mask, _mm_xor_si128(t, _mm_srli_epi64(t, 7)));
+  
+  BitBoard result;
+  _mm_store_si128((__m128i *)&result, mask);
+  return result;
+}
+
 extern inline BitMask rotate90Clockwise(BitMask mask){
   return flipVertical(flipDiagA1H8(mask));
+}
+
+extern inline BitBoard rotate90Clockwise_sse(BitBoard board){
+  return flipVertical_packed(flipDiagA1H8_sse(board));
 }
 
 extern inline BitMask rotate90CounterClockwise(BitMask mask){
   return flipDiagA1H8(flipVertical(mask));
 }
 
+extern inline BitBoard rotate90CounterClockwise_sse(BitBoard board){
+  return flipDiagA1H8_sse(flipVertical_packed(board));
+}
+
 extern inline BitMask rotate180(BitMask mask){
   return flipVertical(flipHorizontal(mask));
 }
+
+extern inline BitBoard rotate180_sse(BitBoard board){
+  return flipVertical_packed(flipHorizontal_sse(board));
+}
+
 
 #endif
 

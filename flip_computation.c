@@ -108,7 +108,7 @@ void init_diags(void){
   
 }
 
-void REGPARM(2) flip_bitboard_via_pext_w(BitBoard *board, int pos_index){
+BitMask REGPARM(2) flip_bitboard_via_pext_w(BitBoard *board, int pos_index){
   int r = pos_index / 8;
   int c = pos_index % 8;
 
@@ -138,7 +138,6 @@ void REGPARM(2) flip_bitboard_via_pext_w(BitBoard *board, int pos_index){
   uint8_t diag_flipped = flipped_bits[diag_pos][diag_w][diag_b];
   uint8_t anti_diag_flipped = flipped_bits[anti_diag_pos][anti_diag_w][anti_diag_b];
   
-
   uint64_t row_mask = _pdep_u64(row_flipped, row);
   uint64_t col_mask = _pdep_u64(col_flipped, col);
   uint64_t diag_mask = _pdep_u64(diag_flipped, diag);
@@ -148,9 +147,11 @@ void REGPARM(2) flip_bitboard_via_pext_w(BitBoard *board, int pos_index){
 
   board->w |= flipped;
   board->b &= ~flipped;
+
+  return flipped;
 }
 
-void REGPARM(2) flip_bitboard_via_pext_b(BitBoard *board, int pos_index){
+BitMask REGPARM(2) flip_bitboard_via_pext_b(BitBoard *board, int pos_index){
   int r = pos_index / 8;
   int c = pos_index % 8;
 
@@ -180,9 +181,6 @@ void REGPARM(2) flip_bitboard_via_pext_b(BitBoard *board, int pos_index){
   uint8_t diag_flipped = flipped_bits[diag_pos][diag_b][diag_w];
   uint8_t anti_diag_flipped = flipped_bits[anti_diag_pos][anti_diag_b][anti_diag_w];
   
-  //printf("anti_diag_w = %u, anti_diag_b = %u\n", anti_diag_w, anti_diag_b);
-  //printf("anti_diag_pos = %u\n", anti_diag_pos);
-
   uint64_t row_mask = _pdep_u64(row_flipped, row);
   uint64_t col_mask = _pdep_u64(col_flipped, col);
   uint64_t diag_mask = _pdep_u64(diag_flipped, diag);
@@ -192,6 +190,8 @@ void REGPARM(2) flip_bitboard_via_pext_b(BitBoard *board, int pos_index){
 
   board->b |= flipped;
   board->w &= ~flipped;
+
+  return flipped;
 }
 
 // TODO

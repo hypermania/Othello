@@ -79,19 +79,20 @@ int print_bitstate(BitState *state){
 }
 
 
-void print_options(BitMask *moves, int movec){
+void print_options(BitMask moves){
   int i;
-  for(i=0;i<(movec+7-1)/7;i++){
-    int j = 7*i;
-    while(j<movec && j<7*(i+1)){
-      int clz = __builtin_clzll(moves[j]);
+  for(i = 0; moves != 0; i++){
+    int j = 0;
+    while(moves != 0 && j < 7){
+      BitMask pos = my_blsi_u64(moves);
+      int clz = __builtin_clzll(pos);
       int r, c;
       r = clz / 8;
       c = clz % 8;
-
       
-      printf("%2d:%c%c (%d,%d)  ", j, c+'A', r+'1', r, c);
+      printf("%2d:%c%c (%d,%d)  ", 7 * i + j, c + 'A', r + '1', r, c);
       j++;
+      moves = my_blsr_u64(moves);
     }
     printf("\n");
   }
